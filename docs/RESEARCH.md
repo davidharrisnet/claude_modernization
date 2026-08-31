@@ -8,6 +8,33 @@
 
 ## Abstract
 
+* Describe the Problem
+Explore task of converting legacy .NET to modern Java.
+
+Specifically ASP.NET Framework 4.7.2, C#, MVC or WebForms to Java 21
+This project
+1. Discuss legacy upgrading in general, siting other references
+1. Compare ASP.NET Framework to Java
+1. Discus Clade Code and best practices.
+1. Report on a few trial cases.
+   * Convert ASP.NET business logic to REST
+   * Deconstruct ASP.NET to microservices
+   
+
+[Outline](https://psychology.ucsd.edu/undergraduate-program/undergraduate-resources/academic-writing-resources/writing-research-papers/research-paper-structure.html#methods)
+
+|ASP.NET
+
+* .NET and Java are well established architectures complexity
+* Converting
+    * Manual takes too long
+    * Modern approaches AI assisted
+        * Literature Review
+        * Claude            
+* Claude best practices
+* The Experiment
+    * .NET/ASP project conversion to Java/Angular
+    * Results
 
 
 ## 1. Introduction
@@ -25,6 +52,39 @@
 - **AI pair-programming effectiveness studies** — public research on AI coding assistants (e.g., GitHub's controlled studies of Copilot task completion time) generally measures greenfield feature tasks. This project's contribution is applying the same measurement discipline (time-on-task, acceptance rate, defect rate) specifically to a cross-platform migration task, where the assistant must translate semantics rather than originate them.
 
 ## 3. Platform Comparison: .NET Framework/C# vs. Java/Spring Boot/Angular
+
+## Direct Mapping: .NET vs. Java Stacks 
+
+To transition successfully, mapping equivalent concepts across both environments is essential:
+
+| Feature / Tool  | Legacy .NET Ecosystem | Target Java Ecosystem |
+| ----- | ----- | ----- |
+| Language | C# | Java |
+|Runtime Environment|.NET Framework (CLR)|Java Virtual Machine (JVM)|
+|Core Enterprise Framework|ASP.NET MVC / Web API / WCF|Spring Boot 4 / Jakarta EE|
+|Object-Relational Mapping|Entity Framework (EF) / LINQ|Hibernate / Spring Data JPA|
+|Dependency Injection|Autofac / Unity / Built-in .NET|Spring IoC / CDI|
+|Package Management|NuGet|Maven / Gradle|
+|Web Server / Hosting|IIS (Internet Information Services)|Tomcat / Jetty / Kinsta (embedded)|
+
+
+## The Core Differences
+
+| Feature | ASP.NET Framework 4.7.2 | C# (Modern, e.g., C# 12 / 13) | Modern Java 21 |
+|---|---|---|---|
+| **Category** | Software Framework (Web) | Programming Language | Programming Language & Platform |
+| **Platform Scope** | Windows only (legacy) | Cross-platform (Windows, Linux, macOS) | Cross-platform (Write Once, Run Anywhere) |
+| **Primary Runtime** | .NET Framework (CLR 4.0) | .NET 8 / .NET 9 (Modern CLR) | Java Virtual Machine (JVM) |
+| **Release Year** | 2018 (Now in maintenance mode) | Modern versions released annually | 2023 (Long-Term Support version) |
+| **Modern Concurrency** | Traditional thread pool / async-await | Advanced async/await with ValueTask | Virtual Threads (Project Loom) |
+
+## Strategies
+1. Establish Clean Boundaries
+2. Leverage Hybrid Interpoability
+* JNBridgePro
+* API Gateways
+3. Gen AI
+4. Strangler Fig Pattern
 
 
 ## 4. State of AI-Assisted Development with Claude Code
