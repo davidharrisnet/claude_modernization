@@ -4,9 +4,10 @@ A report of using Claude code to convert legacy ASP.NET to modern Java/Angular u
 
 The full report in [RESEARCH.md](docs/RESEARCH.md) has the following format:
 
-## Introduction
+## Prerequisites
 
 It may be possible to develop in .NET 4.7.2 in a modern Visual Studio IDE, but I was not successful. Rather, I decided to use a Windows 10 machine, and install only the essential components. 
+
 1. Using the Visual Studio Installer, I removed all currently installed Visual Studio versions, and using the App & features tool, removed all .NET Frameworks 
 2. .NET Frameworks 4.7.2.  
 Install [.NET Framework 4.7.2](https://support.microsoft.com/en-us/servicing/os/windows/2019/07/microsoft-net-framework-4-7-2-offline-installer-for-windows)
@@ -18,10 +19,20 @@ Install [.NET Framework 4.7.2](https://support.microsoft.com/en-us/servicing/os/
 
   * Using the Visual Studio Installer, select Modify, the select ASP.NET and web development
   * Add a selection to .NET Framework 4.7.2 development tools
+### ASP.NET Projects
+So this is a repeatable process, I chose to create two of Visual Studio's default ASP projects
+#### ASP.NET WEb Forms Site
+1. File | New | Project | ASP.NET Web Forms Site
+2. Ensure Framework is .NET Framework 4.7.2
+3. This project has several components
+   * aspx file: Default, Contact, About, Global
+   * bootstrap style sheets
+   * An Account directory with Login pages and security policies specified in the Web.config.\
+   * Routing in App_Code/RouteConfig.cs
+#### ASP.NET Web Site (Razor v3)
 
 ## Analysis 
 
-Breakdown of ASP.NET components and how they map to Java. Strategies and challenges
 
 ## Reports
 ### ASP.NET C# Web Forms 
