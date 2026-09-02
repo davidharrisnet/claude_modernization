@@ -32,7 +32,11 @@ So this is a repeatable process, I chose to create two of Visual Studio's defaul
    * Routing in App_Code/RouteConfig.cs
 #### ASP.NET Web Site (Razor v3)
 
-## Analysis 
+## Furthe Work
+Random Samples
+* https://github.com/PavlosTzitzos/asp.net-samples
+* https://github.com/f2calv/WebAppDI
+* https://github.com/search?q=asp.net+4.7.2&type=repositories
 
 
 
