@@ -8,7 +8,7 @@ The full report in [RESEARCH.md](docs/RESEARCH.md) has the following format:
 Setup: 
 Install [.NET Framework 4.7.2](https://support.microsoft.com/en-us/servicing/os/windows/2019/07/microsoft-net-framework-4-7-2-offline-installer-for-windows)
 
-(Visual Studio 2017)Work in June 2024: https://web.archive.org/web/20240308034322/https://download.visualstudio.microsoft.com/download/pr/119c57b9-af7b-4970-81ff-824299902e62/46731b262625013cb400e2feb083b088f4139158f9a8166feff471e6806dc20d/vs_Community.exe]
+[Visual Studio 2017 via web.archive.org](https://web.archive.org/web/20240308034322/https://download.visualstudio.microsoft.com/download/pr/119c57b9-af7b-4970-81ff-824299902e62/46731b262625013cb400e2feb083b088f4139158f9a8166feff471e6806dc20d/vs_Community.exe)
 
 ```
 dotnet --version 
