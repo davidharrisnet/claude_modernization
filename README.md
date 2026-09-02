@@ -4,8 +4,7 @@ A report of using Claude code to convert legacy ASP.NET to modern Java/Angular u
 
 
 ## Introduction
-This repository is the report of an intertive process to investigate using Claude code to convert ASP.NET Framework 4.7.2, C#, MVC or WebForms projects into Java 21/Spring Boot 8.0. In an attempt to be empiracle, this take a systematic approach decomposing an ASP.NET WebForms project into its different parts, then systematically converting and testing the results. It begins with an exeplar web forms project created by Visual Studio 2017, then add all the additional components an enterpries ASP.NET project may use. The asp web forms project is contained in [aspnet-webforms](https://github.com/davidharrisnet/aspnetwebforms)
-.  The full report in [RESEARCH.md](docs/RESEARCH.md) has the following format:
+This repository is the report of an intertive process to investigate using Claude code to convert ASP.NET Framework 4.7.2, C#, MVC or WebForms projects into Java 21/Spring Boot 8.0. In an attempt to be empiracle, this take a systematic approach decomposing an ASP.NET WebForms project into its different parts, then systematically converting and testing the results. It begins with an exeplar web forms project created by Visual Studio 2017, then add all the additional components an enterpries ASP.NET project may use. The asp web forms project is contained in [aspnet-webforms](https://github.com/davidharrisnet/aspnetwebforms) The full report in [RESEARCH.md](docs/RESEARCH.md) has the following format:
 
 ## Prerequisites
 
@@ -19,9 +18,8 @@ Open [.NET Framework 4.7.2](https://support.microsoft.com/en-us/servicing/os/win
   * Add a selection to .NET Framework 4.7.2 development tools
     
 ### ASP.NET Projects
-So this is a repeatable process, I chose to create two of Visual Studio's default ASP projects
-#### ASP.NET WEb Forms Site
 
+#### ASP.NET WEb Forms Site
 
 1. File | New | Project | ASP.NET Web Forms Site
 2. Ensure Framework is .NET Framework 4.7.2
@@ -31,7 +29,14 @@ So this is a repeatable process, I chose to create two of Visual Studio's defaul
    * An Account directory with Login pages and security policies specified in the Web.config.\
    * Routing in App_Code/RouteConfig.cs
 #### ASP.NET Web Site (Razor v3)
-
+ ...
+## Design
+1. Given the exemplar web forms project, systematically test each component as listed in [ASP.md](https://github.com/davidharrisnet/aspnetwebforms/blob/asp_analysis/ASP.md).
+2. Prompt Claude to convert the component the Java/Spring Boot with a regression test confirming its functionality.
+3. Bring in the components in [Core Components](https://github.com/davidharrisnet/aspnetwebforms/blob/core_components/CORE_COMPONENTS.md)
+4. Prompt Claude to convert the component the Java/Spring Boot with a regression test confirming its functionality.
+5. Do not simply convert the projects, but build out a Java/Spring Boot regression suite to validate each component. This project can then be reused with claude to convert other projects. The Suite should test each component the produce a measurable report. 
+6. With the regression suite established, bring in random ASP.NET 4.7.2 Frameworks from github
 ## Furthe Work
 Random Samples
 * https://github.com/PavlosTzitzos/asp.net-samples
