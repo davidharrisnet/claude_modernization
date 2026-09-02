@@ -1,7 +1,7 @@
 # asp_modernization
 
 A report of using Claude code to convert legacy ASP.NET to modern Java/Angular using Claude AI.
-
+ASP.NET Framework 4.7.2, C#, MVC or WebForms 
 The full report in [RESEARCH.md](docs/RESEARCH.md) has the following format:
 
 ## Prerequisites
