@@ -5,7 +5,7 @@ A report of using Claude code to convert legacy ASP.NET to modern Java/Angular u
 
 ## Introduction
 This repository is the report of an intertive process to investigate using Claude code to convert ASP.NET Framework 4.7.2, C#, MVC or WebForms projects into Java 21/Spring Boot 8.0. In an attempt to be empiracle, this take a systematic approach decomposing an ASP.NET WebForms project into its different parts, then systematically converting and testing the results. It begins with an exeplar web forms project created by Visual Studio 2017, then add all the additional components an enterpries ASP.NET project may use. 
-The asp project is contained in aspnetwebforms.  The full report in [RESEARCH.md](docs/RESEARCH.md) has the following format:
+The asp project is contained in [aspnet-webforms](https://github.com/davidharrisnet/aspnetwebforms).  The full report in [RESEARCH.md](docs/RESEARCH.md) has the following format:
 
 ## Prerequisites
 
