@@ -10,6 +10,8 @@ Install [.NET Framework 4.7.2](https://support.microsoft.com/en-us/servicing/os/
 
 [Visual Studio 2017 via web.archive.org](https://web.archive.org/web/20240308034322/https://download.visualstudio.microsoft.com/download/pr/119c57b9-af7b-4970-81ff-824299902e62/46731b262625013cb400e2feb083b088f4139158f9a8166feff471e6806dc20d/vs_Community.exe)
 
+[Visual Studio 2017 via microsoft.com](https://download.visualstudio.microsoft.com/download/pr/8729ca3d-c3b2-4b32-b6fb-a7ea468a4af2/4448a86b1ae7d5b90bdc9c51e3f18b8f6ab0d3176560aa23b03f102380e02746/vs_Community.exe)
+
 ```
 dotnet --version 
 
