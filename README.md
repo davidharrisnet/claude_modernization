@@ -4,7 +4,7 @@ A report of using Claude code to convert legacy ASP.NET to modern Java/Angular u
 
 
 ## Introduction
-This repository is the report of an intertive process to investigate using Claude code to convert ASP.NET Framework 4.7.2, C#, MVC or WebForms projects into Java 21/Spring Boot 8.0. In an attempt to be empiracle, this take a systematic approach decomposing an ASP.NET WebForms project into its different parts, then systematically converting and testing the results. It begins with an exeplar web forms project created by Visual Studio 2017, then add all the additional components an enterpries ASP.NET project may use. The asp web forms project is contained in [aspnet-webforms](https://github.com/davidharrisnet/aspnetwebforms) The full report in [RESEARCH.md](docs/RESEARCH.md) has the following format:
+This repository is the report of an intertive process to investigate using Claude code to convert ASP.NET Framework 4.7.2, C#, MVC or WebForms projects into Java 21/Spring Boot 8.0.  It begins with an exeplar web forms project created by Visual Studio 2017. The asp web forms project is contained in [aspnet-webforms](https://github.com/davidharrisnet/aspnetwebforms) The full report in [RESEARCH.md](docs/RESEARCH.md) has the following format:
 
 ## Prerequisites
 
@@ -28,15 +28,48 @@ Open [.NET Framework 4.7.2](https://support.microsoft.com/en-us/servicing/os/win
    * bootstrap style sheets
    * An Account directory with Login pages and security policies specified in the Web.config.\
    * Routing in App_Code/RouteConfig.cs
-#### ASP.NET Web Site (Razor v3)
+
  ...
 ## Design
-1. Given the exemplar web forms project, systematically test each component as listed in [ASP.md](https://github.com/davidharrisnet/aspnetwebforms/blob/asp_analysis/ASP.md).
-2. Prompt Claude to convert the component the Java/Spring Boot with a regression test confirming its functionality.
-3. Bring in the components in [Core Components](https://github.com/davidharrisnet/aspnetwebforms/blob/core_components/CORE_COMPONENTS.md)
-4. Prompt Claude to convert the component the Java/Spring Boot with a regression test confirming its functionality.
-5. Do not simply convert the projects, but build out a Java/Spring Boot regression suite to validate each component. This project can then be reused with claude to convert other projects. The Suite should test each component the produce a measurable report. 
-6. With the regression suite established, bring in random ASP.NET 4.7.2 Frameworks from github
+PHASE 1 — Legacy Build
+Stack: ASP.NET Framework 4.7.2, C#, MVC or WebForms, SQL Server (or SQLite is fine)
+
+Functional requirements:
+•	A single core domain with 3–4 related entities (e.g., a simple case/request tracking app: Requests → Assignees → Status History)
+•	Basic CRUD for each entity
+•	One approval/status-transition workflow with at least 3 states (e.g., Submitted → In Review → Closed)
+•	A simple login/role check (hardcoded roles are fine)
+•	One list/search view with filtering and pagination
+
+Non-functional requirements:
+•	Layered architecture (UI / business logic / data access clearly separated — no logic in code-behind)
+•	Server-side input validation
+•	Logging of workflow state changes (this becomes your audit trail in Phase 2)
+•	A short README explaining the structure and how to run it
+
+PHASE 2 — AI-Assisted Modernization
+Stack: Angular 21, Spring Boot 3, Oracle
+
+Functional requirements:
+•	Feature parity with Phase 1 (same entities, workflow, and auth boundary). Where you can't get exact 1:1 parity, note it and explain why.
+•	A REST API in Spring Boot backing the Angular SPA (no server-rendered views)
+•	A data migration plan/script from the SQL Server schema to Oracle or something database, noting any type or logic differences
+
+Non-functional requirements:
+•	Security: server-side validation, no secrets in source, basic protection against injection/XSS
+•	Testability: at least one unit test suite per layer (Spring service layer, Angular component)
+•	Maintainability: clear separation of concerns — no logic in controllers or components
+•	Accessibility: basic WCAG 2.1 AA conformance on the Angular UI (labels, keyboard navigation, contrast)
+•	Documentation: a short migration notes doc
+•	Auditability: preserve or improve on the workflow logging from Phase 1
+
+DELIVERABLES
+1. Working legacy app matching the Phase 1 scope
+2. Working modernized app matching the Phase 2 scope, with any parity gaps explained
+3. A 1–2-page(s) migration notes doc: key decisions, risks you'd flag in a real migration, what you'd do differently with more time
+4. A brief walkthrough of how you used Claude in the process — what you had it do, and what you double-checked or overrode
+
+
 ## Furthe Work
 Random Samples
 * https://github.com/PavlosTzitzos/asp.net-samples
