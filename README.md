@@ -31,7 +31,7 @@ Open [.NET Framework 4.7.2](https://support.microsoft.com/en-us/servicing/os/win
 
  ...
 ## Design
-PHASE 1 — Legacy Build
+**PHASE 1 — Legacy Build**
 Stack: ASP.NET Framework 4.7.2, C#, MVC or WebForms, SQL Server (or SQLite is fine)
 
 Functional requirements:
@@ -47,7 +47,7 @@ Non-functional requirements:
 •	Logging of workflow state changes (this becomes your audit trail in Phase 2)
 •	A short README explaining the structure and how to run it
 
-PHASE 2 — AI-Assisted Modernization
+**PHASE 2 — AI-Assisted Modernization**
 Stack: Angular 21, Spring Boot 3, Oracle
 
 Functional requirements:
@@ -63,14 +63,14 @@ Non-functional requirements:
 •	Documentation: a short migration notes doc
 •	Auditability: preserve or improve on the workflow logging from Phase 1
 
-DELIVERABLES
+**DELIVERABLES**
 1. Working legacy app matching the Phase 1 scope
 2. Working modernized app matching the Phase 2 scope, with any parity gaps explained
 3. A 1–2-page(s) migration notes doc: key decisions, risks you'd flag in a real migration, what you'd do differently with more time
 4. A brief walkthrough of how you used Claude in the process — what you had it do, and what you double-checked or overrode
 
 
-## Furthe Work
+## Further Work
 Random Samples
 * https://github.com/PavlosTzitzos/asp.net-samples
 * https://github.com/f2calv/WebAppDI
