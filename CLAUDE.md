@@ -38,5 +38,6 @@ A two-phase legacy-to-modern migration exercise (see [README.md](README.md)) sim
 ## Working in this repo going forward
 
 - Two Phase 1 scaffolds already exist outside this repo, under `%USERPROFILE%\source\repos` (`legacy-app` for Web Forms, `legacy-app-mvc` for MVC 5) — see [docs/ASPNET.md](docs/ASPNET.md) before re-scaffolding.
+- `app/` is an empty, untracked placeholder — the eventual home for the Phase 1 and/or Phase 2 application code once it moves into this repo. `.gitignore` already anticipates Visual Studio build output (`bin/`, `obj/`, `.vs/`, `*.user`, `*.suo`), so bring code in under `app/` rather than committing straight from `%USERPROFILE%\source\repos`.
 - Keep the audit/workflow-state-change logging format consistent between Phase 1 and Phase 2 — RESEARCH.md's methodology explicitly measures Phase 2 against the Phase 1 behavioral baseline (transitions, log format), and Phase 2's auditability requirement is to preserve or improve on it.
 - RESEARCH.md is an internal working draft for engagement-team reference, not a public/client deliverable (see its Disclaimer section) — keep that framing if extending it.
