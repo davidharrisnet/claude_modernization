@@ -3,7 +3,7 @@
 # values in anything that is exported.
 
 $script:MigrationRoot = $PSScriptRoot
-$script:RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..\..')).Path
+$script:RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..\..\..')).Path
 $script:Inv = [System.Globalization.CultureInfo]::InvariantCulture
 $script:Utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 
