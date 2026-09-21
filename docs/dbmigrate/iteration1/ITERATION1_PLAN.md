@@ -1,4 +1,4 @@
-> **Implementation status:** built and verified. Entry point `tools\dbmigrate\dbmigrate.cmd` (commands `export`, `import`, `verify`, `selftest`, `report`, `all`); code in `tools\dbmigrate\migration\`. SQLite and MySQL (in Docker) dialects exist; the dialect interface (target ids, Exists, Import, ReadRows, Query, SchemaChecks, Behaviour, Clone/Diff for the self-test, DisplayName/KnownDifferences for the report) is what a PostgreSQL dialect would implement. Beyond this plan it also added a `selftest` command (byte-identical re-export, `sqldiff`, damaged-copy detection) and column-default support. See README "Exporting to SQLite" and `claude.log` entry 89.
+> **Implementation status:** built and verified. Entry point `tools\dbmigrate\dbmigrate.cmd` (commands `export`, `import`, `verify`, `selftest`, `report`, `all`); code in `tools\dbmigrate\migration1\`. SQLite and MySQL (in Docker) dialects exist; the dialect interface (target ids, Exists, Import, ReadRows, Query, SchemaChecks, Behaviour, Clone/Diff for the self-test, DisplayName/KnownDifferences for the report) is what a PostgreSQL dialect would implement. Beyond this plan it also added a `selftest` command (byte-identical re-export, `sqldiff`, damaged-copy detection) and column-default support. See README "Exporting to SQLite" and `claude.log` entry 89.
 
 # Plan: Deterministic SQL Server -> SQLite export / import / verify (iteration 1)
 
@@ -12,7 +12,7 @@ Source facts (observed): 8 app tables + `__MigrationHistory` (excluded, EF-only)
 **SQLite tools on disk**: use the **64-bit** `C:\Apps\sqlite-tools-win-x64-3530400` (`sqlite3.exe` 3.53.4 verified running, `sqldiff.exe`, `sqlite3_analyzer.exe`, `sqlite3_rsync.exe`). The x86 folder is ignored (32-bit DLL can't load into 64-bit PowerShell). `C:\Apps\sqlite-dll-win-x64-3530400\sqlite3.dll` is loadable in principle via P/Invoke but is **not used**: the CLI does everything needed, is simpler, and avoids native-interop code in a script. The config's `exe` points at the x64 tools `sqlite3.exe` (PATH `sqlite3` is the fallback). `sqldiff.exe` is used as an **independent second check**: export twice, import each into its own `.sqlite`, and `sqldiff` them - must report no differences (also proves determinism at the database level, not just file bytes). Its version is recorded in the results JSON.
 
 ## Command-prompt interface
-`tools\dbmigrate\dbmigrate.cmd` -> `powershell -NoProfile -ExecutionPolicy Bypass -File tools\dbmigrate\migration\DbMigrate.ps1 %*`
+`tools\dbmigrate\dbmigrate.cmd` -> `powershell -NoProfile -ExecutionPolicy Bypass -File tools\dbmigrate\migration1\DbMigrate.ps1 %*`
 ```
 dbmigrate export  --target sqlite [--config path]
 dbmigrate import  --target sqlite [--recreate]
@@ -22,7 +22,7 @@ dbmigrate all     --target sqlite     (export -> import -> verify -> report)
 ```
 Exit codes: `0` success/all checks pass, `1` verification found differences, `2` config/tool/connection error, `3` refused (target exists without `--recreate`). Non-interactive, batch-friendly. Args parsed from `$args` by hand (`--flag value`) so the `--` style works from cmd.exe.
 
-## Configuration: `tools/dbmigrate/migration/migration.config.json`
+## Configuration: `tools/dbmigrate/migration1/migration.config.json`
 ```
 { "source":  { "server": "(localdb)\\MSSQLLocalDB", "database": "aspnet-MasterAntiqueRepair-e93a6129-..." },
   "outputDir": "export",
@@ -33,7 +33,7 @@ Exit codes: `0` success/all checks pass, `1` verification found differences, `2`
 ## Architecture
 ```
 tools/dbmigrate/dbmigrate.cmd
-tools/dbmigrate/migration/
+tools/dbmigrate/migration1/
   DbMigrate.ps1        dispatcher, arg parsing, exit codes
   Common.ps1           SQL Server catalog introspection -> neutral model, topo-sort, canonical value form, hashing, process runner
   dialects/sqlite.ps1  type map, DDL/DML rendering, client invocation, read-back SQL
@@ -76,7 +76,7 @@ No Word install needed. Charts rendered to PNG with `System.Drawing` (fixed size
 Contents: (1) title + executive summary with a PASS/FAIL banner and "N of N checks passed, N of N rows verified identical"; (2) scope/method in plain English and why matching SHA-256 hashes mean identical data; (3) graphics: check-outcome donut, grouped bar chart of row counts SQL Server vs SQLite, per-table status strip (counts / content / hash), schema-objects chart, business charts (users by role, active vs soft-deleted, tickets by state, audit events by action); (4) detail tables (counts with delta, per-table hashes, schema comparison, behaviour tests); (5) differences found ("None" or an itemised list, credentials redacted); (6) intentional exclusions/known differences (`__MigrationHistory`, `dbo` dropped, dates stored as ISO text, `Discriminator` kept as a column, password hashes copied byte-for-byte, VARCHAR lengths not enforced by SQLite); (7) reproducibility (commands, git commit, file hashes, run date); (8) sign-off block + appendix.
 
 ## Files to touch
-- New: everything under `tools/dbmigrate/migration/` and `tools/dbmigrate/dbmigrate.cmd`.
+- New: everything under `tools/dbmigrate/migration1/` and `tools/dbmigrate/dbmigrate.cmd`.
 - Edit: `.gitignore` (`export/`), `README.md` (short "Exporting to SQLite" section: prerequisites, commands, exit codes), `CLAUDE.md` (one Build/run bullet), append to `claude.log`.
 - Reuse: connection defaults and `SqlLocalDB.exe start` guard from the legacy repo's `Scripts/Reset-Database.ps1`.
 
