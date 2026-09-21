@@ -67,7 +67,7 @@ Command: `tools\dbmigrate\dbmigrate.cmd export --target sqlite`
 1. **Read the structure.** The script asks SQL Server to describe itself (its catalog): tables, columns and their types, primary keys, relationships, indexes, default values and the auto-number counters. This becomes a neutral description of the database.
 2. **Decide the order.** Tables that other tables depend on must be created and filled first (for example `Users` before `Tickets`). The script works this order out itself.
 3. **Read every row** in a fixed order and convert each value to one agreed text form (for example, dates always as `2026-09-07 08:20:34.0000000`, yes/no as `1`/`0`). This "canonical form" is what later lets both databases be compared exactly.
-4. **Write two files** into `tools\dbmigrate\export\iteration1\`:
+4. **Write two files** into `tools\dbmigrate\iteration1\`:
    - `01-schema.sql` (about 4 KB): the instructions that create the empty tables, keys, relationships and indexes.
    - `02-data.sql` (about 16 KB): the instructions that insert every row, in batches of 100, and set the auto-number counters to continue from where the source left off.
 
@@ -90,7 +90,7 @@ Safety rules built in: an unrecognised column type or an index rule the script c
 
 Command: `tools\dbmigrate\dbmigrate.cmd import --target sqlite --recreate`
 
-1. A **new, empty** database file is created: `tools\dbmigrate\export\iteration1\masterantique.sqlite`. Without `--recreate` the script refuses to touch an existing file.
+1. A **new, empty** database file is created: `tools\dbmigrate\iteration1\masterantique.sqlite`. Without `--recreate` the script refuses to touch an existing file.
 2. `01-schema.sql` runs, then `02-data.sql`. The run stops at the first error.
 3. **Immediate self-checks** by SQLite: an integrity check (must say `ok`) and a relationship check (must find no orphaned rows).
 
@@ -154,7 +154,7 @@ Per-table result (the fingerprint is the first 16 characters of the SHA-256 of a
 | UserLogins | 0 | 0 | `e3b0c44298fc1c14` (empty table) | Pass |
 | UserRoles | 12 | 12 | `400a46fd1a653d2b` | Pass |
 
-Files produced (in `tools\dbmigrate\export\iteration1\`, which is gitignored because it contains password hashes):
+Files produced (in `tools\dbmigrate\iteration1\`, which is gitignored because it contains password hashes):
 
 | File | What it is |
 |---|---|
@@ -198,7 +198,7 @@ tools\dbmigrate\dbmigrate.cmd all --target sqlite
 
 Expect `VERIFICATION PASSED - 41 of 41 checks passed; 155 of 155 source rows verified identical`, then `SELF-TEST PASSED`, then the report path; `echo %ERRORLEVEL%` prints `0`. Exit codes: `0` success, `1` verification found differences, `2` configuration or tool error, `3` refused because the target already exists and `--recreate` was not given.
 
-For an independent look, ask SQLite directly: `C:\Apps\sqlite-tools-win-x64-3530400\sqlite3.exe tools\dbmigrate\export\iteration1\masterantique.sqlite "select count(*) from Users;"` prints 12, matching SQL Server.
+For an independent look, ask SQLite directly: `C:\Apps\sqlite-tools-win-x64-3530400\sqlite3.exe tools\dbmigrate\iteration1\masterantique.sqlite "select count(*) from Users;"` prints 12, matching SQL Server.
 
 ## 9. Conclusion
 

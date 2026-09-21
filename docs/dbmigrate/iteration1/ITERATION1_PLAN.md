@@ -26,7 +26,7 @@ Exit codes: `0` success/all checks pass, `1` verification found differences, `2`
 ```
 { "source":  { "server": "(localdb)\\MSSQLLocalDB", "database": "aspnet-MasterAntiqueRepair-e93a6129-..." },
   "outputDir": "export",
-  "targets": { "sqlite": { "dialect": "sqlite", "exe": "C:\\Apps\\sqlite-tools-win-x64-3530400\\sqlite3.exe", "diffExe": "C:\\Apps\\sqlite-tools-win-x64-3530400\\sqldiff.exe", "file": "tools/dbmigrate/export/iteration1/masterantique.sqlite" } } }
+  "targets": { "sqlite": { "dialect": "sqlite", "exe": "C:\\Apps\\sqlite-tools-win-x64-3530400\\sqlite3.exe", "diffExe": "C:\\Apps\\sqlite-tools-win-x64-3530400\\sqldiff.exe", "file": "tools/dbmigrate/iteration1/masterantique.sqlite" } } }
 ```
 `--target` picks a block; `dialect` picks `dialects/<name>.ps1`. Unknown dialect -> exit 2 listing implemented ones.
 
@@ -55,7 +55,7 @@ tools/dbmigrate/migration/
 
 **Process handling**: `sqlite3` is driven through `System.Diagnostics.Process` with the SQL piped to stdin as UTF-8 bytes (avoids PowerShell 5.1 quoting/code-page problems with emoji and quotes) and stdout/stderr read asynchronously (no pipe deadlock); `-bail` so the first error aborts.
 
-## Outputs (`tools/dbmigrate/export/iteration1/`, gitignored - contains credential-equivalent password hashes)
+## Outputs (`tools/dbmigrate/iteration1/`, gitignored - contains credential-equivalent password hashes)
 `01-schema.sql`, `02-data.sql`, `masterantique.sqlite`, `import-log.txt`, `verification-results.json`, `MigrationVerificationReport.docx`.
 
 ## Import

@@ -11,4 +11,4 @@
 .iisexpress/
 
 # dbmigrate generated output (contains password hashes)
-tools/dbmigrate/export/
+tools/dbmigrate/iteration*/
