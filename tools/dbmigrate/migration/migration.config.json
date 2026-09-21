@@ -3,7 +3,7 @@
     "server": "(localdb)\\MSSQLLocalDB",
     "database": "aspnet-MasterAntiqueRepair-e93a6129-7f74-4486-97e8-8d4ab1a709b4"
   },
-  "outputDir": "tools/dbmigrate/export",
+  "outputDir": "tools/dbmigrate",
   "targets": {
     "sqlite": {
       "dialect": "sqlite",
@@ -14,7 +14,7 @@
       "guideFile": "SQLiteDatabaseGuide1.docx",
       "exe": "C:\\Apps\\sqlite-tools-win-x64-3530400\\sqlite3.exe",
       "diffExe": "C:\\Apps\\sqlite-tools-win-x64-3530400\\sqldiff.exe",
-      "file": "tools/dbmigrate/export/iteration1/masterantique.sqlite"
+      "file": "tools/dbmigrate/iteration1/masterantique.sqlite"
     },
     "sqlite-linux": {
       "dialect": "sqlite",
