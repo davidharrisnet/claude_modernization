@@ -1,0 +1,6 @@
+# Transient input only — real password hashes. Never commit this; see sanitize.py.
+02-data.sql
+# Local independent control database, built fresh by verify.py — not an artifact.
+_local/
+__pycache__/
+_report_build/

@@ -1,5 +1,7 @@
 # Iteration 1: Migrating the MasterAntiqueRepair database from SQL Server to SQLite
 
+**Runs on Windows.** This iteration needs a live SQL Server LocalDB connection and Windows PowerShell — both Windows-only. It cannot be executed on Linux or macOS; see [docs/DATA_MIGRATION.md](../../DATA_MIGRATION.md) for how iteration 3 works around that by starting from already-exported files instead.
+
 **What this document is.** A step-by-step, plain-language account of the whole migration in iteration 1: what was moved, how, how we know it arrived intact, and what to watch for. It is written so parts of it can be lifted into a project report.
 
 **How it relates to the other documents.**

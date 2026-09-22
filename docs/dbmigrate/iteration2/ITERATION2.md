@@ -1,5 +1,7 @@
 # Iteration 2: Migrating the MasterAntiqueRepair database from SQL Server to SQLite inside a Docker Linux container
 
+**Orchestrated from Windows.** The *target* database lives inside a Linux container, but the tool driving this iteration is still Windows PowerShell, needing a live SQL Server LocalDB connection and Docker Desktop — this iteration cannot be run from a Linux or macOS host. Only iteration 3 runs its tooling entirely on Linux; see [docs/DATA_MIGRATION.md](../../DATA_MIGRATION.md).
+
 **What this document is.** A step-by-step, plain-language account of iteration 2: the same migration as iteration 1, but with the new SQLite database created and verified inside a Linux container. It is written so parts of it can be lifted into a project report.
 
 **Provenance.** This file was recreated from the earlier record of the first iteration 2 run (git commit `bbc6fcd`, `DM2.md`) with paths updated to the current layout. The numbers below are from that recorded run (21 September 2026, 15:50 UTC). The pipeline was re-run on the same day at 22:28 UTC (`all --target sqlite-linux --recreate`, exit 0) with identical results: 41 of 41 checks, 155 of 155 rows, self-test passed, the same export hashes (`f0b3a4bb...`, `d800a8c7...`), and the same database fingerprint inside the container (`436c7b68...`).
