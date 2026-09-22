@@ -18,7 +18,8 @@
         "image": "alpine:3.20",
         "autoStart": true
       },
-      "file": "/data/masterantique.sqlite"
+      "file": "/data/masterantique.sqlite",
+      "sanitizeCredentials": true
     }
   }
 }

@@ -254,6 +254,33 @@ function ConvertFrom-HexUtf8([string]$Hex) {
     return $script:Utf8NoBom.GetString($bytes)
 }
 
+# ---------------------------------------------------------------- credential sanitization (opt-in per target)
+
+# One-time-bootstrap credential policy (docs/DATA_MIGRATION.md §5.2): mutates $Table and $Rows in place,
+# in memory, before RenderSchema/RenderData (export) or a source-vs-target comparison (verify) ever sees
+# them - so a raw PasswordHash/SecurityStamp value never reaches disk. $Rows is the ArrayList of canonical
+# row arrays for $Table (as returned by Read-SourceRows). No-op for any table but Users, so callers can
+# invoke it unconditionally per table without checking the name themselves.
+function Protect-SensitiveData($Table, $Rows) {
+    if ($Table.Name -cne 'Users') { return }
+    $pwIdx = -1; $stampIdx = -1
+    for ($i = 0; $i -lt $Table.Columns.Count; $i++) {
+        if ($Table.Columns[$i].Name -ceq 'PasswordHash') { $pwIdx = $i }
+        if ($Table.Columns[$i].Name -ceq 'SecurityStamp') { $stampIdx = $i }
+    }
+    if ($pwIdx -lt 0 -or $stampIdx -lt 0) { throw (New-MigrationError "Protect-SensitiveData: Users table is missing PasswordHash/SecurityStamp." 2) }
+    [void]$Table.Columns.Add([pscustomobject]@{ Name = 'MustResetPassword'; TypeName = 'bit'; Kind = 'bit'; Length = 0; Nullable = $false; IsIdentity = $false; Default = '0'; Collation = $null })
+    for ($r = 0; $r -lt $Rows.Count; $r++) {
+        $old = $Rows[$r]
+        $new = New-Object 'object[]' ($old.Length + 1)
+        [Array]::Copy($old, $new, $old.Length)
+        $new[$pwIdx] = $null
+        $new[$stampIdx] = $null
+        $new[$new.Length - 1] = '1'
+        $Rows[$r] = $new
+    }
+}
+
 # Reads a whole table from the source as canonical rows (string[] per row, $null = NULL).
 function Read-SourceRows($Conn, $Table) {
     $cols = ($Table.Columns | ForEach-Object { "[$($_.Name)]" }) -join ', '

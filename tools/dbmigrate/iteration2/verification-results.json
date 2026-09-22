@@ -9,7 +9,8 @@
                  "TargetName":  "SQLite (Linux container)",
                  "TargetClient":  "sqlite3 3.45.3 on Alpine Linux v3.20, Linux kernel 5.15.133.1-microsoft-standard-WSL2 (container mar-sqlite, image alpine:3.20)",
                  "TargetLocation":  "/data/masterantique.sqlite",
-                 "TargetFingerprint":  "436c7b68565e91717511bc43a29f2352d59dcdd20216e142759534bee75200a7",
+                 "TargetFingerprint":  "5a6bc47fc11cf20a9a07a40ca9eadae75dc122efe0f07fee8ed500d9a10ec81a",
+                 "SanitizeCredentials":  true,
                  "KnownDifferences":  [
                                           "SQLite has no separate date type: dates are stored as ISO-8601 text (yyyy-MM-dd HH:mm:ss.fffffff) and compared as such. Yes/no columns are stored as integers 0/1 and protected by a CHECK constraint.",
                                           "SQLite does not enforce VARCHAR lengths; the declared lengths are kept for documentation.",
@@ -17,16 +18,16 @@
                                           "Index names that were duplicated across tables in SQL Server (for example IX_UserId) are prefixed with the table name, because index names are database-wide in SQLite.",
                                           "The database was created and checked by the Linux build of SQLite running in a Docker container (Alpine Linux); the native Windows target (iteration 1) used a different SQLite version. The SQLite file format is identical on both, so a file built on one platform opens on the other. The database file lives only inside the container (/data); no copy is taken out."
                                       ],
-                 "ExportSchemaSha256":  "f0b3a4bbd89d972f46676ea836a7d8cfd22e7f0cec866ff1762903a89f4a1ab4",
-                 "ExportDataSha256":  "d800a8c715e152459e44d67f7f9253c8c42a3fe9c2aa41c51139f1e6c5382a7b",
-                 "GitCommit":  "14ddf4b",
+                 "ExportSchemaSha256":  "72d62510dfc78e0be541addc5c2f3d15d26fb586b0d52eb487c4b04d0f67a017",
+                 "ExportDataSha256":  "4752e8c463068a5d3767f0f8441c2dd39ced67985db960a1e823894b77b17c32",
+                 "GitCommit":  "324ddff",
                  "Iteration":  2,
                  "IterationTitle":  "SQLite in a Dockerized Linux container",
-                 "RunTimeUtc":  "2026-09-21 22:28:43"
+                 "RunTimeUtc":  "2026-09-22 17:17:43"
              },
     "Summary":  {
-                    "ChecksTotal":  41,
-                    "ChecksPassed":  41,
+                    "ChecksTotal":  42,
+                    "ChecksPassed":  42,
                     "RowsSource":  155,
                     "RowsVerifiedIdentical":  155,
                     "Tables":  8
@@ -49,13 +50,13 @@
                    },
                    {
                        "Name":  "Users",
-                       "Columns":  15,
+                       "Columns":  16,
                        "SourceRows":  12,
                        "TargetRows":  12,
                        "CountPassed":  true,
                        "ContentPassed":  true,
-                       "SourceHash":  "a90ce7a28ea1503640fbe7481dc6caf92f965cfff41bdec5630efd64d2384237",
-                       "TargetHash":  "a90ce7a28ea1503640fbe7481dc6caf92f965cfff41bdec5630efd64d2384237",
+                       "SourceHash":  "a83eada4f190cd7389d15ac7dbb85001ac1fb94653b1069726fcff2367bd3003",
+                       "TargetHash":  "a83eada4f190cd7389d15ac7dbb85001ac1fb94653b1069726fcff2367bd3003",
                        "MismatchCount":  0,
                        "RowsIdentical":  12,
                        "Mismatches":  [
@@ -165,8 +166,8 @@
                    {
                        "Category":  "Schema",
                        "Name":  "Columns (name, order, type, NOT NULL, PK position, default)",
-                       "Source":  45,
-                       "Target":  45,
+                       "Source":  46,
+                       "Target":  46,
                        "Passed":  true,
                        "Detail":  ""
                    },
@@ -273,6 +274,14 @@
                        "Target":  null,
                        "Passed":  true,
                        "Detail":  "expected id 4, got id 4"
+                   },
+                   {
+                       "Category":  "Sanitization",
+                       "Name":  "Every Users row has PasswordHash/SecurityStamp NULL and MustResetPassword = 1",
+                       "Source":  null,
+                       "Target":  null,
+                       "Passed":  true,
+                       "Detail":  "0 row(s) not sanitized"
                    }
                ],
     "Domain":  [

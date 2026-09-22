@@ -448,7 +448,11 @@ function Build-ReportDocument($R, $SelfTest, $Images) {
     & $add (Bullet 'The SQL Server "dbo" schema prefix is dropped. Table and column names keep their exact spelling and case.')
     foreach ($kd in @($m.KnownDifferences)) { & $add (Bullet ([string]$kd)) }
     & $add (Bullet 'The single user table keeps its "Discriminator" column (Customer / Employee / Manager) unchanged.')
-    & $add (Bullet "Password hashes and security stamps were copied byte-for-byte. They are compared during verification but never printed in this report. The exported SQL files and the $tn database therefore contain credential-equivalent data and must be protected accordingly.")
+    if ($m.SanitizeCredentials) {
+        & $add (Bullet "Every migrated Users row had its password hash and security stamp set to NULL, with a new MustResetPassword column set to 1 - a deliberate one-time-bootstrap policy: forcing a password reset on next login means no usable legacy credential needs to be carried into the target at all. Verification confirms every row is sanitized (section 7) and that every other Users column is unchanged from the source.")
+    } else {
+        & $add (Bullet "Password hashes and security stamps were copied byte-for-byte. They are compared during verification but never printed in this report. The exported SQL files and the $tn database therefore contain credential-equivalent data and must be protected accordingly.")
+    }
 
     # ---- 10 reproducibility
     & $add (PT '10. Reproducibility' 'Heading1')
@@ -461,7 +465,7 @@ function Build-ReportDocument($R, $SelfTest, $Images) {
         , @('Target client', [string]$m.TargetClient)
         , @('Run time (UTC)', [string]$m.RunTimeUtc)
         , @('01-schema.sql SHA-256', [string]$m.ExportSchemaSha256)
-        , @('02-data.sql SHA-256', [string]$m.ExportDataSha256)
+        , @($(if ($m.SanitizeCredentials) { '02-data-sanitized.sql SHA-256' } else { '02-data.sql SHA-256' }), [string]$m.ExportDataSha256)
         , @("$tn target", [string]$loc)
         , @('Target fingerprint (SHA-256)', $(if ($m.TargetFingerprint) { [string]$m.TargetFingerprint } else { 'n/a (server-hosted database)' }))
     ))

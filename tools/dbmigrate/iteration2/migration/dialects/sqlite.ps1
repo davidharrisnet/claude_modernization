@@ -246,7 +246,15 @@ function global:Sqlite-ReadRows($Settings, [string]$DbFile, $Table) {
 
 # Runs a query and returns each output row as a '|'-joined string.
 function global:Sqlite-Query($Settings, [string]$DbFile, [string]$Sql) {
-    $r = Sqlite-Run $Settings $DbFile ".mode list`n.separator |`n$Sql"
+    # -list/-separator are CLI flags, not dot-commands piped over stdin: newer sqlite3 builds (seen:
+    # 3.53.4) don't reliably parse '.mode list'/'.separator |' sent as part of the same stdin write
+    # Sqlite-Run uses for the query itself, so set the output shape on the command line instead.
+    if (Sqlite-IsDocker $Settings) {
+        $r = Sqlite-Docker $Settings @('sqlite3', '-bail', '-list', '-separator', '|', $DbFile) $Sql
+    } else {
+        $exe = Sqlite-Exe $Settings
+        $r = Invoke-ClientProcess $exe @('-bail', '-list', '-separator', '|', $DbFile) $Sql
+    }
     if ($r.ExitCode -ne 0) { throw (New-MigrationError "sqlite3 query failed: $($r.Stderr.Trim())`n$Sql" 2) }
     $rows = New-Object System.Collections.ArrayList
     foreach ($l in ($r.Stdout -split "`r?`n")) { if ($l.Length -gt 0) { [void]$rows.Add($l) } }

@@ -153,6 +153,12 @@ function Invoke-Verify($Config, [string]$Target, [string]$DbOverride, [string]$R
         $tables = New-Object System.Collections.ArrayList
         foreach ($t in $model.Tables) {
             $srcRows = Read-SourceRows $conn $t
+            # Compare against the same sanitized shape Export produced, not the raw source: this both
+            # proves the transform (target Users rows must have NULL/NULL/1 to match) and still catches
+            # any real drift in every other column, using the same row-by-row comparison as every other
+            # table (docs/DATA_MIGRATION.md §5.2). $t is the entry inside $model.Tables, so the added
+            # MustResetPassword column is visible to the schema checks run after this loop too.
+            if ($settings.sanitizeCredentials) { Protect-SensitiveData $t $srcRows }
             $tgtLines = & $dialect.ReadRows $settings $dbFile $t
             $cmp = Compare-TableRows $t $srcRows $tgtLines
             [void]$tables.Add([pscustomobject]@{
@@ -192,6 +198,11 @@ function Invoke-Verify($Config, [string]$Target, [string]$DbOverride, [string]$R
     foreach ($c in (& $dialect.SchemaChecks $settings $dbFile $model)) { [void]$checks.Add($c) }
     Say 'Running behaviour tests on a temporary copy ...'
     foreach ($c in (& $dialect.Behaviour $settings $dbFile $model $schemaText $dataText)) { [void]$checks.Add($c) }
+    if ($settings.sanitizeCredentials) {
+        Say 'Checking credential sanitization ...'
+        $bad = [int]([string[]]@(& $dialect.Query $settings $dbFile 'SELECT COUNT(*) FROM "Users" WHERE "PasswordHash" IS NOT NULL OR "SecurityStamp" IS NOT NULL OR "MustResetPassword" <> 1;'))[0]
+        [void]$checks.Add((New-Check 'Sanitization' 'Every Users row has PasswordHash/SecurityStamp NULL and MustResetPassword = 1' ($bad -eq 0) "$bad row(s) not sanitized"))
+    }
 
     $countChecks = $tables.Count
     $allPass = ($tables | Where-Object { -not $_.CountPassed -or -not $_.ContentPassed }).Count -eq 0 -and
@@ -211,6 +222,7 @@ function Invoke-Verify($Config, [string]$Target, [string]$DbOverride, [string]$R
             Target = $Target; Dialect = $settings.dialect
             SourceServer = $Config.source.server; SourceDatabase = $Config.source.database; SourceVersion = $sourceVersion
             TargetName = $dialect.DisplayName; TargetClient = (& $dialect.Version $settings); TargetLocation = $dbFile; TargetFingerprint = (& $dialect.Fingerprint $settings $dbFile)
+            SanitizeCredentials = [bool]$settings.sanitizeCredentials
             KnownDifferences = @($dialect.KnownDifferences)
             ExportSchemaSha256 = $schemaHash; ExportDataSha256 = $dataHash
             GitCommit = (Get-GitCommit)

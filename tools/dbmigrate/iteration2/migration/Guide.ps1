@@ -207,7 +207,11 @@ function Build-GuideDocument($Settings, [string]$Db, [string]$DisplayPath, $Resu
 
     # ---------------------------------------------------------------- 7
     & $add (H1 '7. Credentials')
-    & $add (PT 'The Users table contains the Identity credential columns PasswordHash and SecurityStamp, copied unchanged from the source so the copy is complete. This guide does not show their values and none of its queries read them. Treat the database file as sensitive and do not share or commit it.')
+    if ($Settings.sanitizeCredentials) {
+        & $add (PT 'The Users table contains the Identity credential columns PasswordHash and SecurityStamp. As part of this migration''s one-time-bootstrap policy, every row has these set to NULL, and a new MustResetPassword column set to 1: no usable legacy credential was carried into this database, and every migrated account must reset its password on first login. This guide does not show credential values and none of its queries read them.')
+    } else {
+        & $add (PT 'The Users table contains the Identity credential columns PasswordHash and SecurityStamp, copied unchanged from the source so the copy is complete. This guide does not show their values and none of its queries read them. Treat the database file as sensitive and do not share or commit it.')
+    }
 
     # ---------------------------------------------------------------- 8
     & $add (H1 '8. Regenerating the database and this guide')
@@ -223,32 +227,37 @@ function Build-GuideDocument($Settings, [string]$Db, [string]$DisplayPath, $Resu
         & $add (PT 'The wider goal is to move the ASP.NET application to Linux. The database is the first piece. This section shows how a Linux process takes over from the export, so the same steps work in the container used here or on any Linux host.')
         & $add (H2 '9.1 Where Windows stops and Linux takes over')
         & $add (Bullet 'Windows only: the export. The source is SQL Server LocalDB, which exists only on Windows, and the export tooling is Windows PowerShell.')
-        & $add (Bullet 'Portable: the two files the export writes, 01-schema.sql and 02-data.sql. They are plain SQLite SQL text (UTF-8 without BOM, LF line ends). They are the only things that cross from Windows to Linux.')
+        $dataFile = if ($Settings.sanitizeCredentials) { '02-data-sanitized.sql' } else { '02-data.sql' }
+        & $add (Bullet "Portable: the two files the export writes, 01-schema.sql and $dataFile. They are plain SQLite SQL text (UTF-8 without BOM, LF line ends). They are the only things that cross from Windows to Linux.")
         & $add (Bullet 'Linux: everything after that. A Linux process needs nothing but the sqlite3 command-line tool to build the database from those two files and to check that it is sound.')
         & $add (H2 '9.2 What to carry over')
         $exRows = New-Object System.Collections.ArrayList
-        foreach ($f in @(@('01-schema.sql', 'Schema', 'ExportSchemaSha256'), @('02-data.sql', 'Data', 'ExportDataSha256'))) {
+        foreach ($f in @(@('01-schema.sql', 'Schema', 'ExportSchemaSha256'), @($dataFile, 'Data', 'ExportDataSha256'))) {
             $sz = 'n/a'; $sha = 'n/a'
             if ($ExportPaths -and (Test-Path $ExportPaths.($f[1]))) { $sz = "$((Get-Item $ExportPaths.($f[1])).Length) bytes" }
             if ($Results -and $Results.Meta.($f[2])) { $sha = [string]$Results.Meta.($f[2]) }
             [void]$exRows.Add(@($f[0], $sz, $sha))
         }
         & $add (Table @(2000, 1700, 5660) @('File', 'Size', 'SHA-256 (from this run)') $exRows)
-        & $add (PT 'Both files are in tools\dbmigrate\iteration2 on the Windows machine. 02-data.sql contains the password hashes from the Identity tables, so treat it as sensitive: do not commit it or share it.')
+        if ($Settings.sanitizeCredentials) {
+            & $add (PT "Both files are in tools\dbmigrate\iteration2 on the Windows machine. $dataFile has already had PasswordHash/SecurityStamp set to NULL for every Users row (section 7), so it carries no credential material. Whether any other column should be treated as sensitive has not been evaluated for this database and is a separate decision.")
+        } else {
+            & $add (PT "Both files are in tools\dbmigrate\iteration2 on the Windows machine. $dataFile contains the password hashes from the Identity tables, so treat it as sensitive: do not commit it or share it.")
+        }
         & $add (H2 '9.3 Getting the files to Linux')
-        & $add (Code "rem Into the running container, without touching the database:`ndocker cp tools\dbmigrate\iteration2\01-schema.sql ${container}:/tmp/01-schema.sql`ndocker cp tools\dbmigrate\iteration2\02-data.sql ${container}:/tmp/02-data.sql`n`n# To a separate Linux host:`nscp 01-schema.sql 02-data.sql user@linuxhost:/tmp/")
+        & $add (Code "rem Into the running container, without touching the database:`ndocker cp tools\dbmigrate\iteration2\01-schema.sql ${container}:/tmp/01-schema.sql`ndocker cp tools\dbmigrate\iteration2\$dataFile ${container}:/tmp/$dataFile`n`n# To a separate Linux host:`nscp 01-schema.sql $dataFile user@linuxhost:/tmp/")
         & $add (PT 'Or skip the copy entirely and pipe each file into sqlite3 from Windows, as the migration tool does (9.4, option A).')
         & $add (PT 'Confirm the transfer on Linux against the SHA-256 values in 9.2:')
-        & $add (Code "docker exec $container sha256sum /tmp/01-schema.sql /tmp/02-data.sql`nsha256sum /tmp/01-schema.sql /tmp/02-data.sql")
+        & $add (Code "docker exec $container sha256sum /tmp/01-schema.sql /tmp/$dataFile`nsha256sum /tmp/01-schema.sql /tmp/$dataFile")
         & $add (PT 'The first line is for the container, the second for a plain Linux host.')
         & $add (H2 '9.4 Build the database on Linux')
         & $add (PT 'Install SQLite if it is missing: apk add sqlite sqlite-tools (Alpine), or apt-get install sqlite3 (Debian, Ubuntu). Load the schema first, then the data. The schema creates the tables in dependency order with the foreign keys inline; the data script switches foreign key checks off while it loads, sets the auto-number counters, switches them back on and runs a foreign key check. -bail stops at the first error.')
         & $add (PT 'Option A: from Windows, into the container, piping the files (the tool''s own method):')
-        & $add (Code "docker exec $container sh -c ""test ! -e $Db""`ntype tools\dbmigrate\iteration2\01-schema.sql | docker exec -i $container sqlite3 -bail $Db`ntype tools\dbmigrate\iteration2\02-data.sql | docker exec -i $container sqlite3 -bail $Db")
+        & $add (Code "docker exec $container sh -c ""test ! -e $Db""`ntype tools\dbmigrate\iteration2\01-schema.sql | docker exec -i $container sqlite3 -bail $Db`ntype tools\dbmigrate\iteration2\$dataFile | docker exec -i $container sqlite3 -bail $Db")
         & $add (PT 'Option B: files already in the container:')
-        & $add (Code "docker exec $container sh -c ""sqlite3 -bail $Db < /tmp/01-schema.sql && sqlite3 -bail $Db < /tmp/02-data.sql""")
+        & $add (Code "docker exec $container sh -c ""sqlite3 -bail $Db < /tmp/01-schema.sql && sqlite3 -bail $Db < /tmp/$dataFile""")
         & $add (PT 'Option C: on a plain Linux host (any path works; /data/masterantique.sqlite is used here to match this guide):')
-        & $add (Code "mkdir -p /data`ntest ! -e /data/masterantique.sqlite`nsqlite3 -bail /data/masterantique.sqlite < /tmp/01-schema.sql`nsqlite3 -bail /data/masterantique.sqlite < /tmp/02-data.sql")
+        & $add (Code "mkdir -p /data`ntest ! -e /data/masterantique.sqlite`nsqlite3 -bail /data/masterantique.sqlite < /tmp/01-schema.sql`nsqlite3 -bail /data/masterantique.sqlite < /tmp/$dataFile")
         & $add (PT 'The test ! -e line makes the sequence stop if a database already exists, so an existing database is never overwritten by accident. To rebuild deliberately, delete the old file first (rm -f) and run the steps again.')
         & $add (H2 '9.5 Check the result on Linux, without SQL Server')
         & $add (Code "sqlite3 /data/masterantique.sqlite ""PRAGMA integrity_check;""      # must print: ok`nsqlite3 /data/masterantique.sqlite ""PRAGMA foreign_key_check;""   # must print nothing`nsqlite3 /data/masterantique.sqlite "".tables""`nsqlite3 /data/masterantique.sqlite ""SELECT COUNT(*) FROM Users;""")

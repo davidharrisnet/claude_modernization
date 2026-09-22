@@ -14,7 +14,8 @@
       "guideFile": "SQLiteDatabaseGuide1.docx",
       "exe": "C:\\Apps\\sqlite-tools-win-x64-3530400\\sqlite3.exe",
       "diffExe": "C:\\Apps\\sqlite-tools-win-x64-3530400\\sqldiff.exe",
-      "file": "tools/dbmigrate/iteration1/masterantique.sqlite"
+      "file": "tools/dbmigrate/iteration1/masterantique.sqlite",
+      "sanitizeCredentials": true
     },
     "sqlite-linux": {
       "dialect": "sqlite",
@@ -26,7 +27,8 @@
         "image": "alpine:3.20",
         "autoStart": true
       },
-      "file": "/data/masterantique.sqlite"
+      "file": "/data/masterantique.sqlite",
+      "sanitizeCredentials": true
     },
     "mysql": {
       "dialect": "mysql",
@@ -38,7 +40,8 @@
       },
       "database": "masterantique",
       "user": "root",
-      "passwordEnv": "MAR_MYSQL_PASSWORD"
+      "passwordEnv": "MAR_MYSQL_PASSWORD",
+      "sanitizeCredentials": true
     }
   }
 }

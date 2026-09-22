@@ -139,7 +139,11 @@ function Build-GuideDocument($Settings, [string]$Db, [string]$DisplayPath, $Resu
 
     # ---------------------------------------------------------------- 7
     & $add (H1 '7. Credentials')
-    & $add (PT 'The Users table contains the Identity credential columns PasswordHash and SecurityStamp, copied unchanged from the source so the copy is complete. This guide does not show their values and none of its queries read them. Treat the database file as sensitive and do not share or commit it.')
+    if ($Settings.sanitizeCredentials) {
+        & $add (PT 'The Users table contains the Identity credential columns PasswordHash and SecurityStamp. As part of this migration''s one-time-bootstrap policy, every row has these set to NULL, and a new MustResetPassword column set to 1: no usable legacy credential was carried into this database, and every migrated account must reset its password on first login. This guide does not show credential values and none of its queries read them.')
+    } else {
+        & $add (PT 'The Users table contains the Identity credential columns PasswordHash and SecurityStamp, copied unchanged from the source so the copy is complete. This guide does not show their values and none of its queries read them. Treat the database file as sensitive and do not share or commit it.')
+    }
 
     # ---------------------------------------------------------------- 8
     & $add (H1 '8. Regenerating the database and this guide')

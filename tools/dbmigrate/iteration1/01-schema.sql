@@ -21,7 +21,8 @@ CREATE TABLE "Users" (
     "TwoFactorEnabled" INTEGER NOT NULL DEFAULT 0 CHECK ("TwoFactorEnabled" IN (0, 1)),
     "LockoutEndDateUtc" DATETIME,
     "LockoutEnabled" INTEGER NOT NULL DEFAULT 0 CHECK ("LockoutEnabled" IN (0, 1)),
-    "AccessFailedCount" INTEGER NOT NULL DEFAULT 0
+    "AccessFailedCount" INTEGER NOT NULL DEFAULT 0,
+    "MustResetPassword" INTEGER NOT NULL DEFAULT 0 CHECK ("MustResetPassword" IN (0, 1))
 );
 
 CREATE TABLE "AuditLogs" (
