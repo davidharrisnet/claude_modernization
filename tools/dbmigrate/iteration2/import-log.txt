@@ -1,0 +1,5 @@
+client: sqlite3 3.45.3 on Alpine Linux v3.20, Linux kernel 5.15.133.1-microsoft-standard-WSL2 (container mar-sqlite, image alpine:3.20)
+target: /data/masterantique.sqlite
+schema: ok
+data: ok
+integrity_check: ok; foreign_key_check: clean

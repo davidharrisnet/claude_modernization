@@ -1,0 +1,53 @@
+{
+    "Passed":  true,
+    "Tests":  [
+                  {
+                      "Category":  "Determinism",
+                      "Name":  "Schema export is byte-identical across runs",
+                      "Source":  null,
+                      "Target":  null,
+                      "Passed":  true,
+                      "Detail":  "sha256 f0b3a4bbd89d972f46676ea836a7d8cfd22e7f0cec866ff1762903a89f4a1ab4 vs f0b3a4bbd89d972f46676ea836a7d8cfd22e7f0cec866ff1762903a89f4a1ab4"
+                  },
+                  {
+                      "Category":  "Determinism",
+                      "Name":  "Data export is byte-identical across runs",
+                      "Source":  null,
+                      "Target":  null,
+                      "Passed":  true,
+                      "Detail":  "sha256 d800a8c715e152459e44d67f7f9253c8c42a3fe9c2aa41c51139f1e6c5382a7b vs d800a8c715e152459e44d67f7f9253c8c42a3fe9c2aa41c51139f1e6c5382a7b"
+                  },
+                  {
+                      "Category":  "sqldiff",
+                      "Name":  "Imported database equals an independently imported copy (sqldiff)",
+                      "Source":  null,
+                      "Target":  null,
+                      "Passed":  true,
+                      "Detail":  "sqldiff reported no differences"
+                  },
+                  {
+                      "Category":  "Negative",
+                      "Name":  "Damaged copy is reported as FAILED",
+                      "Source":  null,
+                      "Target":  null,
+                      "Passed":  true,
+                      "Detail":  "verify result Passed=False"
+                  },
+                  {
+                      "Category":  "Negative",
+                      "Name":  "Altered comment is pinpointed (Comments, Id, Text)",
+                      "Source":  null,
+                      "Target":  null,
+                      "Passed":  true,
+                      "Detail":  "Comments Id=1 column Text"
+                  },
+                  {
+                      "Category":  "Negative",
+                      "Name":  "Deleted ticket is pinpointed (Tickets, Id)",
+                      "Source":  null,
+                      "Target":  null,
+                      "Passed":  true,
+                      "Detail":  "Tickets Id=24"
+                  }
+              ]
+}
