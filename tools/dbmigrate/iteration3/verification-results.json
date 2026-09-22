@@ -1,6 +1,6 @@
 {
   "Passed": true,
-  "GitCommit": "ba452db",
+  "GitCommit": "41d80a5",
   "Meta": {
     "Target": "sqlite-image",
     "Dialect": "sqlite",

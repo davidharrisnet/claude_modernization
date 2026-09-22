@@ -172,3 +172,11 @@ To look inside the container yourself: `docker exec mar-sqlite sqlite3 /data/mas
 ## 9. Conclusion
 
 The SQL Server database was exported by a repeatable script, rebuilt as a new SQLite database **inside a Linux container**, and verified to be identical in structure and in all 155 rows, with the deleted-user username rule, relationships and auto-numbering intact. The export files match iteration 1 exactly, the row fingerprints match iteration 1 for every table, and the container's own `sqldiff` finds no difference between the delivered database and one built independently from the same files. The database was never copied to Windows. Iteration 2 meets all four steps. Its detailed evidence is in `MigrationVerificationReport2.docx`.
+
+## 10. Later addition: credential sanitization (2026-09-22)
+
+Same change, same reason, as [ITERATION1.md §10](../iteration1/ITERATION1.md#10-later-addition-credential-sanitization-2026-09-22) — this iteration's tooling is a separate copy, so the identical edit (`Protect-SensitiveData` in `migration/Common.ps1`, called from `Export.ps1` and `Verify.ps1`, plus the `Sqlite-Query` stdin-parsing fix in `sqlite.ps1`) was applied here too and re-run against the Linux-container target, per `docs/dbmigrate/SANITIZE_FIRST_REFACTOR.md`. This file only records what differs.
+
+**Results of the re-run** (`tools/dbmigrate/iteration2/verification-results.json`, run 2026-09-22 17:17:43 UTC, `sqlite3 3.45.3 on Alpine Linux v3.20`): **42 of 42 checks passed**, **155 of 155 rows verified identical**, self-test 6 of 6 passed — the same totals as iteration 1's re-run, as expected since both exported from the same source with the same policy. The sanitization check (*"Every Users row has PasswordHash/SecurityStamp NULL and MustResetPassword = 1"*) passed with `0 row(s) not sanitized`. `MigrationVerificationReport2.docx` and `SQLiteDatabaseGuide2.docx` were regenerated accordingly.
+
+As with iteration 1: no raw `02-data.sql` was committed — only `02-data-sanitized.sql`, and iteration 2's verification claim changes the same way (full fidelity except credentials, which are now deliberately invalidated rather than carried through byte-for-byte).

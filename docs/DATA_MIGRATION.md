@@ -48,8 +48,8 @@ verification-results.json  →  MigrationVerificationReport{N}.docx
 
 | # | What | Runs on | Status | Docs |
 |---|---|---|---|---|
-| 1 | SQL Server → SQLite, native | Windows | Done | `docs/dbmigrate/iteration1/` |
-| 2 | SQL Server → SQLite inside a Docker Linux container, loaded at container-runtime | Windows orchestrates; target is Linux | Done | `docs/dbmigrate/iteration2/` |
+| 1 | SQL Server → SQLite, native | Windows | Done; credential sanitization added 2026-09-22 (§10 of `ITERATION1.md`) | `docs/dbmigrate/iteration1/` |
+| 2 | SQL Server → SQLite inside a Docker Linux container, loaded at container-runtime | Windows orchestrates; target is Linux | Done; credential sanitization added 2026-09-22 (§10 of `ITERATION2.md`) | `docs/dbmigrate/iteration2/` |
 | 3 | SQL Server (via iteration 2's export) → SQLite baked into a Docker image at build time; verification and tooling run **entirely on Linux**, with **no dependency on iteration 1/2's stored results** and **credentials sanitized before anything is built or committed** | Linux, end to end | Done | `docs/dbmigrate/iteration3/` |
 | — | MySQL in Docker | Windows | Extra work, not a numbered iteration | (results embedded in iteration 1/2 regression runs) |
 | 4+ | PostgreSQL in Docker; eventually Oracle (the actual Phase 2 target) | TBD | Not started | — |
@@ -110,8 +110,8 @@ A verification step that only checks "does this match what a previous run alread
 
 ## 6. What's not built yet
 
-- **Config-driven sensitive-column declarations** (§5.2.5) — today, sanitization is a bespoke script per iteration; it should become a `migration.config.json`-declared policy the export/verify pipeline enforces generically.
-- **Sanitize-first for iterations 1 and 2** (§5.2.4) — full plan written: [docs/dbmigrate/SANITIZE_FIRST_REFACTOR.md](dbmigrate/SANITIZE_FIRST_REFACTOR.md). Iterations 1/2 currently export, carry, and verify real credentials end-to-end with no sanitization at all. Written on Linux (can't be implemented or tested there — needs Windows/PowerShell/SQL Server); pending implementation and a real test run on the Windows machine.
+- ~~Sanitize-first for iterations 1 and 2~~ — **done** (2026-09-22). Implemented and verified on the Windows machine per [docs/dbmigrate/SANITIZE_FIRST_REFACTOR.md](dbmigrate/SANITIZE_FIRST_REFACTOR.md); results in `ITERATION1.md`/`ITERATION2.md` §10. The bullet below is the still-open piece of that plan's scope.
+- **Config-driven sensitive-column declarations** (§5.2.5) — today, sanitization is a bespoke, hardcoded transform per iteration (`Users.PasswordHash`/`SecurityStamp` → `MustResetPassword`); it should become a `migration.config.json`-declared policy the export/verify pipeline enforces generically, for any table/column, not just this one.
 - **PostgreSQL and Oracle dialects** — the roadmap's next two targets; Oracle is the actual Phase 2 destination and doesn't exist yet.
 - **A formal data-classification step before export** — right now, sensitive columns are identified by inspection (a human, or Claude, reading the schema). A real engagement should start with an explicit classification pass (PII/PCI/PHI/credential/none) per column, signed off by the data owner, before any export tooling runs.
 
