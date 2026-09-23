@@ -1,6 +1,6 @@
 # Plan: Iteration 4 - export the SQL Server database to sanitized PostgreSQL schema and data files (Windows)
 
-**Status: planning. All decisions are settled (1-4, 2b, 8, 11, 12, 14). Nothing is built yet.**
+**Status: BUILT AND RUN (2026-09-23). All decisions are settled (1-4, 2b, 8, 11, 12, 14). The record of what actually happened, with real numbers, is `ITERATION4.md`. Where this plan and the built tool differ (they are noted inline as "built:"), the built tool and `ITERATION4.md` are authoritative.**
 
 This plan is written so a **new Claude session with no memory of the design conversation** can read it and build (or maintain) the tool. Read this file first, then `docs/DATA_MIGRATION.md` §5 (security policy) and §7 (why database-agnostic SQL is impossible). The Linux side that consumes this iteration's output is a separate iteration: `docs/dbmigrate/iteration5/ITERATION5_PLAN.md`. Once built, the tool is run from the command line with no AI involved.
 
@@ -10,7 +10,7 @@ This plan is written so a **new Claude session with no memory of the design conv
 
 - **Command:** `tools\dbmigrate\iteration4\dbmigrate4.cmd <export|selftest|report|all> --target postgres`, from a plain Windows command prompt, with the legacy app's LocalDB database as the source. Deterministic; no AI in the loop. Exit codes: 0 ok, 1 selftest differences, 2 error, 3 refused.
 - **Outputs (checked in):** `01-schema.sql`, `02-data-sanitized.sql`, `source-metadata.json`, in `tools/dbmigrate/iteration4/`; and `docs/dbmigrate/iteration4/MigrationExportReport4.docx`.
-- **Iteration 4 verifies nothing against a target** (there is none), so it does not produce a "verification report". Its report is an **export report**. `MigrationVerificationReport5.docx` is iteration 5's responsibility.
+- **Iteration 4 verifies nothing against a target** (there is none), so it does not produce a "verification report". Its report is an **export report**. `MigrationVerificationReport5.html` is iteration 5's responsibility.
 - **Self-contained:** own copy of the tooling; reads nothing from `tools/dbmigrate/iteration1|2|3/` at run time. Copy code out of iteration 2 once, at build time.
 - Directories: `tools/dbmigrate/iteration4/` and `docs/dbmigrate/iteration4/`.
 
@@ -62,7 +62,7 @@ tools/dbmigrate/iteration4/
   migration/                        copied from iteration 2, trimmed to what export needs
     DbMigrate.ps1  Common.ps1  Export.ps1  SelfTest.ps1 (determinism and no-credential checks)
     Metadata.ps1                    NEW: writes source-metadata.json
-    Report.ps1                      trimmed copy: export report from source-metadata.json
+    Report.ps1  ExportReport.ps1    helpers copied from iteration 2; the export report built from source-metadata.json
     dialects/postgres.ps1           NEW
     migration.config.json           source + target "postgres" block
   01-schema.sql                     OUTPUT, checked in
@@ -126,12 +126,12 @@ Header comment; `SET client_encoding = 'UTF8'; SET standard_conforming_strings =
 
 Written by `Metadata.ps1` in `Invoke-Export`, from the catalog and the **same in-memory rows** the SQL is rendered from (after sanitizing). It is the data about the source database, recorded at export (decision 14), and the input to both the export report and iteration 5's verification. It must not contain credentials, personal data or raw comment text. **It contains no SQL text** (iteration 5 builds its own queries from the names). Contents:
 
-- `meta`: iteration, `schemaVersion` of the JSON format, source server and database, SQL Server version, tool git commit, minimum PostgreSQL version (15), `schemaSha256` and `dataSha256` (SHA-256 of `01-schema.sql` and `02-data-sanitized.sql`), and `runTimeUtc` (the only non-deterministic field, kept in its own section and excluded from determinism checks).
-- `tables[]`, in load order: source name and `targetName`, `rowCount`, `identityLast`, `rowSha256`, `columns[]` (source name and type, `targetName`, `kind`, target type, nullable, default, identity), `primaryKey[]`, `foreignKeys[]` (target name, columns, referenced table and columns, delete action), `indexes[]` (target name, unique, columns or key expression, partial filter).
-- **Canonical row form (defined independent of any database):** rows in primary-key order joined by LF; cells joined by `|`; a NULL cell is `~`; otherwise a one-letter prefix and a value: `i:<decimal>` for integers, `b:1|0` for booleans, `t:yyyy-MM-dd HH:mm:ss.fff` for timestamps, `s:<lowercase hex of the UTF-8 bytes>` for strings. Table hash = lowercase hex SHA-256 of the UTF-8 text. An empty table hashes the empty string (`e3b0c442...`). Sanitized columns hash as `~`, so no credential is ever hashed. The Windows side computes this from its in-memory rows; iteration 5 recomputes it in SQL on the loaded database.
-- `summaries[]`: the ten business summaries from the earlier iterations (users by type, active vs soft-deleted, users per role, tickets by state, assigned vs unassigned, audit events by action, comments per ticket, comment and ticket totals, ticket date ranges, account and audit date ranges): `name`, the source query (T-SQL, for documentation) and `expectedRows` as `|`-joined text computed on the source. Port the definitions from `Verify.ps1`.
-- `renameMap`: source to target names of every table, column, foreign key and index (section 6.1), so a reader can map either way.
-- `expectations`: every user has NULL `password_hash` and `security_stamp` and `must_reset_password` true; total row count 155.
+- `meta`: iteration, `schemaVersion` (1) of the JSON format, `source` (server, database, SQL Server version), `minPostgresVersion` (15), `schemaFile`/`schemaSha256` and `dataFile`/`dataSha256` (SHA-256 of `01-schema.sql` and `02-data-sanitized.sql`), `sanitizeCredentials`. **Built:** the tool git commit and the run time are in the separate top-level `run` section (`run.runTimeUtc`, `run.toolGitCommit`), the only non-deterministic parts, excluded from determinism checks.
+- `tables[]`, in load order: `sourceName` and `targetName`, `rowCount`, `identityLast`, `rowSha256`, `columns[]` (`sourceName`, `sourceType`, `kind`, `targetName`, `targetType`, `dataType` and `maxLength` as `information_schema` reports them, `nullable`, `default`, `identity`, `synthetic`), `primaryKey[]` (target names), `foreignKeys[]` (`targetName`, `sourceName`, `columns`, `refTable`, `refColumns`, `onDelete`), `indexes[]` (`targetName`, `sourceName`, `unique`, `columns[]` with `column`, `expression` and `descending`, and the partial `filter` in target form).
+- **Canonical row form (defined independent of any database):** **built: rows sorted ascending by their canonical text (ordinal, byte order), not by primary key** (this needs no collation or primary-key knowledge on the PostgreSQL side: `ORDER BY r COLLATE "C"`), joined by LF; cells joined by `|` in column order; a NULL cell is `~`; otherwise a one-letter prefix and a value: `i:<decimal>` for integers, `b:1|0` for booleans, `t:yyyy-MM-dd HH:mm:ss.fff` for timestamps, `s:<lowercase hex of the UTF-8 bytes>` for strings (`x:` hex for binary, `g:` for guid; not present in this schema). Table hash = lowercase hex SHA-256 of the UTF-8 text. An empty table hashes the empty string (`e3b0c442...`). Sanitized columns hash as `~`, so no credential is ever hashed. The Windows side computes this from its in-memory rows; iteration 5 recomputes it in SQL on the loaded database (**proven during the build**: all 8 table hashes recomputed in PostgreSQL 16 with a dynamic PL/pgSQL block reading the JSON matched).
+- `summaries[]`: the ten business summaries from the earlier iterations (users by type, active vs soft-deleted, users per role, tickets by state, assigned vs unassigned, audit events by action, comments per ticket, comment and ticket totals, ticket date ranges, account and audit date ranges): `name`, `sourceSql` (the SQL Server query, **recorded for documentation only, never executed from the JSON**) and `expectedRows` computed on the source: sorted ordinally, cells joined by `|`, **NULL as the empty string**, timestamps `yyyy-MM-dd HH:mm:ss.fff`, booleans 1/0. Ported from `Verify.ps1`. Iteration 5 holds its own PostgreSQL queries.
+- `renameMap`: source to target names of every table and column (section 6.1); `excludedTables` (`__MigrationHistory`); `knownDifferences` (text, used by the report).
+- `expectations`: `totalRows` (155), `usersSanitized` (every user has NULL `password_hash` and `security_stamp` and `must_reset_password` true), `usersCount`, `noDuplicateActiveUsernamesIgnoringCase`.
 
 ## 8. The export report (`MigrationExportReport4.docx`)
 
@@ -154,7 +154,7 @@ Built by `dbmigrate4.cmd report` from `source-metadata.json` only (like the earl
 ## 11. Build order for a fresh session
 
 1. Read this plan and DATA_MIGRATION.md §5 and §7. All decisions are settled (section 3); do not reopen them without the user.
-2. Create `tools/dbmigrate/iteration4/`; copy `migration/` from iteration 2; trim to what export needs; fix `RepoRoot` depth; write `dbmigrate4.cmd`, config, `.gitattributes`.
+2. Create `tools/dbmigrate/iteration4/`; copy `migration/` from iteration 2; trim to what export needs; write `dbmigrate4.cmd`, config, `.gitattributes`. (**Built:** iteration 2's `RepoRoot` depth `..\..\..\..` was already correct for this layout, so no fix was needed. Report content is in `ExportReport.ps1`, the helpers copied from iteration 2 are in `Report.ps1`.)
 3. Write `dialects/postgres.ps1` (section 6), including the rename map and the guards.
 4. Write `Metadata.ps1` and call it from `Invoke-Export` (section 7); adapt `SelfTest.ps1` (section 10).
 5. Run the export; inspect the three files by hand.

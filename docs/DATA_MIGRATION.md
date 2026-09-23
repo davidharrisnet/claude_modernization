@@ -52,7 +52,7 @@ verification-results.json  →  MigrationVerificationReport{N}.docx
 | 2 | SQL Server → SQLite inside a Docker Linux container, loaded at container-runtime | Windows orchestrates; target is Linux | Done; credential sanitization added 2026-09-22 (§10 of `ITERATION2.md`) | `docs/dbmigrate/iteration2/` |
 | 3 | SQL Server (via iteration 2's export) → SQLite baked into a Docker image at build time; verification and tooling run **entirely on Linux**, with **no dependency on iteration 1/2's stored results** and **credentials sanitized before anything is built or committed** | Linux, end to end | Done | `docs/dbmigrate/iteration3/` |
 | — | MySQL in Docker | Windows | Extra work, not a numbered iteration | (results embedded in iteration 1/2 regression runs) |
-| 4 | SQL Server → sanitized **PostgreSQL** schema and data files (`01-schema.sql`, `02-data-sanitized.sql`) plus a `source-metadata.json`, checked into git, plus a Word export report. **Export only; no Docker; no target database.** Details: §8 (the earlier database-agnostic idea was considered and set aside: §7) | Windows | Planning (all decisions settled) | `docs/dbmigrate/iteration4/` |
+| 4 | SQL Server → sanitized **PostgreSQL** schema and data files (`01-schema.sql`, `02-data-sanitized.sql`) plus a `source-metadata.json`, checked into git, plus a Word export report. **Export only; no Docker; no target database.** Details: §8 (the earlier database-agnostic idea was considered and set aside: §7) | Windows | **Built and run 2026-09-23** (self-test 9 of 9; the generated SQL was loaded into PostgreSQL 16 during the build and all 8 table counts and hashes matched); record in `ITERATION4.md` | `docs/dbmigrate/iteration4/` |
 | 5 | The iteration 4 files → a fully populated **PostgreSQL** database in a **Docker container**, verified against `source-metadata.json`, with an HTML verification report. bash + Docker only (no Python, no Java, no host PostgreSQL client). Details: §8 | Linux | Planning (decision 16, a database guide, is open) | `docs/dbmigrate/iteration5/` |
 | 6+ | Oracle (the actual Phase 2 target) | TBD | Not started | — |
 
@@ -171,7 +171,7 @@ The Windows side is iteration 4's own copy of iteration 2's tooling plus one new
 |---|---|
 | `01-schema.sql` | PostgreSQL DDL: tables, keys, foreign keys with delete actions, indexes, defaults. |
 | `02-data-sanitized.sql` | The data as PostgreSQL `INSERT`s, credentials sanitized (`PasswordHash`/`SecurityStamp` NULL, `MustResetPassword` true), ending with the identity-sequence resets. |
-| `source-metadata.json` | The metadata report from the SQL Server source, used by the Linux side to verify the new database (§8.5). Contains counts and hashes of sanitized rows only: no credentials and no personal data. It holds no SQL text. |
+| `source-metadata.json` | The metadata report from the SQL Server source, used by the Linux side to verify the new database (§8.5). Contains counts and hashes of sanitized rows only: no credentials and no personal data. It holds no SQL to be executed (the source queries are recorded as documentation only). |
 | `docs/dbmigrate/iteration4/MigrationExportReport4.docx` | The export report (Word), built on Windows from `source-metadata.json` by the existing report generator; for people, not consumed by iteration 5. It carries no PASS/FAIL against a target. |
 
 ### 8.3 SQL Server to PostgreSQL mapping
@@ -201,7 +201,7 @@ Statement mechanics: tables are loaded in dependency order inside one transactio
 `source-metadata.json` is written on Windows from the SQL Server catalog and the same in-memory rows the SQL is rendered from (after sanitizing), by a code path independent of the SQL rendering. It contains:
 
 - **Structure:** tables, columns (source type, target name and type, nullability, defaults), primary keys, foreign keys with delete actions, indexes including the soft-delete filter and the case-insensitive expression.
-- **Data facts:** row count per table and a SHA-256 per table over a canonical row form (defined independent of any database: rows in primary-key order; integers in decimal, booleans as 0/1, timestamps as `yyyy-MM-dd HH:mm:ss.fff`, strings as hex of their UTF-8 bytes, NULL distinct from the empty string). Sanitized rows only, so no credential is hashed.
+- **Data facts:** row count per table and a SHA-256 per table over a canonical row form (defined independent of any database: rows sorted ascending by their own canonical text, so no primary-key or collation knowledge is needed; integers in decimal, booleans as 0/1, timestamps as `yyyy-MM-dd HH:mm:ss.fff`, strings as hex of their UTF-8 bytes, NULL distinct from the empty string). Sanitized rows only, so no credential is hashed.
 - **Business summaries:** the same counts checked in earlier iterations (users by type, tickets by state, audit events by action, and so on).
 - **Expectations:** credential columns NULL and `MustResetPassword` true for every user; the active-username rule holds.
 - **Provenance:** SHA-256 of `01-schema.sql` and `02-data-sanitized.sql`, source database name, tool version, and the run time (the only non-deterministic field, kept in its own section).
