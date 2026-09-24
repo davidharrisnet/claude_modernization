@@ -8,8 +8,8 @@ The code lives in a different repository from this document:
 |---|---|
 | This plan | `claude_modernization/docs/phase2/model/MODEL_PLAN.md` |
 | The code | `~/dev/claude_work/master-antique-repair-claude/backend/` (origin `github.com/davidharrisnet/master-antique-repair-claude`, branch `main`) |
-| The database it connects to | Iteration 5's `mar-postgres` container: [docs/phase1/dbmigrate/iteration5/README.md](../../phase1/dbmigrate/iteration5/README.md) |
-| How to reach that database (logins, network routes) | [../../dbmigrate/iteration5/PostgreSQLDatabaseGuide.html](../../phase1/dbmigrate/iteration5/PostgreSQLDatabaseGuide.html) |
+| The database it connects to | import-postgresql's `mar-postgres` container: [docs/phase1/dbmigrate/import-postgresql/README.md](../../phase1/dbmigrate/import-postgresql/README.md) |
+| How to reach that database (logins, network routes) | [../../phase1/dbmigrate/import-postgresql/PostgreSQLDatabaseGuide.html](../../phase1/dbmigrate/import-postgresql/PostgreSQLDatabaseGuide.html) |
 
 ## 1. Goal and scope
 
@@ -30,7 +30,7 @@ In the code repository the Spring Boot project is `backend/`: it will eventually
 
 ## 2. Run the demonstration
 
-Prerequisites: Java 21, Docker Engine, the `mar-postgres` container from iteration 5 (`tools/phase1/dbmigrate/iteration5/ingest.sh load` if it does not exist), and a clone of `master-antique-repair-claude`.
+Prerequisites: Java 21, Docker Engine, the `mar-postgres` container from import-postgresql (`tools/phase1/dbmigrate/import-postgresql/ingest.sh load` if it does not exist), and a clone of `master-antique-repair-claude`.
 
 1. **Create the application login** (once; the guide, section 3). This makes `mar_app` with a password you choose:
    ```
@@ -42,7 +42,7 @@ Prerequisites: Java 21, Docker Engine, the `mar-postgres` container from iterati
    docker exec -i -e APP_PW -e RO_PW mar-postgres psql -X -q -U masterantique -d masterantique < mar-roles.sql
    unset APP_PW RO_PW
    ```
-   (`mar-roles.sql` is also kept at `tools/phase1/dbmigrate/iteration5/guide/mar-roles.sql`.)
+   (`mar-roles.sql` is also kept at `tools/phase1/dbmigrate/import-postgresql/guide/mar-roles.sql`.)
 2. **Open a localhost route** (once; the guide, section 4, route C). The database container publishes no port by design; a small proxy opens `127.0.0.1:5433` only:
    ```
    docker network create mar-net
@@ -123,12 +123,12 @@ All paths are under `master-antique-repair-claude/`.
 | `.gitignore` | The original ignored every `*.jar`, which would have dropped the Gradle wrapper jar. Added `!**/gradle/wrapper/gradle-wrapper.jar`, `.gradle/`, `build/`, IDE folders, `.env`. |
 | `README.md` | What exists, layout, the environment variables, build/test/run, the first-login design, next steps. |
 
-**Where the code came from:** the entities, repositories, `LoginService` and demo classes are the tested sample project from the PostgreSQL database guide (`tools/phase1/dbmigrate/iteration5/guide/mar-db-client/`, package `com.masterantique.dbclient`), copied with the package renamed. New for the backend: `RejectingIdentityCheck`, the `demo` profile on the demo classes, `DatabaseCheck` (replacing the sample's console `ConnectionCheck`), the test suite, and the build and ignore files.
+**Where the code came from:** the entities, repositories, `LoginService` and demo classes are the tested sample project from the PostgreSQL database guide (`tools/phase1/dbmigrate/import-postgresql/guide/mar-db-client/`, package `com.masterantique.dbclient`), copied with the package renamed. New for the backend: `RejectingIdentityCheck`, the `demo` profile on the demo classes, `DatabaseCheck` (replacing the sample's console `ConnectionCheck`), the test suite, and the build and ignore files.
 
 ## 5. How to rebuild it from scratch
 
 1. In `master-antique-repair-claude`, create `backend/` with `settings.gradle.kts` and `build.gradle.kts` as described in section 4.
-2. Copy the sources from `claude_modernization/tools/phase1/dbmigrate/iteration5/guide/mar-db-client/src/main/java/com/masterantique/dbclient/` into `backend/src/main/java/com/masterantique/backend/`, changing `com.masterantique.dbclient` to `com.masterantique.backend`: `model/*`, `repo/*`, `login/LoginResult`, `login/IdentityCheck`, `login/LoginService`. Put `DemoIdentityCheck` and `FirstLoginDemo` in `demo/`, annotate both `@Profile("demo")`, and rename the `FirstLoginDemo` profile from `first-login-demo` to `demo`.
+2. Copy the sources from `claude_modernization/tools/phase1/dbmigrate/import-postgresql/guide/mar-db-client/src/main/java/com/masterantique/dbclient/` into `backend/src/main/java/com/masterantique/backend/`, changing `com.masterantique.dbclient` to `com.masterantique.backend`: `model/*`, `repo/*`, `login/LoginResult`, `login/IdentityCheck`, `login/LoginService`. Put `DemoIdentityCheck` and `FirstLoginDemo` in `demo/`, annotate both `@Profile("demo")`, and rename the `FirstLoginDemo` profile from `first-login-demo` to `demo`.
 3. Add `RejectingIdentityCheck`, `BackendApplication`, `DatabaseCheck`, the two properties files and `LoginServiceTest` (section 4).
 4. `gradle wrapper --gradle-version 9.4.1` inside `backend/`; fix `.gitignore`; write the README.
 5. Verify as in section 6.
