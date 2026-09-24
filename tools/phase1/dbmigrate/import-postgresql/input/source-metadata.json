@@ -1202,7 +1202,7 @@
                              "Index names that were duplicated across tables in SQL Server (for example IX_UserId) were prefixed with the table name, then renamed to snake_case."
                          ],
     "run":  {
-                "runTimeUtc":  "2026-09-24 13:18:02",
-                "toolGitCommit":  "050e85a"
+                "runTimeUtc":  "2026-09-24 13:24:06",
+                "toolGitCommit":  "346d734"
             }
 }
