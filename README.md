@@ -57,6 +57,29 @@ Non-functional requirements:
 
 ### Claude Code
 
+**Repeating an iteration.** Open this repository in VS Code (or a terminal) with Claude Code and type, for example:
+
+```
+Repeat iteration 5.
+```
+
+Claude Code reads the iteration's own instructions, `tools/phase1/dbmigrate/iterationN/CLAUDE.md`, and follows them:
+the command, the expected results, the checks, and the rules (such as never testing on the delivered database). Each
+iteration's human description is `docs/phase1/dbmigrate/iterationN/README.md`.
+
+**The backend (Phase 2 model).** "Repeat iteration 5" rebuilds and verifies the database only. The Spring Boot
+backend that uses it lives in the separate repository `master-antique-repair-claude` (`backend/`). With this
+repository open in Claude Code, type:
+
+```
+Run the backend demonstration.
+```
+
+or, to rebuild the backend code from scratch, `Rebuild the backend.` Claude Code follows
+`docs/phase2/model/MODEL_PLAN.md`: it creates the database login and the local network route the backend needs, runs
+the backend (connection check), then the first-login password change. Run iteration 5 first if the database does not
+exist; repeating iteration 5 also removes the backend's login and route, which the demonstration then recreates.
+
 ### Components
 These experiments took on a modular approach, focusing on each project component as separate tasks. 
 

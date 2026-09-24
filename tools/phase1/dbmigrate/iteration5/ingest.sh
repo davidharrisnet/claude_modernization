@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Iteration 5: load iteration 4's PostgreSQL export into a PostgreSQL Docker container and verify it against
 # source-metadata.json. bash + Docker only: psql runs inside the container; no host psql, Python, Java or jq.
-# Plan: ../../../../docs/phase1/dbmigrate/iteration5/ITERATION5_PLAN.md
+# Instructions: CLAUDE.md in this folder. Description: ../../../../docs/phase1/dbmigrate/iteration5/README.md
 #
 # Usage: ingest.sh <load|verify|selftest|report|all> [--recreate] [--config <path>] [--db <name>] [--out <path>]
 # Exit codes: 0 ok | 1 verification or self-test differences | 2 configuration, tool or Docker error | 3 refused

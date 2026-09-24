@@ -2,7 +2,7 @@
 
 **Status: BUILT AND RUN (2026-09-23). All decisions are settled (1-4, 2b, 8, 11, 12, 14). The record of what actually happened, with real numbers, is `ITERATION4.md`. Where this plan and the built tool differ (they are noted inline as "built:"), the built tool and `ITERATION4.md` are authoritative.**
 
-This plan is written so a **new Claude session with no memory of the design conversation** can read it and build (or maintain) the tool. Read this file first, then `docs/phase1/dbmigrate/DATA_MIGRATION.md` §5 (security policy) and §7 (why database-agnostic SQL is impossible). The Linux side that consumes this iteration's output is a separate iteration: `docs/phase1/dbmigrate/iteration5/ITERATION5_PLAN.md`. Once built, the tool is run from the command line with no AI involved.
+This plan is written so a **new Claude session with no memory of the design conversation** can read it and build (or maintain) the tool. Read this file first, then `docs/phase1/dbmigrate/DATA_MIGRATION.md` §5 (security policy) and §7 (why database-agnostic SQL is impossible). The Linux side that consumes this iteration's output is a separate iteration: `tools/phase1/dbmigrate/iteration5/CLAUDE.md` (description: `docs/phase1/dbmigrate/iteration5/README.md`). Once built, the tool is run from the command line with no AI involved.
 
 ## 1. Goal
 
@@ -25,7 +25,7 @@ This plan is written so a **new Claude session with no memory of the design conv
 
 ## 3. Decision log
 
-Numbering is shared with `ITERATION5_PLAN.md` (decisions 5, 6, 7, 9, 10, 13, 15 and 16 belong to iteration 5).
+Numbering is shared with iteration 5 (`tools/phase1/dbmigrate/iteration5/CLAUDE.md`) (decisions 5, 6, 7, 9, 10, 13, 15 and 16 belong to iteration 5).
 
 | # | Decision | Status | Answer / default |
 |---|---|---|---|

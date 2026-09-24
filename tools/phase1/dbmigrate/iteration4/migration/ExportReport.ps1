@@ -143,7 +143,7 @@ function Build-ExportReportDocument($M, $Images) {
         , @('01-schema.sql SHA-256', [string]$M.meta.schemaSha256)
         , @('02-data-sanitized.sql SHA-256', [string]$M.meta.dataSha256)
     ))
-    & $add (PT 'Hand-off to iteration 5: after a successful export, copy 01-schema.sql, 02-data-sanitized.sql and source-metadata.json into tools\phase1\dbmigrate\iteration5\input\ and commit them. Iteration 5 (Linux, Docker) reads only that folder. See docs/phase1/dbmigrate/iteration5/ITERATION5_PLAN.md.')
+    & $add (PT 'Hand-off to iteration 5: after a successful export, copy 01-schema.sql, 02-data-sanitized.sql and source-metadata.json into tools\phase1\dbmigrate\iteration5\input\ and commit them. Iteration 5 (Linux, Docker) reads only that folder. See docs/phase1/dbmigrate/iteration5/README.md.')
 
     # ---- appendix
     & $add (PageBreak)

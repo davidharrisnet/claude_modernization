@@ -8,7 +8,7 @@ The code lives in a different repository from this document:
 |---|---|
 | This plan | `claude_modernization/docs/phase2/model/MODEL_PLAN.md` |
 | The code | `~/dev/claude_work/master-antique-repair-claude/backend/` (origin `github.com/davidharrisnet/master-antique-repair-claude`, branch `main`) |
-| The database it connects to | Iteration 5's `mar-postgres` container: [../../dbmigrate/iteration5/ITERATION5_PLAN.md](../../phase1/dbmigrate/iteration5/ITERATION5_PLAN.md) |
+| The database it connects to | Iteration 5's `mar-postgres` container: [docs/phase1/dbmigrate/iteration5/README.md](../../phase1/dbmigrate/iteration5/README.md) |
 | How to reach that database (logins, network routes) | [../../dbmigrate/iteration5/PostgreSQLDatabaseGuide.html](../../phase1/dbmigrate/iteration5/PostgreSQLDatabaseGuide.html) |
 
 ## 1. Goal and scope
