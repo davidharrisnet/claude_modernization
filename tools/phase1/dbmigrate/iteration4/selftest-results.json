@@ -53,7 +53,7 @@
                       "Category":  "Determinism",
                       "Name":  "The export report rebuilds byte-identically from the same metadata",
                       "Passed":  true,
-                      "Detail":  "sha256 b4e6b5964f2e2612efdfc5ebf3dc530f5cf7836803d1eb6e4e9688ef482d2884 vs b4e6b5964f2e2612efdfc5ebf3dc530f5cf7836803d1eb6e4e9688ef482d2884"
+                      "Detail":  "sha256 1b8ce35cd602e986fc6018060e5d27c0321df2c903d7b8f43ce0339260a1862c vs 1b8ce35cd602e986fc6018060e5d27c0321df2c903d7b8f43ce0339260a1862c"
                   }
               ]
 }

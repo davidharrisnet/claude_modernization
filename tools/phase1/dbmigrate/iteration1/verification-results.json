@@ -19,10 +19,10 @@
                                       ],
                  "ExportSchemaSha256":  "72d62510dfc78e0be541addc5c2f3d15d26fb586b0d52eb487c4b04d0f67a017",
                  "ExportDataSha256":  "4752e8c463068a5d3767f0f8441c2dd39ced67985db960a1e823894b77b17c32",
-                 "GitCommit":  "dde75c0",
+                 "GitCommit":  "1261f5f",
                  "Iteration":  1,
                  "IterationTitle":  "SQLite on Windows",
-                 "RunTimeUtc":  "2026-09-24 09:36:10"
+                 "RunTimeUtc":  "2026-09-24 12:39:39"
              },
     "Summary":  {
                     "ChecksTotal":  42,
