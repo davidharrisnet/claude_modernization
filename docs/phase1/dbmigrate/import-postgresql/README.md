@@ -74,9 +74,9 @@ It rebuilds the database, verifies it, runs the self-test and writes the report.
 [tools/phase1/dbmigrate/import-postgresql/README.md](../../../../tools/phase1/dbmigrate/import-postgresql/README.md).
 
 **The backend that uses this database** is not part of this tool: it is Phase 2 code in the separate repository
-`master-antique-repair-claude`. With this repository open in Claude Code, type `Run the backend demonstration.` (or
+`master-antique-repair-claude`. With this repository open in Claude Code, type `Run backend-postgresql` (or
 `Rebuild the backend.` to rebuild its code); Claude Code follows
-[docs/phase2/model/MODEL_PLAN.md](../../../phase2/model/MODEL_PLAN.md). Running import-postgresql again removes the
+[docs/phase2/model/postgresql/MODEL_PLAN.md](../../../phase2/model/postgresql/MODEL_PLAN.md). Running import-postgresql again removes the
 database login and network route the backend uses; the demonstration recreates them.
 
 ## Limits and known differences
@@ -101,5 +101,5 @@ database login and network route the backend uses; the demonstration recreates t
   instructions for running and maintaining this tool (written for Claude Code).
 - [../export-postgresql/](../export-postgresql/): the export that produced this tool's input.
 - [../DATA_MIGRATION.md](../DATA_MIGRATION.md): the migration strategy and security policy.
-- [docs/phase2/model/MODEL_PLAN.md](../../../phase2/model/MODEL_PLAN.md): the Spring Boot backend built on this
+- [docs/phase2/model/postgresql/MODEL_PLAN.md](../../../phase2/model/postgresql/MODEL_PLAN.md): the Spring Boot backend built on this
   database.

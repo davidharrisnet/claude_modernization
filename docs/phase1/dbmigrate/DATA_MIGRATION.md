@@ -9,7 +9,7 @@ This is the parent document for the database migration: `tools/phase1/dbmigrate/
 | `export-postgresql` | SQL Server LocalDB → sanitized PostgreSQL files | Windows | `Run export-postgresql` |
 | `import-postgresql` | those files → a verified PostgreSQL database in Docker | Linux | `Run import-postgresql` |
 | `export-oracle` | SQL Server LocalDB → sanitized Oracle files (proof of concept, §10) | Windows | `Run export-oracle` |
-| `import-oracle` | those files → a verified Oracle AI Database 26ai Free in Docker (skeleton, built on first run) | Linux | `Run import-oracle` |
+| `import-oracle` | those files → a verified Oracle AI Database 26ai Free in Docker (proof of concept, §10) | Linux | `Run import-oracle` |
 
 ## 1. Purpose and scope
 
@@ -59,8 +59,8 @@ verification-results.json  →  MigrationVerificationReport.html
 |---|---|---|
 | `export-postgresql` | **Built and run 2026-09-23** (self-test 9 of 9; the generated SQL was loaded into PostgreSQL 16 during the build and all 8 table counts and hashes matched); re-run 2026-09-24: self-test 9 of 9, SQL files unchanged | `docs/phase1/dbmigrate/export-postgresql/` |
 | `import-postgresql` | **Built and run 2026-09-23** (verification 80 of 80 checks, 155 of 155 rows identical; self-test 7 of 7); database guide written (decision 16) | `docs/phase1/dbmigrate/import-postgresql/` |
-| `export-oracle` | **Built and run 2026-09-24** (self-test 13 of 13; every table's row fingerprint, row count and business summary equals the PostgreSQL export's). The Oracle SQL is not yet proven to load | `docs/phase1/dbmigrate/export-oracle/` |
-| `import-oracle` | **Skeleton only** (input files, configuration example and build directions in its `CLAUDE.md`); built and run on the first `Run import-oracle` on the Linux machine | `docs/phase1/dbmigrate/import-oracle/` |
+| `export-oracle` | **Built and run 2026-09-24** (self-test 13 of 13; every table's row fingerprint, row count and business summary equals the PostgreSQL export's); its SQL loads into Oracle unchanged (proven by import-oracle) | `docs/phase1/dbmigrate/export-oracle/` |
+| `import-oracle` | **Built and run 2026-09-24** (verification 86 of 86 checks, 155 of 155 rows identical; self-test 7 of 7) on Oracle AI Database 26ai Free 23.26.3 | `docs/phase1/dbmigrate/import-oracle/` |
 
 `import-postgresql` is the migration to the final Phase 2 database; the Oracle pair is a proof of concept (§10).
 
@@ -121,7 +121,6 @@ A verification step that only checks "does this match what a previous run alread
 ## 6. What's not built yet
 
 - **Config-driven sensitive-column declarations** (§5.2.5) — today, sanitization is a bespoke, hardcoded transform (`Users.PasswordHash`/`SecurityStamp` → `MustResetPassword`); it should become a `migration.config.json`-declared policy the export pipeline enforces generically, for any table/column, not just this one.
-- **A verified Oracle load** — `export-oracle` renders Oracle SQL, but no Oracle database has loaded it yet; `import-oracle` is a skeleton (§10).
 - **A formal data-classification step before export** — right now, sensitive columns are identified by inspection (a human, or Claude, reading the schema). A real engagement should start with an explicit classification pass (PII/PCI/PHI/credential/none) per column, signed off by the data owner, before any export tooling runs.
 
 ## 7. Database-agnostic exports: what is and isn't possible
@@ -268,14 +267,14 @@ Windows can prove that the export is deterministic (two exports byte-identical),
 | `export-postgresql` | `docs/phase1/dbmigrate/export-postgresql/README.md` | `tools/phase1/dbmigrate/export-postgresql/CLAUDE.md` | `MigrationExportReport.docx` (an export report; no verification) | — |
 | `import-postgresql` | `docs/phase1/dbmigrate/import-postgresql/README.md` | `tools/phase1/dbmigrate/import-postgresql/CLAUDE.md` | `MigrationVerificationReport.html` | `PostgreSQLDatabaseGuide.html` |
 | `export-oracle` | `docs/phase1/dbmigrate/export-oracle/README.md` | `tools/phase1/dbmigrate/export-oracle/CLAUDE.md` | `MigrationExportReport.docx` (an export report; no verification) | — |
-| `import-oracle` | `docs/phase1/dbmigrate/import-oracle/README.md` | `tools/phase1/dbmigrate/import-oracle/CLAUDE.md` (build directions) | not yet | not yet |
+| `import-oracle` | `docs/phase1/dbmigrate/import-oracle/README.md` | `tools/phase1/dbmigrate/import-oracle/CLAUDE.md` | `MigrationVerificationReport.html` | `OracleDatabaseGuide.html` |
 
 ## 10. Oracle: a proof of concept alongside PostgreSQL
 
 **Goal.** Show the same migration reasoned through for Oracle, the database the exercise brief names, using what the PostgreSQL pair taught. Phase 2 stays on PostgreSQL (decision 17). Two tools, as for PostgreSQL:
 
 - **`export-oracle` (Windows, export only; built 2026-09-24):** a self-contained copy of `export-postgresql`'s tooling with one different dialect file, `oracle.ps1`. Description: `docs/phase1/dbmigrate/export-oracle/README.md`; instructions: `tools/phase1/dbmigrate/export-oracle/CLAUDE.md`.
-- **`import-oracle` (Linux, Docker; skeleton):** loads the three files into an **Oracle AI Database 26ai Free** container and verifies them against the metadata. Its `CLAUDE.md` is the set of build directions for the Linux Claude session, which builds the tool on the first `Run import-oracle`. Description: `docs/phase1/dbmigrate/import-oracle/README.md`.
+- **`import-oracle` (Linux, Docker; built 2026-09-24):** loads the three files into an **Oracle AI Database 26ai Free** container (`gvenzl/oracle-free:23.26.3-faststart`) and verifies them against the metadata with PL/SQL run by `sqlplus` inside the container. Description: `docs/phase1/dbmigrate/import-oracle/README.md`; instructions: `tools/phase1/dbmigrate/import-oracle/CLAUDE.md`.
 
 The pipeline (§2), the hand-off (three files copied into `import-oracle/input/`), the security policy (§5: sanitize in memory, refuse unsanitized, verify against an independently made record) and the design of both tools are the PostgreSQL ones. What changes is the dialect and the load and verify mechanics.
 
@@ -305,10 +304,11 @@ The pipeline (§2), the hand-off (three files copied into `import-oracle/input/`
 | 19 | Identifier style | **Unquoted lowercase snake_case** from the rename map (assumed by default, not separately confirmed) | Nothing needs quoting; same names as PostgreSQL |
 | 20 | Where Oracle runs | **Linux machine, in Docker**; export on Windows as before | The user's environment; keeps "bash and Docker only" for the import |
 | 21 | Empty strings | **Refuse them** in the export | Silent NULL conversion is worse than a stopped export |
-| 22 | Build order | **Export built and run now; import is a skeleton** whose `CLAUDE.md` directs the Linux session to build and verify it | Windows cannot prove the SQL loads; the unverified facts are listed in `export-oracle/CLAUDE.md` for the first Linux run to confirm or correct |
+| 22 | Build order | **Export built and run first; the import built on the Linux machine from directions in its `CLAUDE.md`** (both 2026-09-24) | Windows cannot prove the SQL loads; the unverified facts were listed for the first Linux run, which confirmed every one without a correction to `oracle.ps1` |
+| 23 | Oracle image and passwords | **`gvenzl/oracle-free:23.26.3-faststart`**; the start-up password through `ORACLE_PASSWORD_FILE`, then SYS, SYSTEM and PDBADMIN given random passwords nobody keeps (PDBADMIN locked); the tool uses operating-system authentication; the schema is a `NO AUTHENTICATION` account | The official registry needs a token even to list tags and prints its generated password; the community image's random-password option is weak and logged; PDBADMIN keeps its build-time password unless changed. The PostgreSQL rule (no password in `docker inspect`, none stored) holds |
 
-### 10.3 Status and what is unverified
+### 10.3 Status and what is verified
 
-`export-oracle` passes its 13 self-tests and its cross-check against PostgreSQL. Everything Oracle-specific in the rendered SQL was written from documentation and memory, without an Oracle database: the identity `RESTART START WITH` syntax, `BOOLEAN` and multi-row `INSERT` on 26ai Free, the SQL*Plus line and blank-line behaviour, `TO_CLOB`/`UNISTR` inside `VALUES`, unquoted `timestamp`/`action` column names, and the default `MAX_STRING_SIZE`. The first `Run import-oracle` on Linux tests each and reports confirmed or corrected; corrections go into `oracle.ps1` and the export is re-run (as decision 10 for PostgreSQL). The image name and tag, the service name (`FREEPDB1`), and how to keep the password out of `docker inspect` are also unverified.
+`export-oracle` passes its 13 self-tests and its cross-check against PostgreSQL. `import-oracle` (2026-09-24, Oracle AI Database 26ai Free 23.26.3) loads its SQL unchanged and verifies 86 of 86 checks with 155 of 155 rows identical; self-test 7 of 7. The Oracle rules written without a database are **confirmed**: identity `RESTART START WITH` (the next id is `identityLast + 1`), `BOOLEAN` with `DEFAULT FALSE NOT NULL`, multi-row `INSERT`, `TIMESTAMP(3)` literals, unquoted `timestamp`/`action`/`state`/`text`/`name`/`description` (none reserved), `SET DEFINE OFF`, the `WHENEVER SQLERROR` lines (a failed script stops with exit 1 and leaves its DDL behind), the function-based index (case-insensitive for active users, deleted users absent), and `CHR`/`UNISTR` literals including a surrogate-pair emoji (a round-trip test in the verification). **Found:** `MAX_STRING_SIZE` is `STANDARD`, so a `VARCHAR2(2000 CHAR)` value is also limited to 4,000 bytes (2,000 two-byte characters fit; 1,334 three-byte characters do not); `BOOLEAN` silently converts numbers and words such as `'yes'`. **Not exercised by the current data:** `TO_CLOB(...)` literals (every CLOB is NULL) and expressions spread over several lines (the longest data line is 306 characters); export-oracle's stress test with awkward data, loaded by import-oracle, would cover them.
 
 This document should be updated whenever a tool is added or the security policy in §5 changes in a way that should apply retroactively to how future migrations are reviewed.

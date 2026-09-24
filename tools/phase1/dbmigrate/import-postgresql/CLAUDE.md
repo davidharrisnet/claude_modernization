@@ -161,7 +161,7 @@ every code block is a tested file in `guide/`. Change the file, re-test on a tem
 and uses `scram-sha-256` over TCP; applications need a login (`mar-roles.sql`, passwords via `\getenv`) and a network
 route (container address — use `{{index .NetworkSettings.Networks "bridge" "IPAddress"}}`, the shorter template
 concatenates addresses once a second network is attached — a shared Docker network, or an `alpine/socat` proxy on
-127.0.0.1). The Phase 2 backend was built from `guide/mar-db-client/` (`docs/phase2/model/MODEL_PLAN.md`).
+127.0.0.1). The Phase 2 backend was built from `guide/mar-db-client/` (`docs/phase2/model/postgresql/MODEL_PLAN.md`).
 
 ## Testing changes
 

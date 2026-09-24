@@ -1,0 +1,1990 @@
+{
+  "schemaVersion" : 1,
+  "tool" : "import-oracle",
+  "status" : "PASS",
+  "checksPassed" : 86,
+  "checksTotal" : 86,
+  "rowsVerified" : 155,
+  "rowsTotal" : 155,
+  "database" : "freepdb1",
+  "environment" :
+  {
+    "serverVersion" : "23.26.3.0.0",
+    "banner" : "Oracle AI Database 26ai Free Release 23.26.3.0.0 - Develop, Learn, and Run for Free",
+    "characterSet" : "AL32UTF8",
+    "maxStringSize" : "STANDARD",
+    "lengthSemantics" : "BYTE",
+    "image" : "gvenzl/oracle-free:23.26.3-faststart",
+    "container" : "mar-oracle",
+    "pluggableDatabase" : "freepdb1",
+    "schema" : "masterantique"
+  },
+  "run" :
+  {
+    "runTimeUtc" : "2026-09-24 14:36:06",
+    "toolGitCommit" : "6fcb0a6"
+  },
+  "source" :
+  {
+    "server" : "(localdb)\\MSSQLLocalDB",
+    "database" : "aspnet-MasterAntiqueRepair-e93a6129-7f74-4486-97e8-8d4ab1a709b4",
+    "version" : "Microsoft SQL Server 2025 (RC1) - 17.0.925.4 (X64)"
+  },
+  "sourceExport" :
+  {
+    "runTimeUtc" : "2026-09-24 13:50:17",
+    "toolGitCommit" : "e044682"
+  },
+  "inputs" :
+  [
+    {
+      "file" : "01-schema.sql",
+      "expectedSha256" : "1882e31d2963b5435dd99801193e70ed7eb408646ee8ba6ca3b899fd869e159a",
+      "actualSha256" : "1882e31d2963b5435dd99801193e70ed7eb408646ee8ba6ca3b899fd869e159a"
+    },
+    {
+      "file" : "02-data-sanitized.sql",
+      "expectedSha256" : "0c1504e711c113d91b40edfd20fd10429fe1d6a4a29378fb7df908964654d08e",
+      "actualSha256" : "0c1504e711c113d91b40edfd20fd10429fe1d6a4a29378fb7df908964654d08e"
+    }
+  ],
+  "tables" :
+  [
+    {
+      "sourceName" : "Roles",
+      "targetName" : "roles",
+      "expectedRows" : 3,
+      "actualRows" : 3,
+      "expectedSha256" : "c0a2efd12835614432929f984bc5568f0bef002000c247946417e4131f582b14",
+      "actualSha256" : "c0a2efd12835614432929f984bc5568f0bef002000c247946417e4131f582b14"
+    },
+    {
+      "sourceName" : "Users",
+      "targetName" : "users",
+      "expectedRows" : 12,
+      "actualRows" : 12,
+      "expectedSha256" : "fa415e1421e2d4a8ba921f6c7b488354a8d9de3c06bd754b4b74bb47cc50cf94",
+      "actualSha256" : "fa415e1421e2d4a8ba921f6c7b488354a8d9de3c06bd754b4b74bb47cc50cf94"
+    },
+    {
+      "sourceName" : "AuditLogs",
+      "targetName" : "audit_logs",
+      "expectedRows" : 78,
+      "actualRows" : 78,
+      "expectedSha256" : "c6e4f24be7acad70339ca42dc69160f675b3f42f0fab54f4c4be0be53c118e4d",
+      "actualSha256" : "c6e4f24be7acad70339ca42dc69160f675b3f42f0fab54f4c4be0be53c118e4d"
+    },
+    {
+      "sourceName" : "Tickets",
+      "targetName" : "tickets",
+      "expectedRows" : 24,
+      "actualRows" : 24,
+      "expectedSha256" : "c34f64ec58233df74a39c63e0b2c15c7a3cc751e747cc9a68f55a3ee6e164711",
+      "actualSha256" : "c34f64ec58233df74a39c63e0b2c15c7a3cc751e747cc9a68f55a3ee6e164711"
+    },
+    {
+      "sourceName" : "Comments",
+      "targetName" : "comments",
+      "expectedRows" : 26,
+      "actualRows" : 26,
+      "expectedSha256" : "c954517fcb3a64cbb6fa5e8bc5f1619ee7a64453bc80bfcf1783d9845d4a72ea",
+      "actualSha256" : "c954517fcb3a64cbb6fa5e8bc5f1619ee7a64453bc80bfcf1783d9845d4a72ea"
+    },
+    {
+      "sourceName" : "UserClaims",
+      "targetName" : "user_claims",
+      "expectedRows" : 0,
+      "actualRows" : 0,
+      "expectedSha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "actualSha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "sourceName" : "UserLogins",
+      "targetName" : "user_logins",
+      "expectedRows" : 0,
+      "actualRows" : 0,
+      "expectedSha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "actualSha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "sourceName" : "UserRoles",
+      "targetName" : "user_roles",
+      "expectedRows" : 12,
+      "actualRows" : 12,
+      "expectedSha256" : "44553a2bae5a2d4035a03bfd1d63a239e33929a4dd668d4687cacdfa44308007",
+      "actualSha256" : "44553a2bae5a2d4035a03bfd1d63a239e33929a4dd668d4687cacdfa44308007"
+    }
+  ],
+  "summaries" :
+  [
+    {
+      "name" : "Users by type",
+      "expectedRows" :
+      [
+        "Customer|8",
+        "Employee|3",
+        "Manager|1"
+      ],
+      "actualRows" :
+      [
+        "Customer|8",
+        "Employee|3",
+        "Manager|1"
+      ]
+    },
+    {
+      "name" : "Users active vs soft-deleted",
+      "expectedRows" :
+      [
+        "active|12"
+      ],
+      "actualRows" :
+      [
+        "active|12"
+      ]
+    },
+    {
+      "name" : "Users per role",
+      "expectedRows" :
+      [
+        "Customer|8",
+        "Employee|3",
+        "Manager|1"
+      ],
+      "actualRows" :
+      [
+        "Customer|8",
+        "Employee|3",
+        "Manager|1"
+      ]
+    },
+    {
+      "name" : "Tickets by state",
+      "expectedRows" :
+      [
+        "0|8",
+        "1|8",
+        "2|8"
+      ],
+      "actualRows" :
+      [
+        "0|8",
+        "1|8",
+        "2|8"
+      ]
+    },
+    {
+      "name" : "Tickets assigned vs unassigned",
+      "expectedRows" :
+      [
+        "assigned|16",
+        "unassigned|8"
+      ],
+      "actualRows" :
+      [
+        "assigned|16",
+        "unassigned|8"
+      ]
+    },
+    {
+      "name" : "Audit events by action",
+      "expectedRows" :
+      [
+        "0|11",
+        "1|1",
+        "2|24",
+        "3|16",
+        "4|8",
+        "5|18"
+      ],
+      "actualRows" :
+      [
+        "0|11",
+        "1|1",
+        "2|24",
+        "3|16",
+        "4|8",
+        "5|18"
+      ]
+    },
+    {
+      "name" : "Comments per ticket (distribution)",
+      "expectedRows" :
+      [
+        "3|6",
+        "4|2"
+      ],
+      "actualRows" :
+      [
+        "3|6",
+        "4|2"
+      ]
+    },
+    {
+      "name" : "Comment and commented-ticket totals",
+      "expectedRows" :
+      [
+        "26|8"
+      ],
+      "actualRows" :
+      [
+        "26|8"
+      ]
+    },
+    {
+      "name" : "Ticket date ranges",
+      "expectedRows" :
+      [
+        "2026-09-07 08:20:34.000|2026-09-16 08:39:18.000|2026-09-07 11:26:34.000|2026-09-14 10:16:58.910|2026-09-11 00:13:34.000|2026-09-17 14:15:58.910"
+      ],
+      "actualRows" :
+      [
+        "2026-09-07 08:20:34.000|2026-09-16 08:39:18.000|2026-09-07 11:26:34.000|2026-09-14 10:16:58.910|2026-09-11 00:13:34.000|2026-09-17 14:15:58.910"
+      ]
+    },
+    {
+      "name" : "Account and audit date ranges",
+      "expectedRows" :
+      [
+        "2026-09-10 14:41:58.910|2026-09-11 16:41:58.910|2026-09-07 08:20:34.000|2026-09-17 14:43:56.643"
+      ],
+      "actualRows" :
+      [
+        "2026-09-10 14:41:58.910|2026-09-11 16:41:58.910|2026-09-07 08:20:34.000|2026-09-17 14:43:56.643"
+      ]
+    }
+  ],
+  "checks" :
+  [
+    {
+      "seq" : 1,
+      "status" : "PASS",
+      "category" : "environment",
+      "name" : "Oracle server version is supported",
+      "detail" : "server 23.26.3.0.0, minimum 23"
+    },
+    {
+      "seq" : 2,
+      "status" : "PASS",
+      "category" : "environment",
+      "name" : "Database character set is AL32UTF8",
+      "detail" : "AL32UTF8"
+    },
+    {
+      "seq" : 3,
+      "status" : "PASS",
+      "category" : "environment",
+      "name" : "MAX_STRING_SIZE reported",
+      "detail" : "STANDARD: a VARCHAR2 value is limited to 4000 bytes"
+    },
+    {
+      "seq" : 4,
+      "status" : "PASS",
+      "category" : "environment",
+      "name" : "Metadata format is version 1",
+      "detail" : "schemaVersion 1"
+    },
+    {
+      "seq" : 5,
+      "status" : "PASS",
+      "category" : "integrity",
+      "name" : "01-schema.sql matches the recorded SHA-256",
+      "detail" : "expected 1882e31d2963b543, found 1882e31d2963b543"
+    },
+    {
+      "seq" : 6,
+      "status" : "PASS",
+      "category" : "integrity",
+      "name" : "02-data-sanitized.sql matches the recorded SHA-256",
+      "detail" : "expected 0c1504e711c113d9, found 0c1504e711c113d9"
+    },
+    {
+      "seq" : 7,
+      "status" : "PASS",
+      "category" : "counts",
+      "name" : "Table roles row count",
+      "detail" : "expected 3, found 3"
+    },
+    {
+      "seq" : 8,
+      "status" : "PASS",
+      "category" : "hashes",
+      "name" : "Table roles content hash",
+      "detail" : "expected c0a2efd128356144, found c0a2efd128356144"
+    },
+    {
+      "seq" : 9,
+      "status" : "PASS",
+      "category" : "counts",
+      "name" : "Table users row count",
+      "detail" : "expected 12, found 12"
+    },
+    {
+      "seq" : 10,
+      "status" : "PASS",
+      "category" : "hashes",
+      "name" : "Table users content hash",
+      "detail" : "expected fa415e1421e2d4a8, found fa415e1421e2d4a8"
+    },
+    {
+      "seq" : 11,
+      "status" : "PASS",
+      "category" : "counts",
+      "name" : "Table audit_logs row count",
+      "detail" : "expected 78, found 78"
+    },
+    {
+      "seq" : 12,
+      "status" : "PASS",
+      "category" : "hashes",
+      "name" : "Table audit_logs content hash",
+      "detail" : "expected c6e4f24be7acad70, found c6e4f24be7acad70"
+    },
+    {
+      "seq" : 13,
+      "status" : "PASS",
+      "category" : "counts",
+      "name" : "Table tickets row count",
+      "detail" : "expected 24, found 24"
+    },
+    {
+      "seq" : 14,
+      "status" : "PASS",
+      "category" : "hashes",
+      "name" : "Table tickets content hash",
+      "detail" : "expected c34f64ec58233df7, found c34f64ec58233df7"
+    },
+    {
+      "seq" : 15,
+      "status" : "PASS",
+      "category" : "counts",
+      "name" : "Table comments row count",
+      "detail" : "expected 26, found 26"
+    },
+    {
+      "seq" : 16,
+      "status" : "PASS",
+      "category" : "hashes",
+      "name" : "Table comments content hash",
+      "detail" : "expected c954517fcb3a64cb, found c954517fcb3a64cb"
+    },
+    {
+      "seq" : 17,
+      "status" : "PASS",
+      "category" : "counts",
+      "name" : "Table user_claims row count",
+      "detail" : "expected 0, found 0"
+    },
+    {
+      "seq" : 18,
+      "status" : "PASS",
+      "category" : "hashes",
+      "name" : "Table user_claims content hash",
+      "detail" : "expected e3b0c44298fc1c14, found e3b0c44298fc1c14"
+    },
+    {
+      "seq" : 19,
+      "status" : "PASS",
+      "category" : "counts",
+      "name" : "Table user_logins row count",
+      "detail" : "expected 0, found 0"
+    },
+    {
+      "seq" : 20,
+      "status" : "PASS",
+      "category" : "hashes",
+      "name" : "Table user_logins content hash",
+      "detail" : "expected e3b0c44298fc1c14, found e3b0c44298fc1c14"
+    },
+    {
+      "seq" : 21,
+      "status" : "PASS",
+      "category" : "counts",
+      "name" : "Table user_roles row count",
+      "detail" : "expected 12, found 12"
+    },
+    {
+      "seq" : 22,
+      "status" : "PASS",
+      "category" : "hashes",
+      "name" : "Table user_roles content hash",
+      "detail" : "expected 44553a2bae5a2d40, found 44553a2bae5a2d40"
+    },
+    {
+      "seq" : 23,
+      "status" : "PASS",
+      "category" : "counts",
+      "name" : "Total rows across all tables",
+      "detail" : "expected 155, found 155"
+    },
+    {
+      "seq" : 24,
+      "status" : "PASS",
+      "category" : "schema",
+      "name" : "The schema has exactly the expected tables",
+      "detail" : "8 tables"
+    },
+    {
+      "seq" : 25,
+      "status" : "PASS",
+      "category" : "schema",
+      "name" : "Table roles columns",
+      "detail" : "2 columns: names, types, lengths, nullability, defaults, identity"
+    },
+    {
+      "seq" : 26,
+      "status" : "PASS",
+      "category" : "schema",
+      "name" : "Table roles primary key",
+      "detail" : "expected pk_roles (id), found pk_roles (id)"
+    },
+    {
+      "seq" : 27,
+      "status" : "PASS",
+      "category" : "schema",
+      "name" : "Table roles foreign keys",
+      "detail" : "0 foreign keys: names, columns, targets, delete rules"
+    },
+    {
+      "seq" : 28,
+      "status" : "PASS",
+      "category" : "schema",
+      "name" : "Table roles indexes",
+      "detail" : "1 indexes: names, uniqueness, keys and expressions"
+    },
+    {
+      "seq" : 29,
+      "status" : "PASS",
+      "category" : "schema",
+      "name" : "Table users columns",
+      "detail" : "16 columns: names, types, lengths, nullability, defaults, identity"
+    },
+    {
+      "seq" : 30,
+      "status" : "PASS",
+      "category" : "schema",
+      "name" : "Table users primary key",
+      "detail" : "expected pk_users (id), found pk_users (id)"
+    },
+    {
+      "seq" : 31,
+      "status" : "PASS",
+      "category" : "schema",
+      "name" : "Table users foreign keys",
+      "detail" : "0 foreign keys: names, columns, targets, delete rules"
+    },
+    {
+      "seq" : 32,
+      "status" : "PASS",
+      "category" : "schema",
+      "name" : "Table users indexes",
+      "detail" : "1 indexes: names, uniqueness, keys and expressions"
+    },
+    {
+      "seq" : 33,
+      "status" : "PASS",
+      "category" : "schema",
+      "name" : "Table audit_logs columns",
+      "detail" : "6 columns: names, types, lengths, nullability, defaults, identity"
+    },
+    {
+      "seq" : 34,
+      "status" : "PASS",
+      "category" : "schema",
+      "name" : "Table audit_logs primary key",
+      "detail" : "expected pk_audit_logs (id), found pk_audit_logs (id)"
+    },
+    {
+      "seq" : 35,
+      "status" : "PASS",
+      "category" : "schema",
+      "name" : "Table audit_logs foreign keys",
+      "detail" : "1 foreign keys: names, columns, targets, delete rules"
+    },
+    {
+      "seq" : 36,
+      "status" : "PASS",
+      "category" : "schema",
+      "name" : "Table audit_logs indexes",
+      "detail" : "1 indexes: names, uniqueness, keys and expressions"
+    },
+    {
+      "seq" : 37,
+      "status" : "PASS",
+      "category" : "schema",
+      "name" : "Table tickets columns",
+      "detail" : "8 columns: names, types, lengths, nullability, defaults, identity"
+    },
+    {
+      "seq" : 38,
+      "status" : "PASS",
+      "category" : "schema",
+      "name" : "Table tickets primary key",
+      "detail" : "expected pk_tickets (id), found pk_tickets (id)"
+    },
+    {
+      "seq" : 39,
+      "status" : "PASS",
+      "category" : "schema",
+      "name" : "Table tickets foreign keys",
+      "detail" : "2 foreign keys: names, columns, targets, delete rules"
+    },
+    {
+      "seq" : 40,
+      "status" : "PASS",
+      "category" : "schema",
+      "name" : "Table tickets indexes",
+      "detail" : "2 indexes: names, uniqueness, keys and expressions"
+    },
+    {
+      "seq" : 41,
+      "status" : "PASS",
+      "category" : "schema",
+      "name" : "Table comments columns",
+      "detail" : "5 columns: names, types, lengths, nullability, defaults, identity"
+    },
+    {
+      "seq" : 42,
+      "status" : "PASS",
+      "category" : "schema",
+      "name" : "Table comments primary key",
+      "detail" : "expected pk_comments (id), found pk_comments (id)"
+    },
+    {
+      "seq" : 43,
+      "status" : "PASS",
+      "category" : "schema",
+      "name" : "Table comments foreign keys",
+      "detail" : "2 foreign keys: names, columns, targets, delete rules"
+    },
+    {
+      "seq" : 44,
+      "status" : "PASS",
+      "category" : "schema",
+      "name" : "Table comments indexes",
+      "detail" : "2 indexes: names, uniqueness, keys and expressions"
+    },
+    {
+      "seq" : 45,
+      "status" : "PASS",
+      "category" : "schema",
+      "name" : "Table user_claims columns",
+      "detail" : "4 columns: names, types, lengths, nullability, defaults, identity"
+    },
+    {
+      "seq" : 46,
+      "status" : "PASS",
+      "category" : "schema",
+      "name" : "Table user_claims primary key",
+      "detail" : "expected pk_user_claims (id), found pk_user_claims (id)"
+    },
+    {
+      "seq" : 47,
+      "status" : "PASS",
+      "category" : "schema",
+      "name" : "Table user_claims foreign keys",
+      "detail" : "1 foreign keys: names, columns, targets, delete rules"
+    },
+    {
+      "seq" : 48,
+      "status" : "PASS",
+      "category" : "schema",
+      "name" : "Table user_claims indexes",
+      "detail" : "1 indexes: names, uniqueness, keys and expressions"
+    },
+    {
+      "seq" : 49,
+      "status" : "PASS",
+      "category" : "schema",
+      "name" : "Table user_logins columns",
+      "detail" : "3 columns: names, types, lengths, nullability, defaults, identity"
+    },
+    {
+      "seq" : 50,
+      "status" : "PASS",
+      "category" : "schema",
+      "name" : "Table user_logins primary key",
+      "detail" : "expected pk_user_logins (login_provider, provider_key, user_id), found pk_user_logins (login_provider, provider_key, user_id)"
+    },
+    {
+      "seq" : 51,
+      "status" : "PASS",
+      "category" : "schema",
+      "name" : "Table user_logins foreign keys",
+      "detail" : "1 foreign keys: names, columns, targets, delete rules"
+    },
+    {
+      "seq" : 52,
+      "status" : "PASS",
+      "category" : "schema",
+      "name" : "Table user_logins indexes",
+      "detail" : "1 indexes: names, uniqueness, keys and expressions"
+    },
+    {
+      "seq" : 53,
+      "status" : "PASS",
+      "category" : "schema",
+      "name" : "Table user_roles columns",
+      "detail" : "2 columns: names, types, lengths, nullability, defaults, identity"
+    },
+    {
+      "seq" : 54,
+      "status" : "PASS",
+      "category" : "schema",
+      "name" : "Table user_roles primary key",
+      "detail" : "expected pk_user_roles (user_id, role_id), found pk_user_roles (user_id, role_id)"
+    },
+    {
+      "seq" : 55,
+      "status" : "PASS",
+      "category" : "schema",
+      "name" : "Table user_roles foreign keys",
+      "detail" : "2 foreign keys: names, columns, targets, delete rules"
+    },
+    {
+      "seq" : 56,
+      "status" : "PASS",
+      "category" : "schema",
+      "name" : "Table user_roles indexes",
+      "detail" : "2 indexes: names, uniqueness, keys and expressions"
+    },
+    {
+      "seq" : 57,
+      "status" : "PASS",
+      "category" : "schema",
+      "name" : "No unusable or disabled indexes",
+      "detail" : "0 unusable or disabled"
+    },
+    {
+      "seq" : 58,
+      "status" : "PASS",
+      "category" : "schema",
+      "name" : "No identifier is an Oracle reserved word",
+      "detail" : "74 names checked against V$RESERVED_WORDS"
+    },
+    {
+      "seq" : 59,
+      "status" : "PASS",
+      "category" : "summaries",
+      "name" : "Users by type",
+      "detail" : "Customer|8, Employee|3, Manager|1"
+    },
+    {
+      "seq" : 60,
+      "status" : "PASS",
+      "category" : "summaries",
+      "name" : "Users active vs soft-deleted",
+      "detail" : "active|12"
+    },
+    {
+      "seq" : 61,
+      "status" : "PASS",
+      "category" : "summaries",
+      "name" : "Users per role",
+      "detail" : "Customer|8, Employee|3, Manager|1"
+    },
+    {
+      "seq" : 62,
+      "status" : "PASS",
+      "category" : "summaries",
+      "name" : "Tickets by state",
+      "detail" : "0|8, 1|8, 2|8"
+    },
+    {
+      "seq" : 63,
+      "status" : "PASS",
+      "category" : "summaries",
+      "name" : "Tickets assigned vs unassigned",
+      "detail" : "assigned|16, unassigned|8"
+    },
+    {
+      "seq" : 64,
+      "status" : "PASS",
+      "category" : "summaries",
+      "name" : "Audit events by action",
+      "detail" : "0|11, 1|1, 2|24, 3|16, 4|8, 5|18"
+    },
+    {
+      "seq" : 65,
+      "status" : "PASS",
+      "category" : "summaries",
+      "name" : "Comments per ticket (distribution)",
+      "detail" : "3|6, 4|2"
+    },
+    {
+      "seq" : 66,
+      "status" : "PASS",
+      "category" : "summaries",
+      "name" : "Comment and commented-ticket totals",
+      "detail" : "26|8"
+    },
+    {
+      "seq" : 67,
+      "status" : "PASS",
+      "category" : "summaries",
+      "name" : "Ticket date ranges",
+      "detail" : "2026-09-07 08:20:34.000|2026-09-16 08:39:18.000|2026-09-07 11:26:34.000|2026-09-14 10:16:58.910|2026-09-11 00:13:34.000|2026-09-17 14:15:58.910"
+    },
+    {
+      "seq" : 68,
+      "status" : "PASS",
+      "category" : "summaries",
+      "name" : "Account and audit date ranges",
+      "detail" : "2026-09-10 14:41:58.910|2026-09-11 16:41:58.910|2026-09-07 08:20:34.000|2026-09-17 14:43:56.643"
+    },
+    {
+      "seq" : 69,
+      "status" : "PASS",
+      "category" : "sanitization",
+      "name" : "The export was made with credentials sanitized",
+      "detail" : "sanitizeCredentials = true"
+    },
+    {
+      "seq" : 70,
+      "status" : "PASS",
+      "category" : "sanitization",
+      "name" : "User count",
+      "detail" : "expected 12, found 12"
+    },
+    {
+      "seq" : 71,
+      "status" : "PASS",
+      "category" : "sanitization",
+      "name" : "Every user has no password hash or security stamp and must reset the password",
+      "detail" : "0 of 12 users not sanitized"
+    },
+    {
+      "seq" : 72,
+      "status" : "PASS",
+      "category" : "sanitization",
+      "name" : "No two active usernames differ only by case",
+      "detail" : "0 duplicates"
+    },
+    {
+      "seq" : 73,
+      "status" : "PASS",
+      "category" : "rules",
+      "name" : "New roles ids continue after the loaded ones",
+      "detail" : "next value 4, expected 4"
+    },
+    {
+      "seq" : 74,
+      "status" : "PASS",
+      "category" : "rules",
+      "name" : "New users ids continue after the loaded ones",
+      "detail" : "next value 13, expected 13"
+    },
+    {
+      "seq" : 75,
+      "status" : "PASS",
+      "category" : "rules",
+      "name" : "New audit_logs ids continue after the loaded ones",
+      "detail" : "next value 79, expected 79"
+    },
+    {
+      "seq" : 76,
+      "status" : "PASS",
+      "category" : "rules",
+      "name" : "New tickets ids continue after the loaded ones",
+      "detail" : "next value 25, expected 25"
+    },
+    {
+      "seq" : 77,
+      "status" : "PASS",
+      "category" : "rules",
+      "name" : "New comments ids continue after the loaded ones",
+      "detail" : "next value 27, expected 27"
+    },
+    {
+      "seq" : 78,
+      "status" : "PASS",
+      "category" : "rules",
+      "name" : "New user_claims ids continue after the loaded ones",
+      "detail" : "next value 1, expected 1"
+    },
+    {
+      "seq" : 79,
+      "status" : "PASS",
+      "category" : "rules",
+      "name" : "A second active user differing only by case is rejected",
+      "detail" : "inserting 'MANAGER' while 'manager' is active: rejected (ORA-00001)"
+    },
+    {
+      "seq" : 80,
+      "status" : "PASS",
+      "category" : "rules",
+      "name" : "A soft-deleted username can be reused",
+      "detail" : "'manager' soft-deleted, then inserted again: accepted"
+    },
+    {
+      "seq" : 81,
+      "status" : "PASS",
+      "category" : "rules",
+      "name" : "Two soft-deleted users may share a name",
+      "detail" : "two soft-deleted 'rule-test' users: accepted"
+    },
+    {
+      "seq" : 82,
+      "status" : "PASS",
+      "category" : "rules",
+      "name" : "A comment with a non-existent user and ticket is rejected",
+      "detail" : "rejected (ORA-02291)"
+    },
+    {
+      "seq" : 83,
+      "status" : "PASS",
+      "category" : "rules",
+      "name" : "A BOOLEAN column rejects a value that is not a boolean",
+      "detail" : "setting email_confirmed to 'maybe': rejected (ORA-61800)"
+    },
+    {
+      "seq" : 84,
+      "status" : "PASS",
+      "category" : "rules",
+      "name" : "Quote, backslash, ampersand, control characters, accent and emoji round-trip",
+      "detail" : "CHR/UNISTR literal stored and read back: identical"
+    },
+    {
+      "seq" : 85,
+      "status" : "PASS",
+      "category" : "rules",
+      "name" : "Text columns hold their length in characters up to the byte limit",
+      "detail" : "2,000 two-byte characters (4,000 bytes) in comments.text: accepted; 1,334 three-byte characters (4,002 bytes): rejected (ORA-12899) (MAX_STRING_SIZE STANDARD)"
+    },
+    {
+      "seq" : 86,
+      "status" : "PASS",
+      "category" : "rules",
+      "name" : "The rule tests left the database unchanged",
+      "detail" : "0 test rows left, 0 sequences moved"
+    }
+  ],
+  "schemaModel" :
+  [
+    {
+      "sourceName" : "Roles",
+      "targetName" : "roles",
+      "columns" :
+      [
+        {
+          "sourceName" : "Id",
+          "sourceType" : "int",
+          "kind" : "int",
+          "targetName" : "id",
+          "targetType" : "NUMBER(10)",
+          "dataType" : "NUMBER",
+          "maxLength" : null,
+          "precision" : 10,
+          "scale" : 0,
+          "nullable" : false,
+          "default" : null,
+          "identity" : true,
+          "synthetic" : false
+        },
+        {
+          "sourceName" : "Name",
+          "sourceType" : "nvarchar",
+          "kind" : "string",
+          "targetName" : "name",
+          "targetType" : "VARCHAR2(256 CHAR)",
+          "dataType" : "VARCHAR2",
+          "maxLength" : 256,
+          "precision" : null,
+          "scale" : null,
+          "nullable" : false,
+          "default" : null,
+          "identity" : false,
+          "synthetic" : false
+        }
+      ],
+      "primaryKey" :
+      [
+        "id"
+      ],
+      "foreignKeys" :
+      [
+      ],
+      "indexes" :
+      [
+        {
+          "targetName" : "ix_roles_name",
+          "sourceName" : "RoleNameIndex",
+          "unique" : true,
+          "columns" :
+          [
+            {
+              "column" : "name",
+              "expression" : null,
+              "descending" : false
+            }
+          ],
+          "filter" : null
+        }
+      ]
+    },
+    {
+      "sourceName" : "Users",
+      "targetName" : "users",
+      "columns" :
+      [
+        {
+          "sourceName" : "Id",
+          "sourceType" : "int",
+          "kind" : "int",
+          "targetName" : "id",
+          "targetType" : "NUMBER(10)",
+          "dataType" : "NUMBER",
+          "maxLength" : null,
+          "precision" : 10,
+          "scale" : 0,
+          "nullable" : false,
+          "default" : null,
+          "identity" : true,
+          "synthetic" : false
+        },
+        {
+          "sourceName" : "Name",
+          "sourceType" : "nvarchar",
+          "kind" : "string",
+          "targetName" : "name",
+          "targetType" : "VARCHAR2(256 CHAR)",
+          "dataType" : "VARCHAR2",
+          "maxLength" : 256,
+          "precision" : null,
+          "scale" : null,
+          "nullable" : false,
+          "default" : null,
+          "identity" : false,
+          "synthetic" : false
+        },
+        {
+          "sourceName" : "CreatedAt",
+          "sourceType" : "datetime",
+          "kind" : "datetime",
+          "targetName" : "created_at",
+          "targetType" : "TIMESTAMP(3)",
+          "dataType" : "TIMESTAMP(3)",
+          "maxLength" : null,
+          "precision" : null,
+          "scale" : 3,
+          "nullable" : false,
+          "default" : null,
+          "identity" : false,
+          "synthetic" : false
+        },
+        {
+          "sourceName" : "PasswordHash",
+          "sourceType" : "nvarchar",
+          "kind" : "string",
+          "targetName" : "password_hash",
+          "targetType" : "CLOB",
+          "dataType" : "CLOB",
+          "maxLength" : null,
+          "precision" : null,
+          "scale" : null,
+          "nullable" : true,
+          "default" : null,
+          "identity" : false,
+          "synthetic" : false
+        },
+        {
+          "sourceName" : "Discriminator",
+          "sourceType" : "nvarchar",
+          "kind" : "string",
+          "targetName" : "discriminator",
+          "targetType" : "VARCHAR2(128 CHAR)",
+          "dataType" : "VARCHAR2",
+          "maxLength" : 128,
+          "precision" : null,
+          "scale" : null,
+          "nullable" : false,
+          "default" : null,
+          "identity" : false,
+          "synthetic" : false
+        },
+        {
+          "sourceName" : "DeletedAt",
+          "sourceType" : "datetime",
+          "kind" : "datetime",
+          "targetName" : "deleted_at",
+          "targetType" : "TIMESTAMP(3)",
+          "dataType" : "TIMESTAMP(3)",
+          "maxLength" : null,
+          "precision" : null,
+          "scale" : 3,
+          "nullable" : true,
+          "default" : null,
+          "identity" : false,
+          "synthetic" : false
+        },
+        {
+          "sourceName" : "Email",
+          "sourceType" : "nvarchar",
+          "kind" : "string",
+          "targetName" : "email",
+          "targetType" : "VARCHAR2(256 CHAR)",
+          "dataType" : "VARCHAR2",
+          "maxLength" : 256,
+          "precision" : null,
+          "scale" : null,
+          "nullable" : true,
+          "default" : null,
+          "identity" : false,
+          "synthetic" : false
+        },
+        {
+          "sourceName" : "EmailConfirmed",
+          "sourceType" : "bit",
+          "kind" : "bit",
+          "targetName" : "email_confirmed",
+          "targetType" : "BOOLEAN",
+          "dataType" : "BOOLEAN",
+          "maxLength" : null,
+          "precision" : null,
+          "scale" : null,
+          "nullable" : false,
+          "default" : "FALSE",
+          "identity" : false,
+          "synthetic" : false
+        },
+        {
+          "sourceName" : "SecurityStamp",
+          "sourceType" : "nvarchar",
+          "kind" : "string",
+          "targetName" : "security_stamp",
+          "targetType" : "CLOB",
+          "dataType" : "CLOB",
+          "maxLength" : null,
+          "precision" : null,
+          "scale" : null,
+          "nullable" : true,
+          "default" : null,
+          "identity" : false,
+          "synthetic" : false
+        },
+        {
+          "sourceName" : "PhoneNumber",
+          "sourceType" : "nvarchar",
+          "kind" : "string",
+          "targetName" : "phone_number",
+          "targetType" : "CLOB",
+          "dataType" : "CLOB",
+          "maxLength" : null,
+          "precision" : null,
+          "scale" : null,
+          "nullable" : true,
+          "default" : null,
+          "identity" : false,
+          "synthetic" : false
+        },
+        {
+          "sourceName" : "PhoneNumberConfirmed",
+          "sourceType" : "bit",
+          "kind" : "bit",
+          "targetName" : "phone_number_confirmed",
+          "targetType" : "BOOLEAN",
+          "dataType" : "BOOLEAN",
+          "maxLength" : null,
+          "precision" : null,
+          "scale" : null,
+          "nullable" : false,
+          "default" : "FALSE",
+          "identity" : false,
+          "synthetic" : false
+        },
+        {
+          "sourceName" : "TwoFactorEnabled",
+          "sourceType" : "bit",
+          "kind" : "bit",
+          "targetName" : "two_factor_enabled",
+          "targetType" : "BOOLEAN",
+          "dataType" : "BOOLEAN",
+          "maxLength" : null,
+          "precision" : null,
+          "scale" : null,
+          "nullable" : false,
+          "default" : "FALSE",
+          "identity" : false,
+          "synthetic" : false
+        },
+        {
+          "sourceName" : "LockoutEndDateUtc",
+          "sourceType" : "datetime",
+          "kind" : "datetime",
+          "targetName" : "lockout_end_date_utc",
+          "targetType" : "TIMESTAMP(3)",
+          "dataType" : "TIMESTAMP(3)",
+          "maxLength" : null,
+          "precision" : null,
+          "scale" : 3,
+          "nullable" : true,
+          "default" : null,
+          "identity" : false,
+          "synthetic" : false
+        },
+        {
+          "sourceName" : "LockoutEnabled",
+          "sourceType" : "bit",
+          "kind" : "bit",
+          "targetName" : "lockout_enabled",
+          "targetType" : "BOOLEAN",
+          "dataType" : "BOOLEAN",
+          "maxLength" : null,
+          "precision" : null,
+          "scale" : null,
+          "nullable" : false,
+          "default" : "FALSE",
+          "identity" : false,
+          "synthetic" : false
+        },
+        {
+          "sourceName" : "AccessFailedCount",
+          "sourceType" : "int",
+          "kind" : "int",
+          "targetName" : "access_failed_count",
+          "targetType" : "NUMBER(10)",
+          "dataType" : "NUMBER",
+          "maxLength" : null,
+          "precision" : 10,
+          "scale" : 0,
+          "nullable" : false,
+          "default" : "0",
+          "identity" : false,
+          "synthetic" : false
+        },
+        {
+          "sourceName" : "MustResetPassword",
+          "sourceType" : "bit",
+          "kind" : "bit",
+          "targetName" : "must_reset_password",
+          "targetType" : "BOOLEAN",
+          "dataType" : "BOOLEAN",
+          "maxLength" : null,
+          "precision" : null,
+          "scale" : null,
+          "nullable" : false,
+          "default" : "FALSE",
+          "identity" : false,
+          "synthetic" : true
+        }
+      ],
+      "primaryKey" :
+      [
+        "id"
+      ],
+      "foreignKeys" :
+      [
+      ],
+      "indexes" :
+      [
+        {
+          "targetName" : "ix_users_name_active",
+          "sourceName" : "IX_Users_Name_Active",
+          "unique" : true,
+          "columns" :
+          [
+            {
+              "column" : "name",
+              "expression" : "CASE WHEN deleted_at IS NULL THEN LOWER(name) END",
+              "descending" : false
+            }
+          ],
+          "filter" : "deleted_at IS NULL"
+        }
+      ]
+    },
+    {
+      "sourceName" : "AuditLogs",
+      "targetName" : "audit_logs",
+      "columns" :
+      [
+        {
+          "sourceName" : "Id",
+          "sourceType" : "int",
+          "kind" : "int",
+          "targetName" : "id",
+          "targetType" : "NUMBER(10)",
+          "dataType" : "NUMBER",
+          "maxLength" : null,
+          "precision" : 10,
+          "scale" : 0,
+          "nullable" : false,
+          "default" : null,
+          "identity" : true,
+          "synthetic" : false
+        },
+        {
+          "sourceName" : "Timestamp",
+          "sourceType" : "datetime",
+          "kind" : "datetime",
+          "targetName" : "timestamp",
+          "targetType" : "TIMESTAMP(3)",
+          "dataType" : "TIMESTAMP(3)",
+          "maxLength" : null,
+          "precision" : null,
+          "scale" : 3,
+          "nullable" : false,
+          "default" : null,
+          "identity" : false,
+          "synthetic" : false
+        },
+        {
+          "sourceName" : "UserId",
+          "sourceType" : "int",
+          "kind" : "int",
+          "targetName" : "user_id",
+          "targetType" : "NUMBER(10)",
+          "dataType" : "NUMBER",
+          "maxLength" : null,
+          "precision" : 10,
+          "scale" : 0,
+          "nullable" : false,
+          "default" : null,
+          "identity" : false,
+          "synthetic" : false
+        },
+        {
+          "sourceName" : "Action",
+          "sourceType" : "int",
+          "kind" : "int",
+          "targetName" : "action",
+          "targetType" : "NUMBER(10)",
+          "dataType" : "NUMBER",
+          "maxLength" : null,
+          "precision" : 10,
+          "scale" : 0,
+          "nullable" : false,
+          "default" : null,
+          "identity" : false,
+          "synthetic" : false
+        },
+        {
+          "sourceName" : "EntityType",
+          "sourceType" : "int",
+          "kind" : "int",
+          "targetName" : "entity_type",
+          "targetType" : "NUMBER(10)",
+          "dataType" : "NUMBER",
+          "maxLength" : null,
+          "precision" : 10,
+          "scale" : 0,
+          "nullable" : false,
+          "default" : null,
+          "identity" : false,
+          "synthetic" : false
+        },
+        {
+          "sourceName" : "EntityId",
+          "sourceType" : "int",
+          "kind" : "int",
+          "targetName" : "entity_id",
+          "targetType" : "NUMBER(10)",
+          "dataType" : "NUMBER",
+          "maxLength" : null,
+          "precision" : 10,
+          "scale" : 0,
+          "nullable" : false,
+          "default" : null,
+          "identity" : false,
+          "synthetic" : false
+        }
+      ],
+      "primaryKey" :
+      [
+        "id"
+      ],
+      "foreignKeys" :
+      [
+        {
+          "targetName" : "fk_audit_logs_users_user_id",
+          "sourceName" : "FK_dbo.AuditLogs_dbo.Users_UserId",
+          "columns" :
+          [
+            "user_id"
+          ],
+          "refTable" : "users",
+          "refColumns" :
+          [
+            "id"
+          ],
+          "onDelete" : "CASCADE"
+        }
+      ],
+      "indexes" :
+      [
+        {
+          "targetName" : "ix_audit_logs_user_id",
+          "sourceName" : "IX_UserId",
+          "unique" : false,
+          "columns" :
+          [
+            {
+              "column" : "user_id",
+              "expression" : null,
+              "descending" : false
+            }
+          ],
+          "filter" : null
+        }
+      ]
+    },
+    {
+      "sourceName" : "Tickets",
+      "targetName" : "tickets",
+      "columns" :
+      [
+        {
+          "sourceName" : "Id",
+          "sourceType" : "int",
+          "kind" : "int",
+          "targetName" : "id",
+          "targetType" : "NUMBER(10)",
+          "dataType" : "NUMBER",
+          "maxLength" : null,
+          "precision" : 10,
+          "scale" : 0,
+          "nullable" : false,
+          "default" : null,
+          "identity" : true,
+          "synthetic" : false
+        },
+        {
+          "sourceName" : "State",
+          "sourceType" : "int",
+          "kind" : "int",
+          "targetName" : "state",
+          "targetType" : "NUMBER(10)",
+          "dataType" : "NUMBER",
+          "maxLength" : null,
+          "precision" : 10,
+          "scale" : 0,
+          "nullable" : false,
+          "default" : null,
+          "identity" : false,
+          "synthetic" : false
+        },
+        {
+          "sourceName" : "Description",
+          "sourceType" : "nvarchar",
+          "kind" : "string",
+          "targetName" : "description",
+          "targetType" : "VARCHAR2(2000 CHAR)",
+          "dataType" : "VARCHAR2",
+          "maxLength" : 2000,
+          "precision" : null,
+          "scale" : null,
+          "nullable" : true,
+          "default" : null,
+          "identity" : false,
+          "synthetic" : false
+        },
+        {
+          "sourceName" : "User_Id",
+          "sourceType" : "int",
+          "kind" : "int",
+          "targetName" : "user_id",
+          "targetType" : "NUMBER(10)",
+          "dataType" : "NUMBER",
+          "maxLength" : null,
+          "precision" : 10,
+          "scale" : 0,
+          "nullable" : true,
+          "default" : null,
+          "identity" : false,
+          "synthetic" : false
+        },
+        {
+          "sourceName" : "Customer_Id",
+          "sourceType" : "int",
+          "kind" : "int",
+          "targetName" : "customer_id",
+          "targetType" : "NUMBER(10)",
+          "dataType" : "NUMBER",
+          "maxLength" : null,
+          "precision" : 10,
+          "scale" : 0,
+          "nullable" : true,
+          "default" : null,
+          "identity" : false,
+          "synthetic" : false
+        },
+        {
+          "sourceName" : "SubmittedDate",
+          "sourceType" : "datetime",
+          "kind" : "datetime",
+          "targetName" : "submitted_date",
+          "targetType" : "TIMESTAMP(3)",
+          "dataType" : "TIMESTAMP(3)",
+          "maxLength" : null,
+          "precision" : null,
+          "scale" : 3,
+          "nullable" : true,
+          "default" : null,
+          "identity" : false,
+          "synthetic" : false
+        },
+        {
+          "sourceName" : "AssignedDate",
+          "sourceType" : "datetime",
+          "kind" : "datetime",
+          "targetName" : "assigned_date",
+          "targetType" : "TIMESTAMP(3)",
+          "dataType" : "TIMESTAMP(3)",
+          "maxLength" : null,
+          "precision" : null,
+          "scale" : 3,
+          "nullable" : true,
+          "default" : null,
+          "identity" : false,
+          "synthetic" : false
+        },
+        {
+          "sourceName" : "CompletedDate",
+          "sourceType" : "datetime",
+          "kind" : "datetime",
+          "targetName" : "completed_date",
+          "targetType" : "TIMESTAMP(3)",
+          "dataType" : "TIMESTAMP(3)",
+          "maxLength" : null,
+          "precision" : null,
+          "scale" : 3,
+          "nullable" : true,
+          "default" : null,
+          "identity" : false,
+          "synthetic" : false
+        }
+      ],
+      "primaryKey" :
+      [
+        "id"
+      ],
+      "foreignKeys" :
+      [
+        {
+          "targetName" : "fk_tickets_users_customer_id",
+          "sourceName" : "FK_dbo.Orders_dbo.Users_Customer_Id",
+          "columns" :
+          [
+            "customer_id"
+          ],
+          "refTable" : "users",
+          "refColumns" :
+          [
+            "id"
+          ],
+          "onDelete" : "NO ACTION"
+        },
+        {
+          "targetName" : "fk_tickets_users_user_id",
+          "sourceName" : "FK_dbo.Orders_dbo.Users_User_Id",
+          "columns" :
+          [
+            "user_id"
+          ],
+          "refTable" : "users",
+          "refColumns" :
+          [
+            "id"
+          ],
+          "onDelete" : "NO ACTION"
+        }
+      ],
+      "indexes" :
+      [
+        {
+          "targetName" : "ix_tickets_customer_id",
+          "sourceName" : "IX_Customer_Id",
+          "unique" : false,
+          "columns" :
+          [
+            {
+              "column" : "customer_id",
+              "expression" : null,
+              "descending" : false
+            }
+          ],
+          "filter" : null
+        },
+        {
+          "targetName" : "ix_tickets_user_id",
+          "sourceName" : "IX_User_Id",
+          "unique" : false,
+          "columns" :
+          [
+            {
+              "column" : "user_id",
+              "expression" : null,
+              "descending" : false
+            }
+          ],
+          "filter" : null
+        }
+      ]
+    },
+    {
+      "sourceName" : "Comments",
+      "targetName" : "comments",
+      "columns" :
+      [
+        {
+          "sourceName" : "Id",
+          "sourceType" : "int",
+          "kind" : "int",
+          "targetName" : "id",
+          "targetType" : "NUMBER(10)",
+          "dataType" : "NUMBER",
+          "maxLength" : null,
+          "precision" : 10,
+          "scale" : 0,
+          "nullable" : false,
+          "default" : null,
+          "identity" : true,
+          "synthetic" : false
+        },
+        {
+          "sourceName" : "UserId",
+          "sourceType" : "int",
+          "kind" : "int",
+          "targetName" : "user_id",
+          "targetType" : "NUMBER(10)",
+          "dataType" : "NUMBER",
+          "maxLength" : null,
+          "precision" : 10,
+          "scale" : 0,
+          "nullable" : false,
+          "default" : null,
+          "identity" : false,
+          "synthetic" : false
+        },
+        {
+          "sourceName" : "TicketId",
+          "sourceType" : "int",
+          "kind" : "int",
+          "targetName" : "ticket_id",
+          "targetType" : "NUMBER(10)",
+          "dataType" : "NUMBER",
+          "maxLength" : null,
+          "precision" : 10,
+          "scale" : 0,
+          "nullable" : false,
+          "default" : null,
+          "identity" : false,
+          "synthetic" : false
+        },
+        {
+          "sourceName" : "Text",
+          "sourceType" : "nvarchar",
+          "kind" : "string",
+          "targetName" : "text",
+          "targetType" : "VARCHAR2(2000 CHAR)",
+          "dataType" : "VARCHAR2",
+          "maxLength" : 2000,
+          "precision" : null,
+          "scale" : null,
+          "nullable" : true,
+          "default" : null,
+          "identity" : false,
+          "synthetic" : false
+        },
+        {
+          "sourceName" : "CreatedAt",
+          "sourceType" : "datetime",
+          "kind" : "datetime",
+          "targetName" : "created_at",
+          "targetType" : "TIMESTAMP(3)",
+          "dataType" : "TIMESTAMP(3)",
+          "maxLength" : null,
+          "precision" : null,
+          "scale" : 3,
+          "nullable" : false,
+          "default" : null,
+          "identity" : false,
+          "synthetic" : false
+        }
+      ],
+      "primaryKey" :
+      [
+        "id"
+      ],
+      "foreignKeys" :
+      [
+        {
+          "targetName" : "fk_comments_tickets_ticket_id",
+          "sourceName" : "FK_dbo.Comments_dbo.Tickets_TicketId",
+          "columns" :
+          [
+            "ticket_id"
+          ],
+          "refTable" : "tickets",
+          "refColumns" :
+          [
+            "id"
+          ],
+          "onDelete" : "CASCADE"
+        },
+        {
+          "targetName" : "fk_comments_users_user_id",
+          "sourceName" : "FK_dbo.Comments_dbo.Users_UserId",
+          "columns" :
+          [
+            "user_id"
+          ],
+          "refTable" : "users",
+          "refColumns" :
+          [
+            "id"
+          ],
+          "onDelete" : "CASCADE"
+        }
+      ],
+      "indexes" :
+      [
+        {
+          "targetName" : "ix_comments_ticket_id",
+          "sourceName" : "IX_TicketId",
+          "unique" : false,
+          "columns" :
+          [
+            {
+              "column" : "ticket_id",
+              "expression" : null,
+              "descending" : false
+            }
+          ],
+          "filter" : null
+        },
+        {
+          "targetName" : "ix_comments_user_id",
+          "sourceName" : "IX_UserId",
+          "unique" : false,
+          "columns" :
+          [
+            {
+              "column" : "user_id",
+              "expression" : null,
+              "descending" : false
+            }
+          ],
+          "filter" : null
+        }
+      ]
+    },
+    {
+      "sourceName" : "UserClaims",
+      "targetName" : "user_claims",
+      "columns" :
+      [
+        {
+          "sourceName" : "Id",
+          "sourceType" : "int",
+          "kind" : "int",
+          "targetName" : "id",
+          "targetType" : "NUMBER(10)",
+          "dataType" : "NUMBER",
+          "maxLength" : null,
+          "precision" : 10,
+          "scale" : 0,
+          "nullable" : false,
+          "default" : null,
+          "identity" : true,
+          "synthetic" : false
+        },
+        {
+          "sourceName" : "UserId",
+          "sourceType" : "int",
+          "kind" : "int",
+          "targetName" : "user_id",
+          "targetType" : "NUMBER(10)",
+          "dataType" : "NUMBER",
+          "maxLength" : null,
+          "precision" : 10,
+          "scale" : 0,
+          "nullable" : false,
+          "default" : null,
+          "identity" : false,
+          "synthetic" : false
+        },
+        {
+          "sourceName" : "ClaimType",
+          "sourceType" : "nvarchar",
+          "kind" : "string",
+          "targetName" : "claim_type",
+          "targetType" : "CLOB",
+          "dataType" : "CLOB",
+          "maxLength" : null,
+          "precision" : null,
+          "scale" : null,
+          "nullable" : true,
+          "default" : null,
+          "identity" : false,
+          "synthetic" : false
+        },
+        {
+          "sourceName" : "ClaimValue",
+          "sourceType" : "nvarchar",
+          "kind" : "string",
+          "targetName" : "claim_value",
+          "targetType" : "CLOB",
+          "dataType" : "CLOB",
+          "maxLength" : null,
+          "precision" : null,
+          "scale" : null,
+          "nullable" : true,
+          "default" : null,
+          "identity" : false,
+          "synthetic" : false
+        }
+      ],
+      "primaryKey" :
+      [
+        "id"
+      ],
+      "foreignKeys" :
+      [
+        {
+          "targetName" : "fk_user_claims_users_user_id",
+          "sourceName" : "FK_dbo.UserClaims_dbo.Users_UserId",
+          "columns" :
+          [
+            "user_id"
+          ],
+          "refTable" : "users",
+          "refColumns" :
+          [
+            "id"
+          ],
+          "onDelete" : "CASCADE"
+        }
+      ],
+      "indexes" :
+      [
+        {
+          "targetName" : "ix_user_claims_user_id",
+          "sourceName" : "IX_UserId",
+          "unique" : false,
+          "columns" :
+          [
+            {
+              "column" : "user_id",
+              "expression" : null,
+              "descending" : false
+            }
+          ],
+          "filter" : null
+        }
+      ]
+    },
+    {
+      "sourceName" : "UserLogins",
+      "targetName" : "user_logins",
+      "columns" :
+      [
+        {
+          "sourceName" : "LoginProvider",
+          "sourceType" : "nvarchar",
+          "kind" : "string",
+          "targetName" : "login_provider",
+          "targetType" : "VARCHAR2(128 CHAR)",
+          "dataType" : "VARCHAR2",
+          "maxLength" : 128,
+          "precision" : null,
+          "scale" : null,
+          "nullable" : false,
+          "default" : null,
+          "identity" : false,
+          "synthetic" : false
+        },
+        {
+          "sourceName" : "ProviderKey",
+          "sourceType" : "nvarchar",
+          "kind" : "string",
+          "targetName" : "provider_key",
+          "targetType" : "VARCHAR2(128 CHAR)",
+          "dataType" : "VARCHAR2",
+          "maxLength" : 128,
+          "precision" : null,
+          "scale" : null,
+          "nullable" : false,
+          "default" : null,
+          "identity" : false,
+          "synthetic" : false
+        },
+        {
+          "sourceName" : "UserId",
+          "sourceType" : "int",
+          "kind" : "int",
+          "targetName" : "user_id",
+          "targetType" : "NUMBER(10)",
+          "dataType" : "NUMBER",
+          "maxLength" : null,
+          "precision" : 10,
+          "scale" : 0,
+          "nullable" : false,
+          "default" : null,
+          "identity" : false,
+          "synthetic" : false
+        }
+      ],
+      "primaryKey" :
+      [
+        "login_provider",
+        "provider_key",
+        "user_id"
+      ],
+      "foreignKeys" :
+      [
+        {
+          "targetName" : "fk_user_logins_users_user_id",
+          "sourceName" : "FK_dbo.UserLogins_dbo.Users_UserId",
+          "columns" :
+          [
+            "user_id"
+          ],
+          "refTable" : "users",
+          "refColumns" :
+          [
+            "id"
+          ],
+          "onDelete" : "CASCADE"
+        }
+      ],
+      "indexes" :
+      [
+        {
+          "targetName" : "ix_user_logins_user_id",
+          "sourceName" : "IX_UserId",
+          "unique" : false,
+          "columns" :
+          [
+            {
+              "column" : "user_id",
+              "expression" : null,
+              "descending" : false
+            }
+          ],
+          "filter" : null
+        }
+      ]
+    },
+    {
+      "sourceName" : "UserRoles",
+      "targetName" : "user_roles",
+      "columns" :
+      [
+        {
+          "sourceName" : "UserId",
+          "sourceType" : "int",
+          "kind" : "int",
+          "targetName" : "user_id",
+          "targetType" : "NUMBER(10)",
+          "dataType" : "NUMBER",
+          "maxLength" : null,
+          "precision" : 10,
+          "scale" : 0,
+          "nullable" : false,
+          "default" : null,
+          "identity" : false,
+          "synthetic" : false
+        },
+        {
+          "sourceName" : "RoleId",
+          "sourceType" : "int",
+          "kind" : "int",
+          "targetName" : "role_id",
+          "targetType" : "NUMBER(10)",
+          "dataType" : "NUMBER",
+          "maxLength" : null,
+          "precision" : 10,
+          "scale" : 0,
+          "nullable" : false,
+          "default" : null,
+          "identity" : false,
+          "synthetic" : false
+        }
+      ],
+      "primaryKey" :
+      [
+        "user_id",
+        "role_id"
+      ],
+      "foreignKeys" :
+      [
+        {
+          "targetName" : "fk_user_roles_roles_role_id",
+          "sourceName" : "FK_dbo.UserRoles_dbo.Roles_RoleId",
+          "columns" :
+          [
+            "role_id"
+          ],
+          "refTable" : "roles",
+          "refColumns" :
+          [
+            "id"
+          ],
+          "onDelete" : "CASCADE"
+        },
+        {
+          "targetName" : "fk_user_roles_users_user_id",
+          "sourceName" : "FK_dbo.UserRoles_dbo.Users_UserId",
+          "columns" :
+          [
+            "user_id"
+          ],
+          "refTable" : "users",
+          "refColumns" :
+          [
+            "id"
+          ],
+          "onDelete" : "CASCADE"
+        }
+      ],
+      "indexes" :
+      [
+        {
+          "targetName" : "ix_user_roles_role_id",
+          "sourceName" : "IX_RoleId",
+          "unique" : false,
+          "columns" :
+          [
+            {
+              "column" : "role_id",
+              "expression" : null,
+              "descending" : false
+            }
+          ],
+          "filter" : null
+        },
+        {
+          "targetName" : "ix_user_roles_user_id",
+          "sourceName" : "IX_UserId",
+          "unique" : false,
+          "columns" :
+          [
+            {
+              "column" : "user_id",
+              "expression" : null,
+              "descending" : false
+            }
+          ],
+          "filter" : null
+        }
+      ]
+    }
+  ],
+  "knownDifferences" :
+  [
+    "Identifiers are lowercase snake_case in the SQL (for example CreatedAt becomes created_at; User_Id becomes user_id) and Oracle stores them in upper case; foreign key and index names are renamed too. Data values are never lowercased.",
+    "datetime columns become TIMESTAMP(3) without time zone and keep the source values exactly; it is not known whether the legacy application stored UTC or local times (only LockoutEndDateUtc is UTC by name), so no zone conversion is made.",
+    "SQL Server compared text case-insensitively; Oracle is case-sensitive. Username uniqueness is enforced case-insensitively by a function-based unique index on CASE WHEN deleted_at IS NULL THEN LOWER(name) END (Oracle has no partial index), so authentication must compare LOWER(name) = LOWER(input). Role names use a plain case-sensitive unique index.",
+    "bit columns become the native BOOLEAN type (Oracle 23ai and later; not available on 19c); the identity columns become GENERATED BY DEFAULT AS IDENTITY and the data supplies explicit ids (each identity is restarted after the last issued value once the data is loaded).",
+    "Oracle stores an empty string as NULL. The export refuses a source that contains an empty string (there is none), because loading it would silently turn it into NULL.",
+    "ON DELETE NO ACTION is written by leaving the clause out: Oracle rejects the words, and its default already means no action.",
+    "nvarchar(n) becomes VARCHAR2(n CHAR): the length is in characters, but a VARCHAR2 value is also limited to 4000 bytes unless the database has MAX_STRING_SIZE=EXTENDED, so multi-byte text near the limit can overflow.",
+    "The SQL files are pure ASCII: control characters are written as CHR(n) and non-ASCII characters as UNISTR('\\XXXX'), so loading does not depend on the client character set.",
+    "Index names that were duplicated across tables in SQL Server (for example IX_UserId) were prefixed with the table name, then renamed to snake_case."
+  ],
+  "excludedTables" :
+  [
+    "__MigrationHistory"
+  ]
+}

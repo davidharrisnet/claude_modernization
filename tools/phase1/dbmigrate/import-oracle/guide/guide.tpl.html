@@ -1,0 +1,602 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MasterAntiqueRepair Oracle Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+:root {
+  --ground: #f3f5f7; --surface: #ffffff; --ink: #18212b; --muted: #56616e; --line: #d5dbe1;
+  --accent: #875a13; --accent-soft: #f6ecd9; --code-bg: #1c252f; --code-ink: #e3e8ee; --code-muted: #8d99a6;
+  --note-bg: #eaf1f7; --note-line: #9db7cf; --warn-bg: #fbf0e0; --warn-line: #d9a857;
+  --ok: #1f6b3a; --focus: #2f6fa8;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --cond: "IBM Plex Sans Condensed", "IBM Plex Sans", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --ground: #10151a; --surface: #171e25; --ink: #e3e8ed; --muted: #97a2ae; --line: #2b343e;
+    --accent: #dcaa55; --accent-soft: #2c2415; --code-bg: #0b1015; --code-ink: #dfe5eb; --code-muted: #7d8995;
+    --note-bg: #16222e; --note-line: #3c5a78; --warn-bg: #2a2116; --warn-line: #8a6a33; --ok: #8fd4a6; --focus: #7fb2e0;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ground: #10151a; --surface: #171e25; --ink: #e3e8ed; --muted: #97a2ae; --line: #2b343e;
+  --accent: #dcaa55; --accent-soft: #2c2415; --code-bg: #0b1015; --code-ink: #dfe5eb; --code-muted: #7d8995;
+  --note-bg: #16222e; --note-line: #3c5a78; --warn-bg: #2a2116; --warn-line: #8a6a33; --ok: #8fd4a6; --focus: #7fb2e0;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body { margin: 0; background: var(--ground); color: var(--ink); font: 16px/1.6 var(--sans); padding-inline: 16px; }
+.shell { max-width: 1180px; margin: 0 auto; padding-block: 28px 72px; display: grid; gap: 40px; grid-template-columns: 1fr; }
+@media (min-width: 1000px) { .shell { grid-template-columns: 230px minmax(0, 1fr); } }
+nav.toc { font-size: .9rem; }
+@media (min-width: 1000px) { nav.toc { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 20px); align-self: start; max-height: calc(100vh - 40px); overflow-y: auto; } }
+nav.toc p { font: 600 .74rem/1 var(--cond); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; }
+nav.toc ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+nav.toc a { display: block; padding: 5px 10px; border-radius: 6px; color: var(--ink); text-decoration: none; border-left: 2px solid transparent; }
+nav.toc a:hover { background: var(--surface); border-left-color: var(--accent); }
+nav.toc ol ol { margin: 2px 0 6px 12px; font-size: .84rem; }
+nav.toc ol ol a { color: var(--muted); padding-block: 3px; }
+main { min-width: 0; max-width: 820px; }
+@media (max-width: 999px) { nav.toc ol ol { display: none; } nav.toc > ol { display: flex; flex-wrap: wrap; gap: 6px; } nav.toc a { border: 1px solid var(--line); border-radius: 999px; padding: 4px 11px; background: var(--surface); } }
+header.hero { padding-bottom: 24px; border-bottom: 1px solid var(--line); margin-bottom: 8px; }
+.eyebrow { font: 600 .78rem/1.3 var(--cond); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); margin: 0 0 8px; }
+h1 { font: 600 clamp(1.9rem, 4.2vw, 2.6rem)/1.12 var(--cond); margin: 0 0 12px; text-wrap: balance; letter-spacing: -.01em; }
+h2 { font: 600 1.6rem/1.2 var(--cond); margin: 56px 0 12px; text-wrap: balance; scroll-margin-top: 16px; }
+h3 { font: 600 1.18rem/1.3 var(--cond); margin: 34px 0 8px; text-wrap: balance; scroll-margin-top: 16px; }
+h4 { font: 600 1rem/1.35 var(--sans); margin: 22px 0 6px; }
+p, li { max-width: 68ch; }
+.lede { font-size: 1.08rem; color: var(--muted); margin: 0; }
+a { color: var(--accent); text-underline-offset: 2px; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
+code { font: .88em var(--mono); background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; margin: 22px 0 8px; }
+.facts div { background: var(--surface); padding: 12px 14px; }
+.facts dt { font: 600 .72rem/1.2 var(--cond); letter-spacing: .07em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+.facts dd { margin: 0; font: 500 .95rem/1.4 var(--mono); overflow-wrap: anywhere; }
+.callout { border-left: 3px solid var(--note-line); background: var(--note-bg); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 18px 0; }
+.callout.warn { border-left-color: var(--warn-line); background: var(--warn-bg); }
+.callout > :first-child { margin-top: 0; } .callout > :last-child { margin-bottom: 0; }
+.callout strong:first-child { font-family: var(--cond); letter-spacing: .02em; }
+.code { margin: 12px 0 18px; border-radius: 10px; background: var(--code-bg); overflow: hidden; border: 1px solid var(--line); }
+.code-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 7px 8px 7px 14px; border-bottom: 1px solid rgba(255,255,255,.08); font: 500 .78rem/1.3 var(--mono); color: var(--code-muted); }
+.code-head span { overflow-wrap: anywhere; }
+.code-head button { font: 500 .76rem/1 var(--sans); color: var(--code-ink); background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14); border-radius: 6px; padding: 6px 10px; cursor: pointer; flex: none; }
+.code-head button:hover { background: rgba(255,255,255,.16); }
+.code pre { margin: 0; padding: 14px 16px; overflow-x: auto; color: var(--code-ink); font: .84rem/1.55 var(--mono); tab-size: 4; }
+.code pre code { background: none; padding: 0; font: inherit; overflow-wrap: normal; }
+.code.out { background: var(--surface); }
+.code.out .code-head { color: var(--muted); border-bottom-color: var(--line); }
+.code.out pre { color: var(--ink); }
+.table-wrap { overflow-x: auto; margin: 12px 0 18px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+th, td { text-align: left; vertical-align: top; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+thead th { font: 600 .76rem/1.3 var(--cond); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+tbody tr:last-child td { border-bottom: 0; }
+td code, th code { white-space: nowrap; }
+.tabs { margin: 12px 0 18px; }
+.tablist { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: -1px; }
+.tablist button { font: 500 .88rem/1 var(--sans); padding: 9px 14px; border: 1px solid var(--line); border-bottom: 0; border-radius: 8px 8px 0 0; background: var(--ground); color: var(--muted); cursor: pointer; }
+.tablist button[aria-selected="true"] { background: var(--surface); color: var(--ink); border-color: var(--line); box-shadow: inset 0 2px 0 var(--accent); }
+.tabpanel { border: 1px solid var(--line); border-radius: 0 10px 10px 10px; background: var(--surface); padding: 4px 14px 2px; }
+.routes { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 16px 0; }
+.route { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; display: grid; gap: 6px; align-content: start; }
+.route .tag { font: 600 .72rem/1 var(--cond); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+.route h4 { margin: 0; font-family: var(--cond); font-size: 1.05rem; }
+.route p { margin: 0; font-size: .9rem; color: var(--muted); }
+.route .url { font: .8rem/1.4 var(--mono); color: var(--ink); overflow-wrap: anywhere; }
+ol.steps { padding-left: 1.3em; } ol.steps li { margin: 6px 0; }
+.flow { list-style: none; padding: 0; margin: 16px 0; display: grid; gap: 0; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface); }
+.flow li { display: grid; grid-template-columns: 2.2em 1fr; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--line); max-width: none; }
+.flow li:last-child { border-bottom: 0; }
+.flow .n { font: 600 1rem/1.5 var(--cond); color: var(--accent); }
+.flow b { font-family: var(--cond); font-weight: 600; }
+.flow .state { font: 500 .78rem/1 var(--mono); padding: 3px 7px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); white-space: nowrap; }
+footer { margin-top: 64px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: .88rem; }
+.tree { font: .84rem/1.6 var(--mono); }
+</style>
+
+<div class="shell">
+<nav class="toc" aria-label="Contents">
+  <p>Contents</p>
+  <ol>
+    <li><a href="#glance">At a glance</a></li>
+    <li><a href="#bash">Connect from a terminal</a></li>
+    <li><a href="#logins">Create application logins</a></li>
+    <li><a href="#routes">Choose a network route</a></li>
+    <li><a href="#jdbc">Test with plain JDBC</a></li>
+    <li><a href="#spring">Spring Boot project</a>
+      <ol>
+        <li><a href="#build">Gradle and Maven</a></li>
+        <li><a href="#props">application.properties</a></li>
+        <li><a href="#entities">Entities</a></li>
+        <li><a href="#repos">Repositories</a></li>
+        <li><a href="#check">Connection check</a></li>
+        <li><a href="#run">Build and run</a></li>
+      </ol>
+    </li>
+    <li><a href="#firstlogin">First login: change password</a></li>
+    <li><a href="#trouble">Troubleshooting</a></li>
+    <li><a href="#reference">Reference</a></li>
+  </ol>
+</nav>
+
+<main>
+<header class="hero">
+  <p class="eyebrow">MasterAntiqueRepair &middot; database migration &middot; import-oracle (proof of concept)</p>
+  <h1>Connecting to the MasterAntiqueRepair Oracle database</h1>
+  <p class="lede">The migrated database runs in an Oracle AI Database 26ai Free container on the Linux machine. This guide takes you from a first query in SQL*Plus to a Spring Boot 4.1.1 application that reads it with JDBC and JPA, including the password change every migrated user is forced to make on first login. Every command and file here was run against a copy of this database before it was written down. Phase 2 uses the PostgreSQL database; this is the same path shown for Oracle.</p>
+</header>
+
+<section aria-labelledby="glance">
+<h2 id="glance">At a glance</h2>
+<dl class="facts">
+  <div><dt>Container</dt><dd>mar-oracle</dd></div>
+  <div><dt>Image</dt><dd>gvenzl/oracle-free:23.26.3-faststart</dd></div>
+  <div><dt>Pluggable database (service)</dt><dd>FREEPDB1</dd></div>
+  <div><dt>Schema</dt><dd>masterantique</dd></div>
+  <div><dt>Administrator</dt><dd>SYS, no password inside the container</dd></div>
+  <div><dt>Data</dt><dd>8 tables, 155 rows</dd></div>
+</dl>
+<p>The tables hold 12 users (1 manager, 3 employees, 8 customers), 24 repair tickets (8 each <code>SUBMITTED</code>, <code>INPROGRESS</code>, <code>COMPLETED</code>), 26 comments, 78 audit log rows and 12 user-role links. Names are lowercase snake_case in the SQL (<code>created_at</code>, <code>user_id</code>) and unquoted, so Oracle stores them in upper case and you can write them in any case without quotes; never write them in double quotes in lower case (<code>"users"</code> does not exist).</p>
+
+<div class="callout warn">
+  <p><strong>Three things are locked down on purpose.</strong> The container publishes <em>no network port</em>. The schema <code>masterantique</code> that owns the tables has <em>no password at all</em>: nobody can log in as it. And the administrator passwords were set to random values when the container was created and then thrown away. Inside the container none of that matters: <code>docker exec ... sqlplus / as sysdba</code> logs in as SYS through the operating system, so section 2 works right away. An application outside the container needs two extra things, both set up in minutes: its own login with a password you choose (section 3) and a network route to the database (section 4).</p>
+</div>
+<div class="callout">
+  <p><strong>Every migrated user must change their password.</strong> The migration removed all passwords: <code>password_hash</code> and <code>security_stamp</code> are NULL and <code>must_reset_password</code> is <code>TRUE</code> for all 12 users. Section 7 shows a working sign-in that sends them to a password change first.</p>
+</div>
+</section>
+
+<section aria-labelledby="bash">
+<h2 id="bash">Connect from a terminal</h2>
+<p>No setup, no password. Open an interactive SQL*Plus session inside the container, then switch to the pluggable database and to the migrated schema:</p>
+<!--CODE bash
+docker exec -it mar-oracle sqlplus / as sysdba
+CODE-->
+<!--CODE sql
+ALTER SESSION SET CONTAINER = FREEPDB1;
+ALTER SESSION SET CURRENT_SCHEMA = masterantique;
+CODE-->
+<p>You get the <code>SQL&gt;</code> prompt. Type <code>EXIT</code> to leave. SYS can change anything, so for looking around prefer the read-only login from section 3 once it exists: <code>docker exec -it mar-oracle sqlplus mar_readonly@//localhost:1521/FREEPDB1</code> (it asks for the password), then the <code>CURRENT_SCHEMA</code> line. Useful commands at the prompt:</p>
+<div class="table-wrap"><table>
+<thead><tr><th scope="col">Command</th><th scope="col">What it does</th></tr></thead>
+<tbody>
+<tr><td><code>SELECT table_name FROM all_tables WHERE owner = 'MASTERANTIQUE';</code></td><td>List the tables. (<code>user_tables</code> shows your own login's tables, not the schema you switched to.)</td></tr>
+<tr><td><code>DESCRIBE users</code></td><td>Columns, types and nullability of one table</td></tr>
+<tr><td><code>SELECT index_name, uniqueness FROM all_indexes WHERE owner = 'MASTERANTIQUE';</code></td><td>List the indexes</td></tr>
+<tr><td><code>SELECT username FROM dba_users WHERE oracle_maintained = 'N';</code></td><td>List the logins (as SYS)</td></tr>
+<tr><td><code>SET LINESIZE 200 PAGESIZE 100</code></td><td>Wider lines, fewer repeated headings</td></tr>
+<tr><td><code>COLUMN name FORMAT A20</code></td><td>Narrow a text column in the output</td></tr>
+<tr><td><code>SET TIMING ON</code></td><td>Show how long each statement takes</td></tr>
+<tr><td><code>HELP INDEX</code></td><td>List the SQL*Plus commands</td></tr>
+</tbody></table></div>
+
+<h3>One-off queries and scripts</h3>
+<p>SQL*Plus reads statements from standard input, so a one-off query is a pipe (<code>-S</code> silent, headings and feedback off):</p>
+<!--CODE bash
+printf 'SET HEADING OFF FEEDBACK OFF\nALTER SESSION SET CONTAINER = FREEPDB1;\nSELECT COUNT(*) FROM masterantique.tickets;\n' |
+  docker exec -i mar-oracle sqlplus -S / as sysdba
+CODE-->
+<!--OUT
+        24
+OUT-->
+<p>Run a whole SQL file from your machine by piping it in (<code>-i</code> keeps standard input open):</p>
+<!--CODE bash
+docker exec -i mar-oracle sqlplus -S / as sysdba < queries.sql
+CODE-->
+
+<h3>Sample queries</h3>
+<p>Save these as <code>queries.sql</code> and run them as above, or paste them at the prompt. The first lines set up the session and the output format.</p>
+<!--FILE queries.sql|queries.sql-->
+<p>Part of the output:</p>
+<!--OUT
+     STATE WORKFLOW_STATE   COUNT(*)
+---------- -------------- ----------
+         0 SUBMITTED               8
+         1 INPROGRESS              8
+         2 COMPLETED               8
+
+3 rows selected.
+
+        ID NAME         DISCRIMINATOR MUST_RESET_
+---------- ------------ ------------- -----------
+         1 manager      Manager       TRUE
+
+1 row selected.
+OUT-->
+<div class="callout"><p><strong>Why the username lookup looks unusual.</strong> Active usernames are unique regardless of case through a function-based index on <code>CASE WHEN deleted_at IS NULL THEN LOWER(name) END</code> (Oracle has no partial index). Oracle uses that index only when the query repeats its expression, as above: tested, that gives an <code>INDEX UNIQUE SCAN</code> on <code>IX_USERS_NAME_ACTIVE</code>, while <code>LOWER(name) = LOWER('MANAGER') AND deleted_at IS NULL</code> gives the same row through a full table scan.</p></div>
+
+<h3>Export to CSV</h3>
+<!--CODE bash
+docker exec -i mar-oracle sqlplus -S / as sysdba > tickets.csv <<'SQL'
+SET MARKUP CSV ON QUOTE OFF
+SET FEEDBACK OFF
+ALTER SESSION SET CONTAINER = FREEPDB1;
+ALTER SESSION SET NLS_TIMESTAMP_FORMAT = 'YYYY-MM-DD HH24:MI:SS.FF3';
+SELECT id, state, customer_id, user_id, submitted_date FROM masterantique.tickets ORDER BY id;
+SQL
+CODE-->
+<!--OUT
+ID,STATE,CUSTOMER_ID,USER_ID,SUBMITTED_DATE
+1,2,5,2,2026-09-11 05:57:49.000
+2,1,5,2,2026-09-11 03:17:37.000
+3,0,5,,2026-09-13 21:46:54.000
+OUT-->
+
+<h3>Experiment safely</h3>
+<p>Changes are kept only when committed, so try things and roll them back. One Oracle trap: <strong>SQL*Plus commits pending changes when you <code>EXIT</code></strong> (tested), so turn that off first, or always end with <code>ROLLBACK</code>.</p>
+<!--CODE sql
+SET EXITCOMMIT OFF
+UPDATE tickets SET state = 2 WHERE id = 3;
+SELECT id, state FROM tickets WHERE id = 3;   -- shows 2
+ROLLBACK;
+SELECT id, state FROM tickets WHERE id = 3;   -- back to 0
+CODE-->
+
+<h3>Start, stop, rebuild</h3>
+<div class="table-wrap"><table>
+<thead><tr><th scope="col">Command</th><th scope="col">Effect</th></tr></thead>
+<tbody>
+<tr><td><code>docker stop mar-oracle</code><br><code>docker start mar-oracle</code></td><td>Stops and restarts the database (about 30 seconds to open). The data and any logins you created are kept.</td></tr>
+<tr><td><code>docker logs --tail 50 mar-oracle</code></td><td>The container's recent log; <code>DATABASE IS READY TO USE!</code> marks a finished start.</td></tr>
+<tr><td><code>tools/phase1/dbmigrate/import-oracle/ingest.sh verify</code></td><td>Re-checks the database against the migration record (86 checks). Logins you add do not affect it; rows an application inserts do.</td></tr>
+<tr><td><code>tools/phase1/dbmigrate/import-oracle/ingest.sh load --recreate</code></td><td>Deletes the container and rebuilds it from the migration files. Your logins and network links are gone afterwards: repeat sections 3 and 4.</td></tr>
+<tr><td><code>docker rm -f -v mar-oracle</code></td><td>Deletes the container and its data for good.</td></tr>
+</tbody></table></div>
+</section>
+
+<section aria-labelledby="logins">
+<h2 id="logins">Create application logins</h2>
+<p>The schema that owns the tables cannot log in, and an application should never use SYS. Create two logins once: <code>mar_app</code> (read and write, for the application) and <code>mar_readonly</code> (read only, for reports and database tools). Oracle 23ai's <em>schema privileges</em> grant access to every table of <code>masterantique</code> in one line, including tables added later. You choose both passwords; they reach SQL*Plus on standard input as substitution variables, so they never appear in a file, in your shell history, in the process list or in the output.</p>
+<p>Save this as <code>mar-roles.sql</code>:</p>
+<!--FILE mar-roles.sql|mar-roles.sql-->
+<p>Then run it, typing each password when asked (nothing is echoed). A password may use any character except a double quote:</p>
+<!--CODE bash
+read -rsp 'New password for mar_app: ' APP_PW; echo
+read -rsp 'New password for mar_readonly: ' RO_PW; echo
+{ printf 'DEFINE app_pw = "%s"\nDEFINE ro_pw = "%s"\n' "$APP_PW" "$RO_PW"; cat mar-roles.sql; } |
+  docker exec -i mar-oracle sqlplus -S / as sysdba
+unset APP_PW RO_PW
+CODE-->
+<p>Check it: <code>SELECT username FROM dba_users WHERE oracle_maintained = 'N';</code> (as SYS, in <code>FREEPDB1</code>) lists <code>MAR_APP</code>, <code>MAR_READONLY</code> and <code>MASTERANTIQUE</code>. Keep the <code>mar_app</code> password somewhere safe (a password manager, or your platform's secret store); the application reads it from the <code>MAR_DB_PASSWORD</code> environment variable.</p>
+<div class="callout"><p><strong>The logins do not own the tables.</strong> They see them as <code>masterantique.users</code>, or as <code>users</code> after <code>ALTER SESSION SET CURRENT_SCHEMA = masterantique</code>. Without that, a query fails with <code>ORA-00942: table or view "MAR_APP"."USERS" does not exist</code>. The Spring Boot project in section 6 runs the <code>ALTER SESSION</code> on every new connection. Writing as <code>mar_readonly</code> fails with <code>ORA-41900: missing UPDATE privilege</code>, as it should.</p></div>
+
+<h3>Change or remove a login</h3>
+<!--CODE bash
+read -rsp 'New password for mar_app: ' NEW_PW; echo
+{ printf 'SET VERIFY OFF\nDEFINE new_pw = "%s"\n' "$NEW_PW"
+  printf 'ALTER SESSION SET CONTAINER = FREEPDB1;\nALTER USER mar_app IDENTIFIED BY "&new_pw";\n'; } |
+  docker exec -i mar-oracle sqlplus -S / as sysdba
+unset NEW_PW
+
+# remove a login and everything granted to it
+printf 'ALTER SESSION SET CONTAINER = FREEPDB1;\nDROP USER mar_readonly CASCADE;\n' |
+  docker exec -i mar-oracle sqlplus -S / as sysdba
+CODE-->
+<div class="callout"><p>The logins live with the database: they survive <code>docker stop</code>/<code>start</code>, and are lost only when the container is rebuilt with <code>--recreate</code>. Running <code>mar-roles.sql</code> a second time stops with <code>ORA-01920: user name 'MAR_APP' conflicts with another user or role name</code>; use <code>ALTER USER</code> above to change a password instead.</p></div>
+</section>
+
+<section aria-labelledby="routes">
+<h2 id="routes">Choose a network route</h2>
+<p>The database container has no published port, so pick one of three ways to reach Oracle's listener on port 1521. All three were tested; none of them changes the database container itself. Oracle JDBC URLs name the <em>service</em> (<code>FREEPDB1</code>), not a database.</p>
+<div class="routes">
+  <div class="route"><span class="tag">Route A</span><h4>Container address</h4><p>Quickest. Linux with Docker Engine only (not Docker Desktop). The address can change after a restart.</p><span class="url">jdbc:oracle:thin:@//172.17.0.x:1521/FREEPDB1</span></div>
+  <div class="route"><span class="tag">Route B</span><h4>App in a container</h4><p>For an application that runs in Docker. Stable: reach the database by its container name.</p><span class="url">jdbc:oracle:thin:@//mar-oracle:1521/FREEPDB1</span></div>
+  <div class="route"><span class="tag">Route C</span><h4>localhost port</h4><p>For an IDE or an app on your machine. A small proxy container listens on 127.0.0.1 only. Works on Docker Desktop too. The defaults in this guide assume it.</p><span class="url">jdbc:oracle:thin:@//localhost:1522/FREEPDB1</span></div>
+</div>
+
+<h3>Route A: the container's address</h3>
+<!--CODE bash
+docker inspect -f '{{index .NetworkSettings.Networks "bridge" "IPAddress"}}' mar-oracle
+CODE-->
+<p>That prints something like <code>172.17.0.6</code>; connect to it on port 1521. Use this exact form of the command: once the container joins a second network (route B or C), the shorter <code>{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}</code> prints two addresses run together.</p>
+
+<h3>Route B: an application container on a shared network</h3>
+<!--CODE bash
+docker network create mar-net
+docker network connect mar-net mar-oracle
+
+# run the Spring Boot jar from section 6 in a container on that network
+docker run --rm --network mar-net \
+  -v "$PWD/build/libs:/app:ro" \
+  -e MAR_DB_HOST=mar-oracle -e MAR_DB_PORT=1521 -e MAR_DB_PASSWORD \
+  eclipse-temurin:21-jre java -jar /app/mar-db-client-0.0.1-SNAPSHOT.jar
+CODE-->
+<p><code>-e MAR_DB_PASSWORD</code> without a value passes on the variable already set in your shell, so the password is not written on the command line.</p>
+
+<h3>Route C: a localhost-only port through a proxy</h3>
+<p>Needs the <code>mar-net</code> network from route B (the first two lines). Then start a tiny <code>socat</code> proxy that publishes port 1522 on <code>127.0.0.1</code> only, so nothing on your network can reach it:</p>
+<!--CODE bash
+docker network create mar-net                  # skip if it exists
+docker network connect mar-net mar-oracle      # skip if already connected
+
+docker run -d --name mar-oracle-proxy --network mar-net \
+  -p 127.0.0.1:1522:1521 \
+  alpine/socat tcp-listen:1521,fork,reuseaddr tcp-connect:mar-oracle:1521
+
+docker port mar-oracle-proxy      # 1521/tcp -> 127.0.0.1:1522
+CODE-->
+<p>Port 1522 leaves 1521 free for a locally installed Oracle. If 1522 is taken on your machine, use another (for example <code>127.0.0.1:1523:1521</code>) and set <code>MAR_DB_PORT</code> to match. To take it all down again:</p>
+<!--CODE bash
+docker rm -f mar-oracle-proxy
+docker network disconnect mar-net mar-oracle
+docker network rm mar-net
+CODE-->
+<div class="callout"><p><strong>Why not publish a port on the database container?</strong> Docker cannot add a port to an existing container, and the migration tool creates it without one on purpose, so the database is never reachable from the network by accident. The proxy gives you a local port you can remove at any time without touching the data.</p></div>
+</section>
+
+<section aria-labelledby="jdbc">
+<h2 id="jdbc">Test with plain JDBC</h2>
+<p>Before bringing in Spring, prove the login and the route with one Java file and the Oracle JDBC driver (<code>ojdbc11</code>, the thin driver for Java 11 and later; pure Java, no Oracle client installation). Java 11 and later run a single source file directly.</p>
+<!--FILE mar-db-client/JdbcSmokeTest.java|JdbcSmokeTest.java-->
+<!--CODE bash
+curl -fsSLO https://repo1.maven.org/maven2/com/oracle/database/jdbc/ojdbc11/23.26.3.0.0/ojdbc11-23.26.3.0.0.jar
+read -rsp 'mar_app password: ' MAR_DB_PASSWORD; echo; export MAR_DB_PASSWORD
+java -cp ojdbc11-23.26.3.0.0.jar JdbcSmokeTest.java
+CODE-->
+<!--OUT
+Connected to jdbc:oracle:thin:@//localhost:1522/FREEPDB1
+Oracle AI Database 26ai Free Release 23.26.3.0.0 - Develop, Learn, and Run for Free
+users=12 tickets=24
+OUT-->
+<p>For route A, add <code>MAR_DB_HOST=172.17.0.x MAR_DB_PORT=1521</code> in front of the <code>java</code> command.</p>
+</section>
+
+<section aria-labelledby="spring">
+<h2 id="spring">Spring Boot project</h2>
+<p>A small, complete Spring Boot 4.1.1 application (Java 21) that connects with JDBC and JPA, maps the migrated tables, checks the mapping against the live schema at start-up, and demonstrates the first-login password change. The same source builds with Gradle or Maven. It is the PostgreSQL guide's project with the Oracle changes this page points out.</p>
+<div class="code out"><div class="code-head"><span>Project layout</span></div><pre class="tree"><code>mar-db-client/
+├── build.gradle            (or build.gradle.kts, or pom.xml)
+├── settings.gradle
+├── JdbcSmokeTest.java      (section 5, not part of the build)
+└── src/main/
+    ├── resources/application.properties
+    └── java/com/masterantique/dbclient/
+        ├── MarDbClientApplication.java
+        ├── ConnectionCheck.java
+        ├── model/   AppUser, Ticket, TicketState, Comment, AuditLog
+        ├── repo/    AppUserRepository, TicketRepository, CommentRepository, AuditLogRepository
+        └── login/   LoginResult, LoginService, IdentityCheck, DemoIdentityCheck, FirstLoginDemo</code></pre></div>
+
+<h3 id="build">Gradle and Maven</h3>
+<p>Pick one build tool. All three versions below were built and run. The Spring Boot parent (Maven) or plugin (Gradle) manages every library version: with Boot 4.1.1 that is Hibernate 7.4.5, HikariCP 7.0.2, Spring Data JPA 4.1.1 and the Oracle driver <code>ojdbc11</code> 23.26.3.0.0, the same release as the database.</p>
+<div class="tabs" data-tabs>
+  <div class="tablist" role="tablist" aria-label="Build file">
+    <button role="tab" id="tab-groovy" aria-controls="panel-groovy" aria-selected="true">Gradle (Groovy)</button>
+    <button role="tab" id="tab-kotlin" aria-controls="panel-kotlin" aria-selected="false" tabindex="-1">Gradle (Kotlin)</button>
+    <button role="tab" id="tab-maven" aria-controls="panel-maven" aria-selected="false" tabindex="-1">Maven</button>
+  </div>
+  <div class="tabpanel" role="tabpanel" id="panel-groovy" aria-labelledby="tab-groovy">
+    <!--FILE mar-db-client/settings.gradle|settings.gradle-->
+    <!--FILE mar-db-client/build.gradle|build.gradle-->
+    <p>Gradle 8.14 or later is needed (tested with 9.4.1). Create the wrapper once with <code>gradle wrapper</code>, then use <code>./gradlew</code>.</p>
+  </div>
+  <div class="tabpanel" role="tabpanel" id="panel-kotlin" aria-labelledby="tab-kotlin" hidden>
+    <!--FILE kts/settings.gradle.kts|settings.gradle.kts-->
+    <!--FILE kts/build.gradle.kts|build.gradle.kts-->
+    <p>Gradle 8.14 or later is needed (tested with 9.4.1). Create the wrapper once with <code>gradle wrapper</code>, then use <code>./gradlew</code>.</p>
+  </div>
+  <div class="tabpanel" role="tabpanel" id="panel-maven" aria-labelledby="tab-maven" hidden>
+    <!--FILE mar-db-client/pom.xml|pom.xml-->
+    <p>Maven 3.6.3 or later (tested with 3.9.11).</p>
+  </div>
+</div>
+<p>What each dependency brings: <code>spring-boot-starter-data-jpa</code> is Hibernate, Spring Data JPA, JDBC (<code>JdbcTemplate</code>) and the HikariCP pool; <code>ojdbc11</code> is the JDBC driver (runtime only); <code>spring-security-crypto</code> is just the password hashing used in section 7, without the rest of Spring Security. Hibernate picks its Oracle dialect from the connection; nothing needs configuring.</p>
+
+<h3 id="props">application.properties</h3>
+<!--FILE mar-db-client/src/main/resources/application.properties|src/main/resources/application.properties-->
+<div class="table-wrap"><table>
+<thead><tr><th scope="col">Environment variable</th><th scope="col">Default</th><th scope="col">Set it to</th></tr></thead>
+<tbody>
+<tr><td><code>MAR_DB_PASSWORD</code></td><td>(none)</td><td>The <code>mar_app</code> password. Required.</td></tr>
+<tr><td><code>MAR_DB_HOST</code></td><td><code>localhost</code></td><td>Route A: the container address. Route B: <code>mar-oracle</code>. Route C: leave it.</td></tr>
+<tr><td><code>MAR_DB_PORT</code></td><td><code>1522</code></td><td>Routes A and B: <code>1521</code>. Route C: the proxy port.</td></tr>
+<tr><td><code>MAR_DB_USER</code></td><td><code>mar_app</code></td><td><code>mar_readonly</code> for a read-only tool.</td></tr>
+<tr><td><code>MAR_DB_SERVICE</code></td><td><code>FREEPDB1</code></td><td>Leave it.</td></tr>
+</tbody></table></div>
+<p>Two lines are Oracle-specific. <code>connection-init-sql</code> switches every pooled connection to the <code>MASTERANTIQUE</code> schema, because the login does not own the tables; that is enough for both Hibernate's schema check and plain SQL (tested; no <code>hibernate.default_schema</code> needed). <code>hibernate.jdbc.fetch_size</code> raises the Oracle driver's default of 10 rows per round trip, which Hibernate otherwise warns about at start-up.</p>
+<div class="callout warn"><p><strong>Keep <code>ddl-auto=validate</code>.</strong> The schema was migrated and verified; Hibernate must only check it. <code>update</code> or <code>create</code> would change or drop the migrated tables. If validation fails, fix the entity, never the setting.</p></div>
+
+<h3 id="entities">Entities</h3>
+<p>One entity per table you use. Every column is named explicitly so the mapping reads like the schema. Points that matter for this database, all confirmed by Hibernate's validation at start-up: ids are <code>GenerationType.IDENTITY</code> (the tables use <code>GENERATED BY DEFAULT AS IDENTITY</code>, and the identities already continue after the migrated ids); <code>NUMBER(10)</code> columns map to <code>Integer</code>/<code>int</code>; Oracle 23ai's native <code>BOOLEAN</code> columns map to <code>boolean</code>; <code>TIMESTAMP(3)</code> columns are <code>LocalDateTime</code> (no time zone, stored exactly as the legacy system had them); <code>tickets.state</code> is the enum's position 0, 1, 2. The three <code>CLOB</code> columns (<code>password_hash</code>, <code>security_stamp</code>, <code>phone_number</code>) need <code>@Lob</code>: without it Hibernate expects a <code>VARCHAR2</code> and validation fails.</p>
+<!--FILE mar-db-client/src/main/java/com/masterantique/dbclient/model/AppUser.java|model/AppUser.java-->
+<!--FILE mar-db-client/src/main/java/com/masterantique/dbclient/model/TicketState.java|model/TicketState.java-->
+<!--FILE mar-db-client/src/main/java/com/masterantique/dbclient/model/Ticket.java|model/Ticket.java-->
+<!--FILE mar-db-client/src/main/java/com/masterantique/dbclient/model/Comment.java|model/Comment.java-->
+<!--FILE mar-db-client/src/main/java/com/masterantique/dbclient/model/AuditLog.java|model/AuditLog.java-->
+
+<h3 id="repos">Repositories</h3>
+<p>The username lookup repeats the expression of the index <code>ix_users_name_active ON users (CASE WHEN deleted_at IS NULL THEN LOWER(name) END)</code>. That is correct (it ignores case and soft-deleted users, whose expression is NULL) and fast (Oracle uses the index only for its own expression). A plain <code>name = :name</code> would miss <code>Manager</code> for <code>manager</code>, because Oracle compares text case-sensitively, unlike the legacy SQL Server. Hibernate sends it as <code>where case when au1_0.deleted_at is null then lower(au1_0.name) end=lower(?)</code>.</p>
+<!--FILE mar-db-client/src/main/java/com/masterantique/dbclient/repo/AppUserRepository.java|repo/AppUserRepository.java-->
+<!--FILE mar-db-client/src/main/java/com/masterantique/dbclient/repo/TicketRepository.java|repo/TicketRepository.java-->
+<!--FILE mar-db-client/src/main/java/com/masterantique/dbclient/repo/CommentRepository.java|repo/CommentRepository.java-->
+<!--FILE mar-db-client/src/main/java/com/masterantique/dbclient/repo/AuditLogRepository.java|repo/AuditLogRepository.java-->
+
+<h3 id="check">Application and connection check</h3>
+<!--FILE mar-db-client/src/main/java/com/masterantique/dbclient/MarDbClientApplication.java|MarDbClientApplication.java-->
+<!--FILE mar-db-client/src/main/java/com/masterantique/dbclient/ConnectionCheck.java|ConnectionCheck.java-->
+
+<h3 id="run">Build and run</h3>
+<!--CODE bash
+read -rsp 'mar_app password: ' MAR_DB_PASSWORD; echo; export MAR_DB_PASSWORD
+
+./gradlew bootRun                     # Gradle
+mvn spring-boot:run                   # or Maven
+
+./gradlew bootJar && java -jar build/libs/mar-db-client-0.0.1-SNAPSHOT.jar      # or a runnable jar
+mvn package && java -jar target/mar-db-client-0.0.1-SNAPSHOT.jar
+CODE-->
+<!--OUT
+Connected: MAR_APP @ FREEPDB1, schema MASTERANTIQUE, Oracle 23.26.3.0.0
+users=12 tickets=24 comments=26 audit_logs=78
+customers=8 employees=3 managers=1, must reset password=12
+tickets SUBMITTED=8
+tickets INPROGRESS=8
+tickets COMPLETED=8
+findActiveByName("MANAGER") -> id 1, name 'manager', Manager
+OUT-->
+<p>If it starts at all, the mapping is right: Hibernate checked every entity against the live schema first. For route A or B, set <code>MAR_DB_HOST</code> and <code>MAR_DB_PORT</code> as in the table above.</p>
+</section>
+
+<section aria-labelledby="firstlogin">
+<h2 id="firstlogin">First login: change password</h2>
+<p>The migration deliberately carried no passwords over: the legacy PBKDF2 hashes were removed and every account is marked <code>must_reset_password = TRUE</code>. So the first thing any sign-in meets is &ldquo;you must change your password&rdquo;. This mock-up shows the whole flow against the real table; the Java code is the same as for PostgreSQL.</p>
+<ol class="flow">
+  <li><span class="n">1</span><div><b>Sign in.</b> The username is looked up ignoring case among active users. The account has no password yet, so the answer is <span class="state">MUST_CHANGE_PASSWORD</span>, whatever was typed.</div></li>
+  <li><span class="n">2</span><div><b>Prove who you are.</b> With no old password to check, the user enters a one-time code (in a real system: issued by a manager, or a link sent to a verified email address). The demo accepts one fixed code.</div></li>
+  <li><span class="n">3</span><div><b>Choose a password.</b> Typed twice, at least 12 characters, must not contain the username.</div></li>
+  <li><span class="n">4</span><div><b>Saved.</b> The hash is stored in the <code>CLOB</code> as <code>{bcrypt}$2a$10$&hellip;</code>, <code>must_reset_password</code> becomes <code>FALSE</code>, a new <code>security_stamp</code> is set and failed attempts reset. The event is logged; the password never is.</div></li>
+  <li><span class="n">5</span><div><b>Sign in normally.</b> Right password <span class="state">OK</span>; wrong password or unknown user <span class="state">INVALID</span> (the same answer for both, so usernames cannot be probed).</div></li>
+</ol>
+<!--FILE mar-db-client/src/main/java/com/masterantique/dbclient/login/LoginResult.java|login/LoginResult.java-->
+<!--FILE mar-db-client/src/main/java/com/masterantique/dbclient/login/IdentityCheck.java|login/IdentityCheck.java-->
+<!--FILE mar-db-client/src/main/java/com/masterantique/dbclient/login/DemoIdentityCheck.java|login/DemoIdentityCheck.java-->
+<!--FILE mar-db-client/src/main/java/com/masterantique/dbclient/login/LoginService.java|login/LoginService.java-->
+<!--FILE mar-db-client/src/main/java/com/masterantique/dbclient/login/FirstLoginDemo.java|login/FirstLoginDemo.java-->
+
+<h3>Try it</h3>
+<p>Interactively (it asks for everything and hides passwords):</p>
+<!--CODE bash
+java -jar build/libs/mar-db-client-0.0.1-SNAPSHOT.jar --spring.profiles.active=first-login-demo
+CODE-->
+<p>Or non-interactively. This really changes the stored password of that user, so try it on a test copy, or be ready to rebuild with <code>ingest.sh load --recreate</code>:</p>
+<!--CODE bash
+java -jar build/libs/mar-db-client-0.0.1-SNAPSHOT.jar --spring.profiles.active=first-login-demo \
+  --demo.username=Customer1 --demo.password=anything \
+  --demo.one-time-code=DEMO-1234 --demo.new-password=Walnut-Armoire-1887
+CODE-->
+<!--OUT:Output (log lines shortened)
+1. Sign in as 'Customer1' -> MUST_CHANGE_PASSWORD
+   You must change your password before you continue.
+WARN  DemoIdentityCheck : DEMO identity check used for 'customer1': replace DemoIdentityCheck before production
+INFO  LoginService      : Password changed for user id 5 (Customer); must_reset_password cleared
+2. Password changed.
+3. Sign in again with the new password -> OK
+4. Sign in with a wrong password      -> INVALID
+OUT-->
+<p>The refusals, as tested:</p>
+<div class="table-wrap"><table>
+<thead><tr><th scope="col">Input</th><th scope="col">Result</th></tr></thead>
+<tbody>
+<tr><td>Wrong one-time code</td><td><code>2. Not changed: The one-time code is not valid.</code></td></tr>
+<tr><td>New password <code>short</code></td><td><code>2. Not changed: The password must have at least 12 characters.</code></td></tr>
+<tr><td>New password <code>my-customer2-pass</code> for <code>customer2</code></td><td><code>2. Not changed: The password must not contain the username.</code></td></tr>
+<tr><td>Later sign-in, right password</td><td><code>1. Sign in as 'customer1' -> OK</code></td></tr>
+<tr><td>Wrong password, or user <code>nobody</code></td><td><code>1. Sign in as '...' -> INVALID</code> / <code>Wrong username or password.</code></td></tr>
+</tbody></table></div>
+<p>To undo a demo change on one user (as SYS):</p>
+<!--CODE bash
+docker exec -i mar-oracle sqlplus -S / as sysdba <<'SQL'
+ALTER SESSION SET CONTAINER = FREEPDB1;
+UPDATE masterantique.users SET password_hash = NULL, security_stamp = NULL, must_reset_password = TRUE
+ WHERE CASE WHEN deleted_at IS NULL THEN LOWER(name) END = 'customer1';
+COMMIT;
+SQL
+CODE-->
+<div class="callout warn">
+<p><strong>Before this goes near production:</strong></p>
+<ul>
+<li>Replace <code>DemoIdentityCheck</code> with a real check: a single-use, expiring code a manager issues, or an emailed reset link. (Every <code>email</code> in the migrated data is NULL, so email resets need addresses collected first.)</li>
+<li>Write the password change to the audit trail as an event (user id, time, action), never the password, in the same style as the legacy <code>audit_logs</code>.</li>
+<li>Add lockout on repeated failures (<code>access_failed_count</code>, <code>lockout_end_date_utc</code> already exist) and rate limiting at the sign-in endpoint.</li>
+<li>In a web application, the same <code>LoginService</code> sits behind Spring Security's authentication; the forced change becomes a redirect to a change-password page until <code>must_reset_password</code> is false.</li>
+</ul>
+</div>
+</section>
+
+<section aria-labelledby="trouble">
+<h2 id="trouble">Troubleshooting</h2>
+<p>Every message below was produced on the test copy.</p>
+<div class="table-wrap"><table>
+<thead><tr><th scope="col">You see</th><th scope="col">Cause and fix</th></tr></thead>
+<tbody>
+<tr><td><code>ORA-12541: Cannot connect. No listener at host localhost port 1522.</code></td><td>No route. Route C: is <code>mar-oracle-proxy</code> running (<code>docker ps</code>)? Is <code>MAR_DB_PORT</code> the proxy's port? Is <code>mar-oracle</code> running and finished starting (<code>docker logs</code>)?</td></tr>
+<tr><td>Connection times out on <code>172.17.0.x</code></td><td>Route A works only with Docker Engine on Linux; on Docker Desktop (Mac, Windows) use route C. Or the address changed after a restart: run the <code>docker inspect</code> command again.</td></tr>
+<tr><td><code>ORA-01017: invalid credential or not authorized; logon denied</code></td><td>Wrong password, or <code>MAR_DB_PASSWORD</code> is not set in this shell (<code>echo ${MAR_DB_PASSWORD:+set}</code>). Or the container was rebuilt and the logins are gone: repeat section 3.</td></tr>
+<tr><td><code>ORA-12514: Cannot connect to database</code> (service not known)</td><td>The URL names the wrong service. It is <code>FREEPDB1</code>, after a slash: <code>@//host:port/FREEPDB1</code>. <code>masterantique</code> is a schema, not a service.</td></tr>
+<tr><td><code>ORA-00942: table or view "MAR_APP"."USERS" does not exist</code></td><td>The session is not in the <code>masterantique</code> schema. Run <code>ALTER SESSION SET CURRENT_SCHEMA = masterantique</code>, or write <code>masterantique.users</code>; in Spring Boot, check the <code>connection-init-sql</code> line.</td></tr>
+<tr><td><code>ORA-41900: missing UPDATE privilege on "MASTERANTIQUE"."TICKETS"</code></td><td>Writing as <code>mar_readonly</code>. Use <code>mar_app</code> for writes.</td></tr>
+<tr><td><code>Schema validation: missing column [entity_id] in table [audit_logs]</code></td><td>An entity field names a column the table does not have. Compare with <code>DESCRIBE audit_logs</code> and fix the <code>@Column(name = ...)</code>. Never switch <code>ddl-auto</code> away from <code>validate</code>.</td></tr>
+<tr><td><code>ORA-01920: user name 'MAR_APP' conflicts with another user or role name</code></td><td>The logins script has already run. Use <code>ALTER USER ... IDENTIFIED BY</code> to change the password.</td></tr>
+<tr><td><code>Enter value for ...:</code> and SQL*Plus seems to hang</td><td>An <code>&amp;</code> in your SQL was taken as a substitution variable. Run <code>SET DEFINE OFF</code> first (keep it on only for <code>mar-roles.sql</code>, which uses <code>&amp;app_pw</code> on purpose).</td></tr>
+<tr><td>A change you tried "just to see" was saved</td><td>SQL*Plus commits on <code>EXIT</code>. <code>SET EXITCOMMIT OFF</code>, or <code>ROLLBACK</code> before leaving.</td></tr>
+<tr><td>A username is not found although it exists</td><td>Compare with <code>CASE WHEN deleted_at IS NULL THEN LOWER(name) END = LOWER(:input)</code>; Oracle compares text case-sensitively, unlike the legacy SQL Server.</td></tr>
+<tr><td><code>ORA-12899: value too large for column</code> on text under 2,000 characters</td><td>This database has <code>MAX_STRING_SIZE = STANDARD</code>: a <code>VARCHAR2(2000 CHAR)</code> value is also limited to 4,000 bytes, so about 1,333 characters of three-byte text (such as <code>&euro;</code>) is the most that fits. Validate lengths in bytes before saving.</td></tr>
+<tr><td>Times look shifted by some hours</td><td>Columns are <code>TIMESTAMP(3)</code> without time zone, read as <code>LocalDateTime</code> with no conversion. Whether the legacy system stored UTC or local time is unknown; do not convert until that is decided.</td></tr>
+</tbody></table></div>
+</section>
+
+<section aria-labelledby="reference">
+<h2 id="reference">Reference</h2>
+<h3>Tables and columns</h3>
+<p>From the migration record. <b>Key</b>: PK primary key, id = identity column, FK references another table.</p>
+<!--SCHEMA-->
+<h3>Indexes worth knowing</h3>
+<ul>
+<li><code>ix_users_name_active</code>: unique, function-based, on <code>CASE WHEN deleted_at IS NULL THEN LOWER(name) END</code>. Active usernames are unique ignoring case; a soft-deleted user's key is NULL and not stored, so the name can be reused and two deleted users may share it.</li>
+<li><code>ix_roles_name</code>: unique, case-sensitive, on <code>roles.name</code> (<code>Customer</code>, <code>Employee</code>, <code>Manager</code>).</li>
+<li>One plain index on every foreign key column.</li>
+</ul>
+<h3>Connection strings</h3>
+<div class="table-wrap"><table>
+<thead><tr><th scope="col">Route</th><th scope="col">JDBC URL</th><th scope="col">SQL*Plus from another container</th></tr></thead>
+<tbody>
+<tr><td>A</td><td><code>jdbc:oracle:thin:@//172.17.0.x:1521/FREEPDB1</code></td><td><code>sqlplus mar_app@//172.17.0.x:1521/FREEPDB1</code></td></tr>
+<tr><td>B</td><td><code>jdbc:oracle:thin:@//mar-oracle:1521/FREEPDB1</code></td><td><code>sqlplus mar_app@//mar-oracle:1521/FREEPDB1</code></td></tr>
+<tr><td>C</td><td><code>jdbc:oracle:thin:@//localhost:1522/FREEPDB1</code></td><td><code>sqlplus mar_app@//localhost:1522/FREEPDB1</code></td></tr>
+</tbody></table></div>
+<h3>Versions this guide was tested with</h3>
+<p>Oracle AI Database 26ai Free 23.26.3.0.0 (<code>gvenzl/oracle-free:23.26.3-faststart</code>), Spring Boot 4.1.1, Hibernate 7.4.5, HikariCP 7.0.2, Oracle JDBC <code>ojdbc11</code> 23.26.3.0.0, Java 21.0.11, Gradle 9.4.1, Maven 3.9.11, Docker Engine 29.7.2.</p>
+</section>
+
+<footer>
+<p>Part of the import-oracle database migration (<code>docs/phase1/dbmigrate/import-oracle/</code>): the description is <code>README.md</code>, the verification <code>MigrationVerificationReport.html</code>. Tested on 2026-09-24 against a temporary copy of the database; the delivered <code>mar-oracle</code> was not changed.</p>
+</footer>
+</main>
+</div>
+
+
+<script>
+(function () {
+  document.querySelectorAll('.code:not(.out) .code-head button').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var code = btn.closest('.code').querySelector('pre code');
+      var text = code.textContent;
+      function done(label) { btn.textContent = label; setTimeout(function () { btn.textContent = 'Copy'; }, 1600); }
+      function selectIt() {
+        var r = document.createRange(); r.selectNodeContents(code);
+        var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); done('Selected');
+      }
+      try {
+        navigator.clipboard.writeText(text).then(function () { done('Copied'); }, selectIt);
+      } catch (e) { selectIt(); }
+    });
+  });
+  document.querySelectorAll('[data-tabs]').forEach(function (group) {
+    var tabs = Array.prototype.slice.call(group.querySelectorAll('[role="tab"]'));
+    function show(tab) {
+      tabs.forEach(function (t) {
+        var on = t === tab;
+        t.setAttribute('aria-selected', on ? 'true' : 'false');
+        t.tabIndex = on ? 0 : -1;
+        document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+      });
+    }
+    tabs.forEach(function (t, i) {
+      t.addEventListener('click', function () { show(t); });
+      t.addEventListener('keydown', function (e) {
+        var j = e.key === 'ArrowRight' ? i + 1 : e.key === 'ArrowLeft' ? i - 1 : null;
+        if (j === null) return;
+        var next = tabs[(j + tabs.length) % tabs.length]; show(next); next.focus(); e.preventDefault();
+      });
+    });
+  });
+})();
+</script>

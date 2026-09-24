@@ -13,8 +13,8 @@ change the guide: change the file here, test it again, rebuild the page.
 | `mar-db-client/` | The sample Spring Boot 4.1.1 project: entities, repositories, connection check, first-login password change; `build.gradle` (Gradle, Groovy DSL), `pom.xml` (Maven), `JdbcSmokeTest.java` (plain JDBC, no Spring), Gradle wrapper |
 | `kts/` | The same build in the Gradle Kotlin DSL (`build.gradle.kts`, `settings.gradle.kts`). To build it, copy `mar-db-client/src`, `gradlew` and `gradle/` next to them |
 
-The Phase 2 backend (`master-antique-repair-claude/backend/`) was built from `mar-db-client/`; see
-`docs/phase2/model/MODEL_PLAN.md`.
+The Phase 2 backend (`master-antique-repair-claude/backend/postgresql/`) was built from `mar-db-client/`; see
+`docs/phase2/model/postgresql/MODEL_PLAN.md`.
 
 ## Rebuild the page
 

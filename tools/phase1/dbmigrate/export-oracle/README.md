@@ -44,5 +44,5 @@ After a successful export, copy `01-schema.sql`, `02-data-sanitized.sql` and `so
 - `BOOLEAN` and multi-row `INSERT` need Oracle 23ai or later; not 19c.
 - `datetime` becomes `TIMESTAMP(3)` without time zone; the source time zone is not known and no conversion is made.
 - A new source table, column or index makes the export fail with a message naming the missing rename-map entry; an identifier that is an Oracle reserved word also fails. Fix the map, do not work around it.
-- The Oracle rules were written without an Oracle database to test them; import-oracle is the proof and may send corrections back to `oracle.ps1`.
+- import-oracle is the proof that Oracle accepts the SQL: it loaded the current files unchanged (2026-09-24). A rendering problem it finds is fixed in `oracle.ps1` and the export repeated.
 - `.gitattributes` pins `*.sql`, `*.json` and `*.md` to LF. Keep it: the metadata records hashes of the LF form.

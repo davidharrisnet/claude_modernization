@@ -68,23 +68,22 @@ Run import-oracle.
 
 The first runs on the Windows machine (SQL Server LocalDB, sanitized PostgreSQL files out); the second on the Linux
 machine (those files loaded into PostgreSQL in Docker and verified). The last two are an Oracle proof of concept
-alongside PostgreSQL: `export-oracle` produces sanitized Oracle files (Oracle AI Database 26ai), and the first
-`Run import-oracle` on the Linux machine builds the import tool from the directions in its `CLAUDE.md` and loads the
-files into an Oracle container. Claude Code reads the tool's own instructions,
+alongside PostgreSQL: `export-oracle` produces sanitized Oracle files (Oracle AI Database 26ai), and
+`Run import-oracle` on the Linux machine loads them into an Oracle container and verifies them. Claude Code reads the tool's own instructions,
 `tools/phase1/dbmigrate/<tool>/CLAUDE.md`, and follows them: the command, the expected results, the checks, and the
 rules (such as never testing on the delivered database). Each tool's human description is
 `docs/phase1/dbmigrate/<tool>/README.md`.
 
 **The backend (Phase 2 model).** "Run import-postgresql" rebuilds and verifies the database only. The Spring Boot
-backend that uses it lives in the separate repository `master-antique-repair-claude` (`backend/`). With this
+backend that uses it lives in the separate repository `master-antique-repair-claude` (`backend/postgresql/`). With this
 repository open in Claude Code, type:
 
 ```
-Run the backend demonstration.
+Run backend-postgresql
 ```
 
 or, to rebuild the backend code from scratch, `Rebuild the backend.` Claude Code follows
-`docs/phase2/model/MODEL_PLAN.md`: it creates the database login and the local network route the backend needs, runs
+`docs/phase2/model/postgresql/MODEL_PLAN.md`: it creates the database login and the local network route the backend needs, runs
 the backend (connection check), then the first-login password change. Run import-postgresql first if the database does not
 exist; running it again also removes the backend's login and route, which the demonstration then recreates.
 

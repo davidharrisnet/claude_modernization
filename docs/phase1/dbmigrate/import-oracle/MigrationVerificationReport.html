@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Oracle Migration Verification</title>
+<style>
+:root { --bg:#f7f7f5; --surface:#ffffff; --text:#1c1c1a; --muted:#5b5b57; --border:#d9d9d4; --accent:#2f5d8a;
+  --pass:#1f6b3a; --pass-bg:#e3f1e7; --fail:#9b1c1c; --fail-bg:#fbe4e4; --bar:#2f5d8a; --track:#e8e8e3; --code-bg:#f0f0ec; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#161615; --surface:#1f1f1d; --text:#ececea;
+  --muted:#a8a8a2; --border:#3a3a37; --accent:#8db6e0; --pass:#8fd4a6; --pass-bg:#1d3526; --fail:#f2a3a3; --fail-bg:#3d1f1f;
+  --bar:#8db6e0; --track:#2c2c2a; --code-bg:#2a2a27; } }
+:root[data-theme="dark"] { --bg:#161615; --surface:#1f1f1d; --text:#ececea; --muted:#a8a8a2; --border:#3a3a37; --accent:#8db6e0;
+  --pass:#8fd4a6; --pass-bg:#1d3526; --fail:#f2a3a3; --fail-bg:#3d1f1f; --bar:#8db6e0; --track:#2c2c2a; --code-bg:#2a2a27; }
+* { box-sizing: border-box; }
+body { margin:0; background:var(--bg); color:var(--text); font:16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+main { max-width:980px; margin:0 auto; padding:32px 16px 64px; }
+h1 { font-size:1.9rem; line-height:1.2; margin:.2rem 0 .4rem; }
+h2 { font-size:1.35rem; margin:2.4rem 0 .6rem; padding-top:.6rem; border-top:1px solid var(--border); }
+h3 { font-size:1.05rem; margin:1.4rem 0 .5rem; display:flex; gap:.6rem; align-items:center; flex-wrap:wrap; }
+p, li { max-width:72ch; }
+.eyebrow { color:var(--muted); font-size:.85rem; letter-spacing:.04em; text-transform:uppercase; margin:0; }
+.lede { color:var(--muted); margin-top:0; }
+.banner { border-radius:10px; padding:16px 20px; margin:20px 0; border:2px solid; }
+.banner.pass { background:var(--pass-bg); border-color:var(--pass); }
+.banner.fail { background:var(--fail-bg); border-color:var(--fail); }
+.banner-title { font-weight:700; font-size:1.25rem; margin:0 0 .2rem; }
+.banner.pass .banner-title { color:var(--pass); } .banner.fail .banner-title { color:var(--fail); }
+.banner p:last-child { margin:0; }
+.tiles { display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:12px; margin:16px 0; }
+.tile { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:12px 14px; }
+.tile .k { color:var(--muted); font-size:.82rem; margin:0; } .tile .v { font-size:1.5rem; font-weight:650; margin:.1rem 0 0; }
+.scroll { overflow-x:auto; margin:.6rem 0 1rem; border:1px solid var(--border); border-radius:8px; background:var(--surface); }
+table { border-collapse:collapse; width:100%; font-size:.9rem; }
+th, td { text-align:left; padding:7px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
+thead th { background:var(--code-bg); font-weight:600; white-space:nowrap; }
+tbody tr:last-child td { border-bottom:0; }
+td.num { text-align:right; font-variant-numeric:tabular-nums; }
+td.detail { color:var(--muted); word-break:break-word; }
+code, .mono { font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:.85em; }
+code { background:var(--code-bg); padding:1px 4px; border-radius:4px; word-break:break-all; }
+pre { background:var(--code-bg); padding:12px 14px; border-radius:8px; overflow-x:auto; font-size:.85rem; }
+pre code { background:none; padding:0; }
+.badge { display:inline-block; font-size:.72rem; font-weight:700; letter-spacing:.04em; padding:2px 8px; border-radius:999px; }
+.badge.pass { color:var(--pass); background:var(--pass-bg); border:1px solid var(--pass); }
+.badge.fail { color:var(--fail); background:var(--fail-bg); border:1px solid var(--fail); }
+.summary { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:4px 16px 12px; margin:12px 0; }
+.bars { list-style:none; padding:0; margin:.4rem 0; }
+.bars li { display:grid; grid-template-columns:minmax(90px, 160px) 1fr 3.5em; gap:10px; align-items:center; margin:5px 0; max-width:none; }
+.bl { font-size:.9rem; overflow-wrap:anywhere; } .bv { font-variant-numeric:tabular-nums; text-align:right; font-weight:600; }
+.bt { display:block; height:14px; background:var(--track); border-radius:4px; overflow:hidden; }
+.bf { display:block; height:100%; background:var(--bar); border-radius:4px; }
+.note { color:var(--muted); font-size:.85rem; margin:.3rem 0; }
+.match { color:var(--pass); font-size:.88rem; margin:.3rem 0 0; } .mismatch { color:var(--fail); font-size:.88rem; margin:.3rem 0 0; }
+dl { display:grid; grid-template-columns:minmax(140px, 220px) 1fr; gap:6px 16px; margin:.6rem 0; }
+dt { color:var(--muted); } dd { margin:0; overflow-wrap:anywhere; }
+@media (max-width: 560px) { dl { grid-template-columns:1fr; } dd { margin-bottom:6px; } .bars li { grid-template-columns:80px 1fr 3em; } }
+footer { color:var(--muted); font-size:.85rem; margin-top:3rem; border-top:1px solid var(--border); padding-top:1rem; }
+</style>
+</head>
+<body>
+<main>
+<header>
+<p class="eyebrow">MasterAntiqueRepair &middot; database migration &middot; import-oracle (proof of concept)</p>
+<h1>Oracle migration verification report</h1>
+<p class="lede">The SQL Server export from export-oracle, loaded into Oracle AI Database 26ai Free in a Docker container on Linux and checked against the metadata recorded at export.</p>
+</header>
+<section class="banner pass" role="status" aria-label="Overall result"><p class="banner-title">VERIFICATION PASSED</p><p>86 of 86 checks passed &middot; 155 of 155 rows verified identical &middot; self-test 7 of 7 passed</p></section>
+<section aria-labelledby="summary"><h2 id="summary">Executive summary</h2>
+<p>All 8 tables and 155 rows exported from the legacy SQL Server database were loaded into Oracle 23.26.3.0.0 and compared with the record made at export. Every row count and every table's full-content fingerprint matches the source, the schema is as designed, the ten business summaries give the same answers, every user's credentials are removed, and the database rules (case-insensitive unique usernames through a function-based index, reuse of soft-deleted names, foreign keys, BOOLEAN values, identity columns, multi-byte text) behave as expected. This is a proof of concept alongside PostgreSQL, which remains the Phase 2 database.</p>
+<div class="tiles"><div class="tile"><p class="k">Checks passed</p><p class="v">86 / 86</p></div><div class="tile"><p class="k">Rows verified identical</p><p class="v">155 / 155</p></div><div class="tile"><p class="k">Tables</p><p class="v">8</p></div><div class="tile"><p class="k">Tooling self-test</p><p class="v">7 / 7</p></div></div></section>
+<section aria-labelledby="method"><h2 id="method">Scope and method</h2>
+<p>The Linux machine cannot reach the SQL Server database, so the comparison is made against <code>source-metadata.json</code>: a record written on Windows at export time from the source catalog and the same in-memory rows the SQL files were generated from, by a separate code path. The tool starts an Oracle container with no published network port, checks the files are the ones the record describes, creates a schema-only account (no password; nobody can log in as it), runs the schema and data scripts in it with SQL*Plus (stopping at the first error), and runs the checks below in PL/SQL inside the container as SYS through operating-system authentication. No data leaves the container and no password is kept.</p>
+<p>Row content is compared with a fingerprint: every row of a table is written in one fixed text form (integers in decimal, true/false as 1/0, timestamps to the millisecond, text as the hex of its UTF-8 bytes, NULL distinct from empty text), the rows are sorted, and the whole table is hashed with SHA-256. A single changed character anywhere in a table changes its hash. The form is database-independent, so the fingerprints recorded at export equal those of the PostgreSQL export of the same data.</p>
+<div class="scroll"><table><thead><tr><th scope="col">Category</th><th scope="col">What is checked</th><th scope="col" class="num">Passed</th><th scope="col">Result</th></tr></thead><tbody>
+<tr><td>Environment</td><td>The Oracle server is version 23 or later and uses AL32UTF8; MAX_STRING_SIZE is recorded; the metadata format is the expected one.</td><td class="num">4 / 4</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Integrity</td><td>The two SQL files are byte-for-byte the ones the metadata was recorded for (SHA-256).</td><td class="num">2 / 2</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Counts</td><td>Every table has exactly the number of rows the source had.</td><td class="num">9 / 9</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Hashes</td><td>Every table's full contents, in a canonical text form, hash to the same SHA-256 as the source.</td><td class="num">8 / 8</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Schema</td><td>Tables, columns, types, nullability, defaults, identity columns, keys, foreign keys and indexes match; no name is a reserved word.</td><td class="num">35 / 35</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Summaries</td><td>Ten business questions give the same answers as on the source.</td><td class="num">10 / 10</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Sanitization</td><td>No user has a password hash or security stamp; every user must reset the password.</td><td class="num">4 / 4</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Rules</td><td>Database rules behave as in the legacy system (each test is rolled back to a savepoint).</td><td class="num">14 / 14</td><td><span class="badge pass">PASS</span></td></tr>
+</tbody></table></div></section>
+<section aria-labelledby="tables"><h2 id="tables">Tables: row counts and content hashes</h2>
+<p>Hashes show the first 16 of 64 hex characters. The two empty tables hash the empty string (<code>e3b0c442&hellip;</code>).</p>
+<div class="scroll"><table><thead><tr><th scope="col">Source (SQL Server)</th><th scope="col">Target (Oracle)</th><th scope="col" class="num">Source rows</th><th scope="col" class="num">Loaded rows</th><th scope="col">Source hash</th><th scope="col">Loaded hash</th><th scope="col">Result</th></tr></thead><tbody>
+<tr><td>Roles</td><td><code>roles</code></td><td class="num">3</td><td class="num">3</td><td><code>c0a2efd128356144</code></td><td><code>c0a2efd128356144</code></td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Users</td><td><code>users</code></td><td class="num">12</td><td class="num">12</td><td><code>fa415e1421e2d4a8</code></td><td><code>fa415e1421e2d4a8</code></td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>AuditLogs</td><td><code>audit_logs</code></td><td class="num">78</td><td class="num">78</td><td><code>c6e4f24be7acad70</code></td><td><code>c6e4f24be7acad70</code></td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Tickets</td><td><code>tickets</code></td><td class="num">24</td><td class="num">24</td><td><code>c34f64ec58233df7</code></td><td><code>c34f64ec58233df7</code></td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Comments</td><td><code>comments</code></td><td class="num">26</td><td class="num">26</td><td><code>c954517fcb3a64cb</code></td><td><code>c954517fcb3a64cb</code></td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>UserClaims</td><td><code>user_claims</code></td><td class="num">0</td><td class="num">0</td><td><code>e3b0c44298fc1c14</code></td><td><code>e3b0c44298fc1c14</code></td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>UserLogins</td><td><code>user_logins</code></td><td class="num">0</td><td class="num">0</td><td><code>e3b0c44298fc1c14</code></td><td><code>e3b0c44298fc1c14</code></td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>UserRoles</td><td><code>user_roles</code></td><td class="num">12</td><td class="num">12</td><td><code>44553a2bae5a2d40</code></td><td><code>44553a2bae5a2d40</code></td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td><strong>Total</strong></td><td></td><td class="num"><strong>155</strong></td><td class="num"><strong>155</strong></td><td></td><td></td><td></td></tr>
+</tbody></table></div></section>
+<section aria-labelledby="schema"><h2 id="schema">Schema</h2>
+<p>Each table as designed in the export (source names on the left, Oracle names and types on the right), with the result of comparing it against the live Oracle data dictionary (<code>DBA_TAB_COLUMNS</code>, <code>DBA_CONSTRAINTS</code>, <code>DBA_INDEXES</code>, <code>DBA_IND_EXPRESSIONS</code>). Identifiers were renamed to lowercase snake_case and are unquoted, so Oracle stores them in upper case; data values were not changed.</p>
+<h3><code>roles</code> &larr; Roles <span class="badge pass">PASS</span></h3>
+<div class="scroll"><table><thead><tr><th scope="col">Source column</th><th scope="col">Source type</th><th scope="col">Oracle column</th><th scope="col">Oracle type</th><th scope="col">Null</th><th scope="col">Default</th><th scope="col">Notes</th></tr></thead><tbody>
+<tr><td>Id</td><td>int</td><td><code>id</code></td><td>NUMBER(10)</td><td>no</td><td></td><td>identity (generated by default)</td></tr>
+<tr><td>Name</td><td>nvarchar</td><td><code>name</code></td><td>VARCHAR2(256 CHAR)</td><td>no</td><td></td><td></td></tr>
+</tbody></table></div><ul>
+<li>Primary key <code>pk_roles</code>: <code>id</code></li>
+<li>Unique index <code>ix_roles_name</code> on (<code>name</code>)</li>
+</ul>
+<h3><code>users</code> &larr; Users <span class="badge pass">PASS</span></h3>
+<div class="scroll"><table><thead><tr><th scope="col">Source column</th><th scope="col">Source type</th><th scope="col">Oracle column</th><th scope="col">Oracle type</th><th scope="col">Null</th><th scope="col">Default</th><th scope="col">Notes</th></tr></thead><tbody>
+<tr><td>Id</td><td>int</td><td><code>id</code></td><td>NUMBER(10)</td><td>no</td><td></td><td>identity (generated by default)</td></tr>
+<tr><td>Name</td><td>nvarchar</td><td><code>name</code></td><td>VARCHAR2(256 CHAR)</td><td>no</td><td></td><td></td></tr>
+<tr><td>CreatedAt</td><td>datetime</td><td><code>created_at</code></td><td>TIMESTAMP(3)</td><td>no</td><td></td><td></td></tr>
+<tr><td>PasswordHash</td><td>nvarchar</td><td><code>password_hash</code></td><td>CLOB</td><td>yes</td><td></td><td></td></tr>
+<tr><td>Discriminator</td><td>nvarchar</td><td><code>discriminator</code></td><td>VARCHAR2(128 CHAR)</td><td>no</td><td></td><td></td></tr>
+<tr><td>DeletedAt</td><td>datetime</td><td><code>deleted_at</code></td><td>TIMESTAMP(3)</td><td>yes</td><td></td><td></td></tr>
+<tr><td>Email</td><td>nvarchar</td><td><code>email</code></td><td>VARCHAR2(256 CHAR)</td><td>yes</td><td></td><td></td></tr>
+<tr><td>EmailConfirmed</td><td>bit</td><td><code>email_confirmed</code></td><td>BOOLEAN</td><td>no</td><td>FALSE</td><td></td></tr>
+<tr><td>SecurityStamp</td><td>nvarchar</td><td><code>security_stamp</code></td><td>CLOB</td><td>yes</td><td></td><td></td></tr>
+<tr><td>PhoneNumber</td><td>nvarchar</td><td><code>phone_number</code></td><td>CLOB</td><td>yes</td><td></td><td></td></tr>
+<tr><td>PhoneNumberConfirmed</td><td>bit</td><td><code>phone_number_confirmed</code></td><td>BOOLEAN</td><td>no</td><td>FALSE</td><td></td></tr>
+<tr><td>TwoFactorEnabled</td><td>bit</td><td><code>two_factor_enabled</code></td><td>BOOLEAN</td><td>no</td><td>FALSE</td><td></td></tr>
+<tr><td>LockoutEndDateUtc</td><td>datetime</td><td><code>lockout_end_date_utc</code></td><td>TIMESTAMP(3)</td><td>yes</td><td></td><td></td></tr>
+<tr><td>LockoutEnabled</td><td>bit</td><td><code>lockout_enabled</code></td><td>BOOLEAN</td><td>no</td><td>FALSE</td><td></td></tr>
+<tr><td>AccessFailedCount</td><td>int</td><td><code>access_failed_count</code></td><td>NUMBER(10)</td><td>no</td><td>0</td><td></td></tr>
+<tr><td>MustResetPassword</td><td>bit</td><td><code>must_reset_password</code></td><td>BOOLEAN</td><td>no</td><td>FALSE</td><td>added at export (not in the source)</td></tr>
+</tbody></table></div><ul>
+<li>Primary key <code>pk_users</code>: <code>id</code></li>
+<li>Unique index <code>ix_users_name_active</code> on (<code>CASE WHEN deleted_at IS NULL THEN LOWER(name) END</code>), a function-based index that implements the source filter <code>deleted_at IS NULL</code> (Oracle has no partial index; rows outside the filter produce an all-NULL key, which is not stored)</li>
+</ul>
+<h3><code>audit_logs</code> &larr; AuditLogs <span class="badge pass">PASS</span></h3>
+<div class="scroll"><table><thead><tr><th scope="col">Source column</th><th scope="col">Source type</th><th scope="col">Oracle column</th><th scope="col">Oracle type</th><th scope="col">Null</th><th scope="col">Default</th><th scope="col">Notes</th></tr></thead><tbody>
+<tr><td>Id</td><td>int</td><td><code>id</code></td><td>NUMBER(10)</td><td>no</td><td></td><td>identity (generated by default)</td></tr>
+<tr><td>Timestamp</td><td>datetime</td><td><code>timestamp</code></td><td>TIMESTAMP(3)</td><td>no</td><td></td><td></td></tr>
+<tr><td>UserId</td><td>int</td><td><code>user_id</code></td><td>NUMBER(10)</td><td>no</td><td></td><td></td></tr>
+<tr><td>Action</td><td>int</td><td><code>action</code></td><td>NUMBER(10)</td><td>no</td><td></td><td></td></tr>
+<tr><td>EntityType</td><td>int</td><td><code>entity_type</code></td><td>NUMBER(10)</td><td>no</td><td></td><td></td></tr>
+<tr><td>EntityId</td><td>int</td><td><code>entity_id</code></td><td>NUMBER(10)</td><td>no</td><td></td><td></td></tr>
+</tbody></table></div><ul>
+<li>Primary key <code>pk_audit_logs</code>: <code>id</code></li>
+<li>Foreign key <code>fk_audit_logs_users_user_id</code>: (user_id) &rarr; <code>users</code> (id), on delete CASCADE</li>
+<li>Plain index <code>ix_audit_logs_user_id</code> on (<code>user_id</code>)</li>
+</ul>
+<h3><code>tickets</code> &larr; Tickets <span class="badge pass">PASS</span></h3>
+<div class="scroll"><table><thead><tr><th scope="col">Source column</th><th scope="col">Source type</th><th scope="col">Oracle column</th><th scope="col">Oracle type</th><th scope="col">Null</th><th scope="col">Default</th><th scope="col">Notes</th></tr></thead><tbody>
+<tr><td>Id</td><td>int</td><td><code>id</code></td><td>NUMBER(10)</td><td>no</td><td></td><td>identity (generated by default)</td></tr>
+<tr><td>State</td><td>int</td><td><code>state</code></td><td>NUMBER(10)</td><td>no</td><td></td><td></td></tr>
+<tr><td>Description</td><td>nvarchar</td><td><code>description</code></td><td>VARCHAR2(2000 CHAR)</td><td>yes</td><td></td><td></td></tr>
+<tr><td>User_Id</td><td>int</td><td><code>user_id</code></td><td>NUMBER(10)</td><td>yes</td><td></td><td></td></tr>
+<tr><td>Customer_Id</td><td>int</td><td><code>customer_id</code></td><td>NUMBER(10)</td><td>yes</td><td></td><td></td></tr>
+<tr><td>SubmittedDate</td><td>datetime</td><td><code>submitted_date</code></td><td>TIMESTAMP(3)</td><td>yes</td><td></td><td></td></tr>
+<tr><td>AssignedDate</td><td>datetime</td><td><code>assigned_date</code></td><td>TIMESTAMP(3)</td><td>yes</td><td></td><td></td></tr>
+<tr><td>CompletedDate</td><td>datetime</td><td><code>completed_date</code></td><td>TIMESTAMP(3)</td><td>yes</td><td></td><td></td></tr>
+</tbody></table></div><ul>
+<li>Primary key <code>pk_tickets</code>: <code>id</code></li>
+<li>Foreign key <code>fk_tickets_users_customer_id</code>: (customer_id) &rarr; <code>users</code> (id), on delete NO ACTION (clause omitted: Oracle's default)</li>
+<li>Foreign key <code>fk_tickets_users_user_id</code>: (user_id) &rarr; <code>users</code> (id), on delete NO ACTION (clause omitted: Oracle's default)</li>
+<li>Plain index <code>ix_tickets_customer_id</code> on (<code>customer_id</code>)</li>
+<li>Plain index <code>ix_tickets_user_id</code> on (<code>user_id</code>)</li>
+</ul>
+<h3><code>comments</code> &larr; Comments <span class="badge pass">PASS</span></h3>
+<div class="scroll"><table><thead><tr><th scope="col">Source column</th><th scope="col">Source type</th><th scope="col">Oracle column</th><th scope="col">Oracle type</th><th scope="col">Null</th><th scope="col">Default</th><th scope="col">Notes</th></tr></thead><tbody>
+<tr><td>Id</td><td>int</td><td><code>id</code></td><td>NUMBER(10)</td><td>no</td><td></td><td>identity (generated by default)</td></tr>
+<tr><td>UserId</td><td>int</td><td><code>user_id</code></td><td>NUMBER(10)</td><td>no</td><td></td><td></td></tr>
+<tr><td>TicketId</td><td>int</td><td><code>ticket_id</code></td><td>NUMBER(10)</td><td>no</td><td></td><td></td></tr>
+<tr><td>Text</td><td>nvarchar</td><td><code>text</code></td><td>VARCHAR2(2000 CHAR)</td><td>yes</td><td></td><td></td></tr>
+<tr><td>CreatedAt</td><td>datetime</td><td><code>created_at</code></td><td>TIMESTAMP(3)</td><td>no</td><td></td><td></td></tr>
+</tbody></table></div><ul>
+<li>Primary key <code>pk_comments</code>: <code>id</code></li>
+<li>Foreign key <code>fk_comments_tickets_ticket_id</code>: (ticket_id) &rarr; <code>tickets</code> (id), on delete CASCADE</li>
+<li>Foreign key <code>fk_comments_users_user_id</code>: (user_id) &rarr; <code>users</code> (id), on delete CASCADE</li>
+<li>Plain index <code>ix_comments_ticket_id</code> on (<code>ticket_id</code>)</li>
+<li>Plain index <code>ix_comments_user_id</code> on (<code>user_id</code>)</li>
+</ul>
+<h3><code>user_claims</code> &larr; UserClaims <span class="badge pass">PASS</span></h3>
+<div class="scroll"><table><thead><tr><th scope="col">Source column</th><th scope="col">Source type</th><th scope="col">Oracle column</th><th scope="col">Oracle type</th><th scope="col">Null</th><th scope="col">Default</th><th scope="col">Notes</th></tr></thead><tbody>
+<tr><td>Id</td><td>int</td><td><code>id</code></td><td>NUMBER(10)</td><td>no</td><td></td><td>identity (generated by default)</td></tr>
+<tr><td>UserId</td><td>int</td><td><code>user_id</code></td><td>NUMBER(10)</td><td>no</td><td></td><td></td></tr>
+<tr><td>ClaimType</td><td>nvarchar</td><td><code>claim_type</code></td><td>CLOB</td><td>yes</td><td></td><td></td></tr>
+<tr><td>ClaimValue</td><td>nvarchar</td><td><code>claim_value</code></td><td>CLOB</td><td>yes</td><td></td><td></td></tr>
+</tbody></table></div><ul>
+<li>Primary key <code>pk_user_claims</code>: <code>id</code></li>
+<li>Foreign key <code>fk_user_claims_users_user_id</code>: (user_id) &rarr; <code>users</code> (id), on delete CASCADE</li>
+<li>Plain index <code>ix_user_claims_user_id</code> on (<code>user_id</code>)</li>
+</ul>
+<h3><code>user_logins</code> &larr; UserLogins <span class="badge pass">PASS</span></h3>
+<div class="scroll"><table><thead><tr><th scope="col">Source column</th><th scope="col">Source type</th><th scope="col">Oracle column</th><th scope="col">Oracle type</th><th scope="col">Null</th><th scope="col">Default</th><th scope="col">Notes</th></tr></thead><tbody>
+<tr><td>LoginProvider</td><td>nvarchar</td><td><code>login_provider</code></td><td>VARCHAR2(128 CHAR)</td><td>no</td><td></td><td></td></tr>
+<tr><td>ProviderKey</td><td>nvarchar</td><td><code>provider_key</code></td><td>VARCHAR2(128 CHAR)</td><td>no</td><td></td><td></td></tr>
+<tr><td>UserId</td><td>int</td><td><code>user_id</code></td><td>NUMBER(10)</td><td>no</td><td></td><td></td></tr>
+</tbody></table></div><ul>
+<li>Primary key <code>pk_user_logins</code>: <code>login_provider, provider_key, user_id</code></li>
+<li>Foreign key <code>fk_user_logins_users_user_id</code>: (user_id) &rarr; <code>users</code> (id), on delete CASCADE</li>
+<li>Plain index <code>ix_user_logins_user_id</code> on (<code>user_id</code>)</li>
+</ul>
+<h3><code>user_roles</code> &larr; UserRoles <span class="badge pass">PASS</span></h3>
+<div class="scroll"><table><thead><tr><th scope="col">Source column</th><th scope="col">Source type</th><th scope="col">Oracle column</th><th scope="col">Oracle type</th><th scope="col">Null</th><th scope="col">Default</th><th scope="col">Notes</th></tr></thead><tbody>
+<tr><td>UserId</td><td>int</td><td><code>user_id</code></td><td>NUMBER(10)</td><td>no</td><td></td><td></td></tr>
+<tr><td>RoleId</td><td>int</td><td><code>role_id</code></td><td>NUMBER(10)</td><td>no</td><td></td><td></td></tr>
+</tbody></table></div><ul>
+<li>Primary key <code>pk_user_roles</code>: <code>user_id, role_id</code></li>
+<li>Foreign key <code>fk_user_roles_roles_role_id</code>: (role_id) &rarr; <code>roles</code> (id), on delete CASCADE</li>
+<li>Foreign key <code>fk_user_roles_users_user_id</code>: (user_id) &rarr; <code>users</code> (id), on delete CASCADE</li>
+<li>Plain index <code>ix_user_roles_role_id</code> on (<code>role_id</code>)</li>
+<li>Plain index <code>ix_user_roles_user_id</code> on (<code>user_id</code>)</li>
+</ul>
+<h3>Schema checks</h3>
+<div class="scroll"><table><thead><tr><th scope="col">Check</th><th scope="col">Detail</th><th scope="col">Result</th></tr></thead><tbody>
+<tr><td>The schema has exactly the expected tables</td><td class="detail">8 tables</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Table roles columns</td><td class="detail">2 columns: names, types, lengths, nullability, defaults, identity</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Table roles primary key</td><td class="detail">expected pk_roles (id), found pk_roles (id)</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Table roles foreign keys</td><td class="detail">0 foreign keys: names, columns, targets, delete rules</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Table roles indexes</td><td class="detail">1 indexes: names, uniqueness, keys and expressions</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Table users columns</td><td class="detail">16 columns: names, types, lengths, nullability, defaults, identity</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Table users primary key</td><td class="detail">expected pk_users (id), found pk_users (id)</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Table users foreign keys</td><td class="detail">0 foreign keys: names, columns, targets, delete rules</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Table users indexes</td><td class="detail">1 indexes: names, uniqueness, keys and expressions</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Table audit_logs columns</td><td class="detail">6 columns: names, types, lengths, nullability, defaults, identity</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Table audit_logs primary key</td><td class="detail">expected pk_audit_logs (id), found pk_audit_logs (id)</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Table audit_logs foreign keys</td><td class="detail">1 foreign keys: names, columns, targets, delete rules</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Table audit_logs indexes</td><td class="detail">1 indexes: names, uniqueness, keys and expressions</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Table tickets columns</td><td class="detail">8 columns: names, types, lengths, nullability, defaults, identity</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Table tickets primary key</td><td class="detail">expected pk_tickets (id), found pk_tickets (id)</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Table tickets foreign keys</td><td class="detail">2 foreign keys: names, columns, targets, delete rules</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Table tickets indexes</td><td class="detail">2 indexes: names, uniqueness, keys and expressions</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Table comments columns</td><td class="detail">5 columns: names, types, lengths, nullability, defaults, identity</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Table comments primary key</td><td class="detail">expected pk_comments (id), found pk_comments (id)</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Table comments foreign keys</td><td class="detail">2 foreign keys: names, columns, targets, delete rules</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Table comments indexes</td><td class="detail">2 indexes: names, uniqueness, keys and expressions</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Table user_claims columns</td><td class="detail">4 columns: names, types, lengths, nullability, defaults, identity</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Table user_claims primary key</td><td class="detail">expected pk_user_claims (id), found pk_user_claims (id)</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Table user_claims foreign keys</td><td class="detail">1 foreign keys: names, columns, targets, delete rules</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Table user_claims indexes</td><td class="detail">1 indexes: names, uniqueness, keys and expressions</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Table user_logins columns</td><td class="detail">3 columns: names, types, lengths, nullability, defaults, identity</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Table user_logins primary key</td><td class="detail">expected pk_user_logins (login_provider, provider_key, user_id), found pk_user_logins (login_provider, provider_key, user_id)</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Table user_logins foreign keys</td><td class="detail">1 foreign keys: names, columns, targets, delete rules</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Table user_logins indexes</td><td class="detail">1 indexes: names, uniqueness, keys and expressions</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Table user_roles columns</td><td class="detail">2 columns: names, types, lengths, nullability, defaults, identity</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Table user_roles primary key</td><td class="detail">expected pk_user_roles (user_id, role_id), found pk_user_roles (user_id, role_id)</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Table user_roles foreign keys</td><td class="detail">2 foreign keys: names, columns, targets, delete rules</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Table user_roles indexes</td><td class="detail">2 indexes: names, uniqueness, keys and expressions</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>No unusable or disabled indexes</td><td class="detail">0 unusable or disabled</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>No identifier is an Oracle reserved word</td><td class="detail">74 names checked against V$RESERVED_WORDS</td><td><span class="badge pass">PASS</span></td></tr>
+</tbody></table></div>
+</section>
+<section aria-labelledby="summaries"><h2 id="summaries">Business summaries</h2>
+<p>The same ten questions export-oracle asked of SQL Server, answered by Oracle queries and compared with the answers recorded from SQL Server.</p>
+<div class="summary"><h3>Users by type <span class="badge pass">PASS</span></h3>
+<ul class="bars">
+<li><span class="bl">Customer</span><span class="bt" aria-hidden="true"><span class="bf" style="width:100.0%"></span></span><span class="bv">8</span></li>
+<li><span class="bl">Employee</span><span class="bt" aria-hidden="true"><span class="bf" style="width:37.5%"></span></span><span class="bv">3</span></li>
+<li><span class="bl">Manager</span><span class="bt" aria-hidden="true"><span class="bf" style="width:12.5%"></span></span><span class="bv">1</span></li>
+</ul>
+<p class="match">Identical to the source.</p></div>
+<div class="summary"><h3>Users active vs soft-deleted <span class="badge pass">PASS</span></h3>
+<ul class="bars">
+<li><span class="bl">active</span><span class="bt" aria-hidden="true"><span class="bf" style="width:100.0%"></span></span><span class="bv">12</span></li>
+</ul>
+<p class="match">Identical to the source.</p></div>
+<div class="summary"><h3>Users per role <span class="badge pass">PASS</span></h3>
+<ul class="bars">
+<li><span class="bl">Customer</span><span class="bt" aria-hidden="true"><span class="bf" style="width:100.0%"></span></span><span class="bv">8</span></li>
+<li><span class="bl">Employee</span><span class="bt" aria-hidden="true"><span class="bf" style="width:37.5%"></span></span><span class="bv">3</span></li>
+<li><span class="bl">Manager</span><span class="bt" aria-hidden="true"><span class="bf" style="width:12.5%"></span></span><span class="bv">1</span></li>
+</ul>
+<p class="match">Identical to the source.</p></div>
+<div class="summary"><h3>Tickets by state <span class="badge pass">PASS</span></h3>
+<ul class="bars">
+<li><span class="bl">0</span><span class="bt" aria-hidden="true"><span class="bf" style="width:100.0%"></span></span><span class="bv">8</span></li>
+<li><span class="bl">1</span><span class="bt" aria-hidden="true"><span class="bf" style="width:100.0%"></span></span><span class="bv">8</span></li>
+<li><span class="bl">2</span><span class="bt" aria-hidden="true"><span class="bf" style="width:100.0%"></span></span><span class="bv">8</span></li>
+</ul>
+<p class="note">States are the legacy workflow codes: 0 = SUBMITTED, 1 = INPROGRESS, 2 = COMPLETED.</p><p class="match">Identical to the source.</p></div>
+<div class="summary"><h3>Tickets assigned vs unassigned <span class="badge pass">PASS</span></h3>
+<ul class="bars">
+<li><span class="bl">assigned</span><span class="bt" aria-hidden="true"><span class="bf" style="width:100.0%"></span></span><span class="bv">16</span></li>
+<li><span class="bl">unassigned</span><span class="bt" aria-hidden="true"><span class="bf" style="width:50.0%"></span></span><span class="bv">8</span></li>
+</ul>
+<p class="match">Identical to the source.</p></div>
+<div class="summary"><h3>Audit events by action <span class="badge pass">PASS</span></h3>
+<ul class="bars">
+<li><span class="bl">0</span><span class="bt" aria-hidden="true"><span class="bf" style="width:45.8%"></span></span><span class="bv">11</span></li>
+<li><span class="bl">1</span><span class="bt" aria-hidden="true"><span class="bf" style="width:4.2%"></span></span><span class="bv">1</span></li>
+<li><span class="bl">2</span><span class="bt" aria-hidden="true"><span class="bf" style="width:100.0%"></span></span><span class="bv">24</span></li>
+<li><span class="bl">3</span><span class="bt" aria-hidden="true"><span class="bf" style="width:66.7%"></span></span><span class="bv">16</span></li>
+<li><span class="bl">4</span><span class="bt" aria-hidden="true"><span class="bf" style="width:33.3%"></span></span><span class="bv">8</span></li>
+<li><span class="bl">5</span><span class="bt" aria-hidden="true"><span class="bf" style="width:75.0%"></span></span><span class="bv">18</span></li>
+</ul>
+<p class="note">Actions are the numeric codes stored by the legacy application.</p><p class="match">Identical to the source.</p></div>
+<div class="summary"><h3>Comments per ticket (distribution) <span class="badge pass">PASS</span></h3>
+<ul class="bars">
+<li><span class="bl">3</span><span class="bt" aria-hidden="true"><span class="bf" style="width:100.0%"></span></span><span class="bv">6</span></li>
+<li><span class="bl">4</span><span class="bt" aria-hidden="true"><span class="bf" style="width:33.3%"></span></span><span class="bv">2</span></li>
+</ul>
+<p class="note">Label = comments on a ticket; value = number of tickets with that many comments.</p><p class="match">Identical to the source.</p></div>
+<div class="summary"><h3>Comment and commented-ticket totals <span class="badge pass">PASS</span></h3>
+<ul class="bars">
+<li><span class="bl">26</span><span class="bt" aria-hidden="true"><span class="bf" style="width:100.0%"></span></span><span class="bv">8</span></li>
+</ul>
+<p class="match">Identical to the source.</p></div>
+<div class="summary"><h3>Ticket date ranges <span class="badge pass">PASS</span></h3>
+<div class="scroll"><table><thead><tr><th scope="col">Expected (SQL Server)</th><th scope="col">Found (Oracle)</th></tr></thead><tbody>
+<tr><td><code>2026-09-07 08:20:34.000|2026-09-16 08:39:18.000|2026-09-07 11:26:34.000|2026-09-14 10:16:58.910|2026-09-11 00:13:34.000|2026-09-17 14:15:58.910</code></td><td><code>2026-09-07 08:20:34.000|2026-09-16 08:39:18.000|2026-09-07 11:26:34.000|2026-09-14 10:16:58.910|2026-09-11 00:13:34.000|2026-09-17 14:15:58.910</code></td></tr>
+</tbody></table></div>
+<p class="note">Earliest and latest submitted, assigned and completed dates.</p><p class="match">Identical to the source.</p></div>
+<div class="summary"><h3>Account and audit date ranges <span class="badge pass">PASS</span></h3>
+<div class="scroll"><table><thead><tr><th scope="col">Expected (SQL Server)</th><th scope="col">Found (Oracle)</th></tr></thead><tbody>
+<tr><td><code>2026-09-10 14:41:58.910|2026-09-11 16:41:58.910|2026-09-07 08:20:34.000|2026-09-17 14:43:56.643</code></td><td><code>2026-09-10 14:41:58.910|2026-09-11 16:41:58.910|2026-09-07 08:20:34.000|2026-09-17 14:43:56.643</code></td></tr>
+</tbody></table></div>
+<p class="note">Earliest and latest account creation and audit event.</p><p class="match">Identical to the source.</p></div>
+</section>
+<section aria-labelledby="sanitization"><h2 id="sanitization">Credential sanitization</h2>
+<p>The export removed every credential before anything was written to disk: <code>password_hash</code> and <code>security_stamp</code> are NULL for every user and <code>must_reset_password</code> (a column added at export) is true, so every migrated account must set a new password. Nothing else was changed: usernames, timestamps, ticket descriptions and comment text are exactly as in the source.</p>
+<div class="scroll"><table><thead><tr><th scope="col">Check</th><th scope="col">Detail</th><th scope="col">Result</th></tr></thead><tbody>
+<tr><td>The export was made with credentials sanitized</td><td class="detail">sanitizeCredentials = true</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>User count</td><td class="detail">expected 12, found 12</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Every user has no password hash or security stamp and must reset the password</td><td class="detail">0 of 12 users not sanitized</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>No two active usernames differ only by case</td><td class="detail">0 duplicates</td><td><span class="badge pass">PASS</span></td></tr>
+</tbody></table></div>
+</section>
+<section aria-labelledby="rules"><h2 id="rules">Rule tests</h2>
+<p>These try things the database must allow or refuse, each between a savepoint and a rollback to it. Test rows use explicit ids far above the data, so no identity sequence moves; the sequences are read first (from <code>DBA_SEQUENCES.LAST_NUMBER</code>, without drawing a value) and the last check confirms nothing was left behind. Oracle-specific findings are recorded here too: a <code>BOOLEAN</code> column silently converts numbers and words such as <code>'yes'</code> but rejects <code>'maybe'</code>; text written in the export's <code>CHR</code>/<code>UNISTR</code> literal form comes back byte for byte; and with <code>MAX_STRING_SIZE = STANDARD</code> a <code>VARCHAR2(2000 CHAR)</code> value is also limited to 4,000 bytes.</p>
+<div class="scroll"><table><thead><tr><th scope="col">Check</th><th scope="col">Detail</th><th scope="col">Result</th></tr></thead><tbody>
+<tr><td>New roles ids continue after the loaded ones</td><td class="detail">next value 4, expected 4</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>New users ids continue after the loaded ones</td><td class="detail">next value 13, expected 13</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>New audit_logs ids continue after the loaded ones</td><td class="detail">next value 79, expected 79</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>New tickets ids continue after the loaded ones</td><td class="detail">next value 25, expected 25</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>New comments ids continue after the loaded ones</td><td class="detail">next value 27, expected 27</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>New user_claims ids continue after the loaded ones</td><td class="detail">next value 1, expected 1</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>A second active user differing only by case is rejected</td><td class="detail">inserting 'MANAGER' while 'manager' is active: rejected (ORA-00001)</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>A soft-deleted username can be reused</td><td class="detail">'manager' soft-deleted, then inserted again: accepted</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Two soft-deleted users may share a name</td><td class="detail">two soft-deleted 'rule-test' users: accepted</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>A comment with a non-existent user and ticket is rejected</td><td class="detail">rejected (ORA-02291)</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>A BOOLEAN column rejects a value that is not a boolean</td><td class="detail">setting email_confirmed to 'maybe': rejected (ORA-61800)</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Quote, backslash, ampersand, control characters, accent and emoji round-trip</td><td class="detail">CHR/UNISTR literal stored and read back: identical</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Text columns hold their length in characters up to the byte limit</td><td class="detail">2,000 two-byte characters (4,000 bytes) in comments.text: accepted; 1,334 three-byte characters (4,002 bytes): rejected (ORA-12899) (MAX_STRING_SIZE STANDARD)</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>The rule tests left the database unchanged</td><td class="detail">0 test rows left, 0 sequences moved</td><td><span class="badge pass">PASS</span></td></tr>
+</tbody></table></div>
+</section>
+<section aria-labelledby="selftest"><h2 id="selftest">Tooling self-test</h2>
+<p>Proves the checker itself can be trusted: it gives the same answer every time and catches real damage. It runs on a separate, temporary container; the delivered database is never modified.</p>
+<div class="scroll"><table><thead><tr><th scope="col">Test</th><th scope="col">Detail</th><th scope="col">Result</th></tr></thead><tbody>
+<tr><td>Repeatable load</td><td class="detail">two fresh loads both pass verification; check output and results JSON identical (apart from the run time)</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Delivered database matches a fresh load</td><td class="detail">mar-oracle gives the same check results as the fresh self-test load</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Damaged copy detected</td><td class="detail">one comment edited, one ticket deleted, the username index dropped: verify exits 1 and names tickets (count, hash), comments (hash), the users index and the case rule; untouched tables still pass</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Tampered metadata hash detected</td><td class="detail">roles hash zeroed in a copy of the metadata: verify exits 1 with exactly one failure, naming roles</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Corrupted input refused</td><td class="detail">one byte changed in 02-data-sanitized.sql: load exits 2 on the integrity check and creates no container</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Existing database protected</td><td class="detail">load without --recreate on an existing container exits 3 and changes nothing</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td>Docker unavailable reported</td><td class="detail">with Docker unreachable, the tool exits 2 with a clear message</td><td><span class="badge pass">PASS</span></td></tr>
+</tbody></table></div>
+</section>
+<section aria-labelledby="differences"><h2 id="differences">Known differences from the legacy database</h2><ul>
+<li>Identifiers are lowercase snake_case in the SQL (for example CreatedAt becomes created_at; User_Id becomes user_id) and Oracle stores them in upper case; foreign key and index names are renamed too. Data values are never lowercased.</li>
+<li>datetime columns become TIMESTAMP(3) without time zone and keep the source values exactly; it is not known whether the legacy application stored UTC or local times (only LockoutEndDateUtc is UTC by name), so no zone conversion is made.</li>
+<li>SQL Server compared text case-insensitively; Oracle is case-sensitive. Username uniqueness is enforced case-insensitively by a function-based unique index on CASE WHEN deleted_at IS NULL THEN LOWER(name) END (Oracle has no partial index), so authentication must compare LOWER(name) = LOWER(input). Role names use a plain case-sensitive unique index.</li>
+<li>bit columns become the native BOOLEAN type (Oracle 23ai and later; not available on 19c); the identity columns become GENERATED BY DEFAULT AS IDENTITY and the data supplies explicit ids (each identity is restarted after the last issued value once the data is loaded).</li>
+<li>Oracle stores an empty string as NULL. The export refuses a source that contains an empty string (there is none), because loading it would silently turn it into NULL.</li>
+<li>ON DELETE NO ACTION is written by leaving the clause out: Oracle rejects the words, and its default already means no action.</li>
+<li>nvarchar(n) becomes VARCHAR2(n CHAR): the length is in characters, but a VARCHAR2 value is also limited to 4000 bytes unless the database has MAX_STRING_SIZE=EXTENDED, so multi-byte text near the limit can overflow.</li>
+<li>The SQL files are pure ASCII: control characters are written as CHR(n) and non-ASCII characters as UNISTR('\XXXX'), so loading does not depend on the client character set.</li>
+<li>Index names that were duplicated across tables in SQL Server (for example IX_UserId) were prefixed with the table name, then renamed to snake_case.</li>
+<li>Excluded on purpose: <code>__MigrationHistory</code> (Entity Framework migration history, not application data).</li>
+<li>Credentials were invalidated, not carried over (see Credential sanitization).</li></ul>
+<h3>What this verification is and is not</h3>
+<ul><li>It compares the database with a record made at export, not with the live SQL Server database, which this machine cannot reach. The record was produced by a separate code path from the SQL, so this is a real end-to-end check of the export and the load.</li>
+<li>It guards against mistakes, not tampering: someone with write access could change both the record and the SQL files.</li>
+<li>Timestamps have no time zone, and whether the legacy application stored UTC or local time is unknown; no conversion was made.</li>
+<li>Usernames are unique regardless of case only through the function-based index on <code>LOWER(name)</code>, so sign-in must compare <code>LOWER(name) = LOWER(:input)</code>.</li>
+<li>Oracle 23ai or later only (<code>BOOLEAN</code>, multi-row <code>INSERT</code>); Oracle 19c would need a different export.</li></ul>
+</section>
+<section aria-labelledby="all"><h2 id="all">All checks</h2>
+<div class="scroll"><table><thead><tr><th scope="col" class="num">#</th><th scope="col">Category</th><th scope="col">Check</th><th scope="col">Detail</th><th scope="col">Result</th></tr></thead><tbody>
+<tr><td class="num">1</td><td>environment</td><td>Oracle server version is supported</td><td class="detail">server 23.26.3.0.0, minimum 23</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">2</td><td>environment</td><td>Database character set is AL32UTF8</td><td class="detail">AL32UTF8</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">3</td><td>environment</td><td>MAX_STRING_SIZE reported</td><td class="detail">STANDARD: a VARCHAR2 value is limited to 4000 bytes</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">4</td><td>environment</td><td>Metadata format is version 1</td><td class="detail">schemaVersion 1</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">5</td><td>integrity</td><td>01-schema.sql matches the recorded SHA-256</td><td class="detail">expected 1882e31d2963b543, found 1882e31d2963b543</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">6</td><td>integrity</td><td>02-data-sanitized.sql matches the recorded SHA-256</td><td class="detail">expected 0c1504e711c113d9, found 0c1504e711c113d9</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">7</td><td>counts</td><td>Table roles row count</td><td class="detail">expected 3, found 3</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">8</td><td>hashes</td><td>Table roles content hash</td><td class="detail">expected c0a2efd128356144, found c0a2efd128356144</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">9</td><td>counts</td><td>Table users row count</td><td class="detail">expected 12, found 12</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">10</td><td>hashes</td><td>Table users content hash</td><td class="detail">expected fa415e1421e2d4a8, found fa415e1421e2d4a8</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">11</td><td>counts</td><td>Table audit_logs row count</td><td class="detail">expected 78, found 78</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">12</td><td>hashes</td><td>Table audit_logs content hash</td><td class="detail">expected c6e4f24be7acad70, found c6e4f24be7acad70</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">13</td><td>counts</td><td>Table tickets row count</td><td class="detail">expected 24, found 24</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">14</td><td>hashes</td><td>Table tickets content hash</td><td class="detail">expected c34f64ec58233df7, found c34f64ec58233df7</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">15</td><td>counts</td><td>Table comments row count</td><td class="detail">expected 26, found 26</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">16</td><td>hashes</td><td>Table comments content hash</td><td class="detail">expected c954517fcb3a64cb, found c954517fcb3a64cb</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">17</td><td>counts</td><td>Table user_claims row count</td><td class="detail">expected 0, found 0</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">18</td><td>hashes</td><td>Table user_claims content hash</td><td class="detail">expected e3b0c44298fc1c14, found e3b0c44298fc1c14</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">19</td><td>counts</td><td>Table user_logins row count</td><td class="detail">expected 0, found 0</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">20</td><td>hashes</td><td>Table user_logins content hash</td><td class="detail">expected e3b0c44298fc1c14, found e3b0c44298fc1c14</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">21</td><td>counts</td><td>Table user_roles row count</td><td class="detail">expected 12, found 12</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">22</td><td>hashes</td><td>Table user_roles content hash</td><td class="detail">expected 44553a2bae5a2d40, found 44553a2bae5a2d40</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">23</td><td>counts</td><td>Total rows across all tables</td><td class="detail">expected 155, found 155</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">24</td><td>schema</td><td>The schema has exactly the expected tables</td><td class="detail">8 tables</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">25</td><td>schema</td><td>Table roles columns</td><td class="detail">2 columns: names, types, lengths, nullability, defaults, identity</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">26</td><td>schema</td><td>Table roles primary key</td><td class="detail">expected pk_roles (id), found pk_roles (id)</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">27</td><td>schema</td><td>Table roles foreign keys</td><td class="detail">0 foreign keys: names, columns, targets, delete rules</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">28</td><td>schema</td><td>Table roles indexes</td><td class="detail">1 indexes: names, uniqueness, keys and expressions</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">29</td><td>schema</td><td>Table users columns</td><td class="detail">16 columns: names, types, lengths, nullability, defaults, identity</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">30</td><td>schema</td><td>Table users primary key</td><td class="detail">expected pk_users (id), found pk_users (id)</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">31</td><td>schema</td><td>Table users foreign keys</td><td class="detail">0 foreign keys: names, columns, targets, delete rules</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">32</td><td>schema</td><td>Table users indexes</td><td class="detail">1 indexes: names, uniqueness, keys and expressions</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">33</td><td>schema</td><td>Table audit_logs columns</td><td class="detail">6 columns: names, types, lengths, nullability, defaults, identity</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">34</td><td>schema</td><td>Table audit_logs primary key</td><td class="detail">expected pk_audit_logs (id), found pk_audit_logs (id)</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">35</td><td>schema</td><td>Table audit_logs foreign keys</td><td class="detail">1 foreign keys: names, columns, targets, delete rules</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">36</td><td>schema</td><td>Table audit_logs indexes</td><td class="detail">1 indexes: names, uniqueness, keys and expressions</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">37</td><td>schema</td><td>Table tickets columns</td><td class="detail">8 columns: names, types, lengths, nullability, defaults, identity</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">38</td><td>schema</td><td>Table tickets primary key</td><td class="detail">expected pk_tickets (id), found pk_tickets (id)</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">39</td><td>schema</td><td>Table tickets foreign keys</td><td class="detail">2 foreign keys: names, columns, targets, delete rules</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">40</td><td>schema</td><td>Table tickets indexes</td><td class="detail">2 indexes: names, uniqueness, keys and expressions</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">41</td><td>schema</td><td>Table comments columns</td><td class="detail">5 columns: names, types, lengths, nullability, defaults, identity</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">42</td><td>schema</td><td>Table comments primary key</td><td class="detail">expected pk_comments (id), found pk_comments (id)</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">43</td><td>schema</td><td>Table comments foreign keys</td><td class="detail">2 foreign keys: names, columns, targets, delete rules</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">44</td><td>schema</td><td>Table comments indexes</td><td class="detail">2 indexes: names, uniqueness, keys and expressions</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">45</td><td>schema</td><td>Table user_claims columns</td><td class="detail">4 columns: names, types, lengths, nullability, defaults, identity</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">46</td><td>schema</td><td>Table user_claims primary key</td><td class="detail">expected pk_user_claims (id), found pk_user_claims (id)</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">47</td><td>schema</td><td>Table user_claims foreign keys</td><td class="detail">1 foreign keys: names, columns, targets, delete rules</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">48</td><td>schema</td><td>Table user_claims indexes</td><td class="detail">1 indexes: names, uniqueness, keys and expressions</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">49</td><td>schema</td><td>Table user_logins columns</td><td class="detail">3 columns: names, types, lengths, nullability, defaults, identity</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">50</td><td>schema</td><td>Table user_logins primary key</td><td class="detail">expected pk_user_logins (login_provider, provider_key, user_id), found pk_user_logins (login_provider, provider_key, user_id)</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">51</td><td>schema</td><td>Table user_logins foreign keys</td><td class="detail">1 foreign keys: names, columns, targets, delete rules</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">52</td><td>schema</td><td>Table user_logins indexes</td><td class="detail">1 indexes: names, uniqueness, keys and expressions</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">53</td><td>schema</td><td>Table user_roles columns</td><td class="detail">2 columns: names, types, lengths, nullability, defaults, identity</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">54</td><td>schema</td><td>Table user_roles primary key</td><td class="detail">expected pk_user_roles (user_id, role_id), found pk_user_roles (user_id, role_id)</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">55</td><td>schema</td><td>Table user_roles foreign keys</td><td class="detail">2 foreign keys: names, columns, targets, delete rules</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">56</td><td>schema</td><td>Table user_roles indexes</td><td class="detail">2 indexes: names, uniqueness, keys and expressions</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">57</td><td>schema</td><td>No unusable or disabled indexes</td><td class="detail">0 unusable or disabled</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">58</td><td>schema</td><td>No identifier is an Oracle reserved word</td><td class="detail">74 names checked against V$RESERVED_WORDS</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">59</td><td>summaries</td><td>Users by type</td><td class="detail">Customer|8, Employee|3, Manager|1</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">60</td><td>summaries</td><td>Users active vs soft-deleted</td><td class="detail">active|12</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">61</td><td>summaries</td><td>Users per role</td><td class="detail">Customer|8, Employee|3, Manager|1</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">62</td><td>summaries</td><td>Tickets by state</td><td class="detail">0|8, 1|8, 2|8</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">63</td><td>summaries</td><td>Tickets assigned vs unassigned</td><td class="detail">assigned|16, unassigned|8</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">64</td><td>summaries</td><td>Audit events by action</td><td class="detail">0|11, 1|1, 2|24, 3|16, 4|8, 5|18</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">65</td><td>summaries</td><td>Comments per ticket (distribution)</td><td class="detail">3|6, 4|2</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">66</td><td>summaries</td><td>Comment and commented-ticket totals</td><td class="detail">26|8</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">67</td><td>summaries</td><td>Ticket date ranges</td><td class="detail">2026-09-07 08:20:34.000|2026-09-16 08:39:18.000|2026-09-07 11:26:34.000|2026-09-14 10:16:58.910|2026-09-11 00:13:34.000|2026-09-17 14:15:58.910</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">68</td><td>summaries</td><td>Account and audit date ranges</td><td class="detail">2026-09-10 14:41:58.910|2026-09-11 16:41:58.910|2026-09-07 08:20:34.000|2026-09-17 14:43:56.643</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">69</td><td>sanitization</td><td>The export was made with credentials sanitized</td><td class="detail">sanitizeCredentials = true</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">70</td><td>sanitization</td><td>User count</td><td class="detail">expected 12, found 12</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">71</td><td>sanitization</td><td>Every user has no password hash or security stamp and must reset the password</td><td class="detail">0 of 12 users not sanitized</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">72</td><td>sanitization</td><td>No two active usernames differ only by case</td><td class="detail">0 duplicates</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">73</td><td>rules</td><td>New roles ids continue after the loaded ones</td><td class="detail">next value 4, expected 4</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">74</td><td>rules</td><td>New users ids continue after the loaded ones</td><td class="detail">next value 13, expected 13</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">75</td><td>rules</td><td>New audit_logs ids continue after the loaded ones</td><td class="detail">next value 79, expected 79</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">76</td><td>rules</td><td>New tickets ids continue after the loaded ones</td><td class="detail">next value 25, expected 25</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">77</td><td>rules</td><td>New comments ids continue after the loaded ones</td><td class="detail">next value 27, expected 27</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">78</td><td>rules</td><td>New user_claims ids continue after the loaded ones</td><td class="detail">next value 1, expected 1</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">79</td><td>rules</td><td>A second active user differing only by case is rejected</td><td class="detail">inserting 'MANAGER' while 'manager' is active: rejected (ORA-00001)</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">80</td><td>rules</td><td>A soft-deleted username can be reused</td><td class="detail">'manager' soft-deleted, then inserted again: accepted</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">81</td><td>rules</td><td>Two soft-deleted users may share a name</td><td class="detail">two soft-deleted 'rule-test' users: accepted</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">82</td><td>rules</td><td>A comment with a non-existent user and ticket is rejected</td><td class="detail">rejected (ORA-02291)</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">83</td><td>rules</td><td>A BOOLEAN column rejects a value that is not a boolean</td><td class="detail">setting email_confirmed to 'maybe': rejected (ORA-61800)</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">84</td><td>rules</td><td>Quote, backslash, ampersand, control characters, accent and emoji round-trip</td><td class="detail">CHR/UNISTR literal stored and read back: identical</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">85</td><td>rules</td><td>Text columns hold their length in characters up to the byte limit</td><td class="detail">2,000 two-byte characters (4,000 bytes) in comments.text: accepted; 1,334 three-byte characters (4,002 bytes): rejected (ORA-12899) (MAX_STRING_SIZE STANDARD)</td><td><span class="badge pass">PASS</span></td></tr>
+<tr><td class="num">86</td><td>rules</td><td>The rule tests left the database unchanged</td><td class="detail">0 test rows left, 0 sequences moved</td><td><span class="badge pass">PASS</span></td></tr>
+</tbody></table></div></section>
+<section aria-labelledby="repro"><h2 id="repro">Reproducibility</h2>
+<p>On a Linux machine with Docker Engine, bash and <code>sha256sum</code>, from the repository root:</p>
+<pre><code>tools/phase1/dbmigrate/import-oracle/ingest.sh all --recreate   # load, verify, selftest, report
+tools/phase1/dbmigrate/import-oracle/ingest.sh verify           # re-check the running database
+docker exec -it mar-oracle sqlplus / as sysdba                  # look around (no password: OS authentication)
+  ALTER SESSION SET CONTAINER = FREEPDB1;
+  ALTER SESSION SET CURRENT_SCHEMA = masterantique;</code></pre>
+<dl>
+<dt>Verified</dt><dd>2026-09-24 14:36:06 UTC, tool commit <code>6fcb0a6</code></dd>
+<dt>Oracle</dt><dd>Oracle AI Database 26ai Free Release 23.26.3.0.0 - Develop, Learn, and Run for Free; character set AL32UTF8, MAX_STRING_SIZE STANDARD, NLS_LENGTH_SEMANTICS BYTE</dd>
+<dt>Docker image</dt><dd><code>gvenzl/oracle-free:23.26.3-faststart</code></dd>
+<dt>Container / database</dt><dd><code>mar-oracle</code> / pluggable database <code>freepdb1</code>, schema <code>masterantique</code> (no password), no published port</dd>
+<dt>01-schema.sql</dt><dd><code>1882e31d2963b5435dd99801193e70ed7eb408646ee8ba6ca3b899fd869e159a</code> (matches the record)</dd>
+<dt>02-data-sanitized.sql</dt><dd><code>0c1504e711c113d91b40edfd20fd10429fe1d6a4a29378fb7df908964654d08e</code> (matches the record)</dd>
+<dt>Source</dt><dd>Microsoft SQL Server 2025 (RC1) - 17.0.925.4 (X64), database <code>aspnet-MasterAntiqueRepair-e93a6129-7f74-4486-97e8-8d4ab1a709b4</code> on <code>(localdb)\MSSQLLocalDB</code></dd>
+<dt>Exported</dt><dd>2026-09-24 13:50:17 UTC, export tool commit <code>e044682</code> (export-oracle)</dd>
+</dl></section>
+<footer><p>Generated by <code>tools/phase1/dbmigrate/import-oracle/ingest.sh report</code> from <code>verification-results.json</code> and <code>selftest-results.json</code>. Description: <code>docs/phase1/dbmigrate/import-oracle/README.md</code>; instructions for Claude Code: <code>tools/phase1/dbmigrate/import-oracle/CLAUDE.md</code>.</p></footer>
+</main>
+</body>
+</html>

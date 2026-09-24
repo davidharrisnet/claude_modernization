@@ -62,7 +62,7 @@ The commands are `export`, `selftest`, `report` and `all`. The exit code is 0 on
 
 ## Limits and known differences
 
-- **The load is not proven here.** This tool cannot show that Oracle accepts the SQL; import-oracle does, and a rendering problem found there is fixed here and the export repeated. Several Oracle details in the rules were written from documentation, without a database to test them; the tool's `CLAUDE.md` lists them.
+- **The load is not proven here.** This tool cannot show that Oracle accepts the SQL; import-oracle does, and a rendering problem found there is fixed here and the export repeated. import-oracle loaded the current files unchanged and verified every row (2026-09-24); two literal forms the current data does not use (long text split over lines, `CLOB` values) are still unproven.
 - **Passwords were removed on purpose.** No usable credential is carried over; every user must set a new password at first login.
 - **Names changed, data did not.** Table, column, constraint and index names are lowercase snake_case in the SQL (Oracle stores them in upper case); every data value is exactly as in the source.
 - **Oracle 23ai or later.** `BOOLEAN` and multi-row `INSERT` do not exist on 19c; a 19c target needs `NUMBER(1)` with a `CHECK` and single-row inserts.
@@ -77,6 +77,6 @@ The commands are `export`, `selftest`, `report` and `all`. The exit code is 0 on
 ## Related documents
 
 - [tools/phase1/dbmigrate/export-oracle/CLAUDE.md](../../../../tools/phase1/dbmigrate/export-oracle/CLAUDE.md): the detailed instructions for running and maintaining this tool (written for Claude Code).
-- [../import-oracle/](../import-oracle/): the load and verification of these files in Oracle in Docker (to be built on the Linux machine).
+- [../import-oracle/](../import-oracle/): the load and verification of these files in Oracle in Docker.
 - [../export-postgresql/](../export-postgresql/): the PostgreSQL export this tool was derived from.
 - [../DATA_MIGRATION.md](../DATA_MIGRATION.md): the migration strategy and security policy (§7 why database-agnostic files are impossible, §10 the Oracle decisions).
