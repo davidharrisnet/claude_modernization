@@ -1,4 +1,4 @@
-# selftest: proves the export tooling is trustworthy (ITERATION4_PLAN.md section 10). Needs the live source (LocalDB) and a
+# selftest: proves the export tooling is trustworthy (tools/phase1/dbmigrate/iteration4/CLAUDE.md, "How selftest works"). Needs the live source (LocalDB) and a
 # previous 'export'. Writes selftest-results.json next to the other outputs. Returns an object with .Passed.
 #   1. Determinism        - a second export is byte-identical (SQL files, and the metadata apart from the run time).
 #   2. No credentials     - no credential value read from the source appears in any output file.

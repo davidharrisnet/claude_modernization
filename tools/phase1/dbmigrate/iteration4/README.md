@@ -2,7 +2,7 @@
 
 Exports the MasterAntiqueRepair SQL Server LocalDB database into PostgreSQL-specific files. **Export only**: no Docker, no PostgreSQL, no target database. Credentials are sanitized in memory before anything is written, and the tool refuses to export unsanitized data.
 
-- Plan: `docs/phase1/dbmigrate/iteration4/ITERATION4_PLAN.md`. Record of the real run: `docs/phase1/dbmigrate/iteration4/ITERATION4.md`.
+- Description and latest results: `docs/phase1/dbmigrate/iteration4/README.md`. Instructions for Claude Code: `CLAUDE.md` in this folder.
 - The Linux side that loads and verifies these files is iteration 5: `docs/phase1/dbmigrate/iteration5/README.md`.
 
 ## Run it

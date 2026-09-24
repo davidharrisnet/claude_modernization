@@ -1,5 +1,5 @@
 client: sqlite3 3.53.4
-target: C:\Users\Bilbo\Documents\dev\aspnet\claude_modernization\tools\dbmigrate\iteration1\masterantique.sqlite
+target: C:\Users\Bilbo\Documents\dev\aspnet\claude_modernization\tools\phase1\dbmigrate\iteration1\masterantique.sqlite
 schema: ok
 data: ok
 integrity_check: ok; foreign_key_check: clean

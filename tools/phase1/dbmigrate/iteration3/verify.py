@@ -15,7 +15,7 @@ mechanisms fed the same input is the evidence, not agreement with a stored answe
 a prior iteration.
 
 01-schema.sql/02-data-sanitized.sql are themselves derived from the same export lineage
-as iterations 1/2 (documented in ITERATION3.md as historical context), but that lineage
+as iterations 1/2 (documented in this folder's CLAUDE.md), but that lineage
 is not consulted here at verification time.
 
 Additionally verifies the credential-sanitization step (sanitize.py): every Users row's

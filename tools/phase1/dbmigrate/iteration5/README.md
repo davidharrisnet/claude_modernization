@@ -3,7 +3,7 @@
 Loads iteration 4's three files (`input/01-schema.sql`, `input/02-data-sanitized.sql`, `input/source-metadata.json`) into a PostgreSQL database inside a Docker container, and verifies the database against `source-metadata.json`. **bash + Docker only**: `psql` runs inside the container; no host PostgreSQL client, Python, Java or `jq`. No Claude session is needed to run it.
 
 - What this iteration is, and its latest results: `docs/phase1/dbmigrate/iteration5/README.md`. Instructions for Claude Code (how to repeat and maintain it): `CLAUDE.md` in this folder.
-- The input comes from iteration 4 (Windows export): `docs/phase1/dbmigrate/iteration4/ITERATION4.md`.
+- The input comes from iteration 4 (Windows export): `docs/phase1/dbmigrate/iteration4/README.md`.
 
 ## Run it
 

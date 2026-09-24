@@ -10,3 +10,6 @@
 # IIS Express
 .iisexpress/
 
+
+# LibreOffice lock files
+.~lock.*#

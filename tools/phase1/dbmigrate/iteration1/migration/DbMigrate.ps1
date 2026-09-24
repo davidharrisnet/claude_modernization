@@ -1,4 +1,4 @@
-# Database migration entry point. Normally called through tools\phase1\dbmigrate\dbmigrate.cmd:
+# Database migration entry point. Normally called through tools\phase1\dbmigrate\iteration1\dbmigrate.cmd:
 #   dbmigrate export|import|verify|report|all --target sqlite [--config path] [--recreate] [--db file] [--out file]
 # Exit codes: 0 ok, 1 verification found differences, 2 config/tool/connection error, 3 refused.
 
@@ -26,7 +26,7 @@ Commands:
 
 Options:
   --target <name>   target block in the config file (required; e.g. sqlite)
-  --config <path>   config file (default tools\phase1\dbmigrate\migration\migration.config.json)
+  --config <path>   config file (default tools\phase1\dbmigrate\iteration1\migration\migration.config.json)
   --recreate        replace an existing target database on import
   --db <file>       verify: check this database file instead of the configured one
   --out <file>      report: output .docx path

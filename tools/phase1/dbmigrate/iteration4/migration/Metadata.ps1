@@ -1,4 +1,4 @@
-# metadata: builds source-metadata.json, the data about the SQL Server source recorded at export (ITERATION4_PLAN.md section 7).
+# metadata: builds source-metadata.json, the data about the SQL Server source recorded at export (tools/phase1/dbmigrate/iteration4/CLAUDE.md, "Contracts").
 # It is computed from the catalog and the SAME in-memory rows the SQL is rendered from (after credential sanitization), by a code
 # path independent of the SQL rendering. It contains no credentials, no personal data, no raw comment text and no SQL text meant
 # to be executed. Deterministic except the separate 'run' section (run time).

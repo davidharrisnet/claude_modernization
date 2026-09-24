@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Iteration 3 wrapper: dbmigrate3.sh <build|verify|selftest|all> [--recreate]
-# Native Linux tooling (bash/python3/sqlite3/docker), no PowerShell. See ../../../../docs/phase1/dbmigrate/iteration3/.
+# Native Linux tooling (bash/python3/sqlite3/docker), no PowerShell. See CLAUDE.md in this folder and ../../../../docs/phase1/dbmigrate/iteration3/README.md.
 # Exit codes: 0 ok, 1 verify/selftest differences, 2 config/tool error, 3 refused.
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")"
@@ -10,8 +10,8 @@ usage() {
 Usage: dbmigrate3.sh <command> [options]
 
 Commands:
-  build     docker build the image with 01-schema.sql/02-data.sql baked in, start the container
-  verify    check the built database against iteration 2's verified results + the iteration 1 reference file
+  build     sanitize 02-data.sql, docker build the image with 01-schema.sql/02-data-sanitized.sql baked in, start the container
+  verify    cross-check the built database against an independent control build made from the same input
   selftest  prove the tooling: repeatable build, an independent scratch copy, a damaged copy must be caught
   all       build, verify, selftest
 

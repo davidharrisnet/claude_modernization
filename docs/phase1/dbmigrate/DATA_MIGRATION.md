@@ -2,7 +2,7 @@
 
 > **Location.** Since 2026-09-23 this document and the iteration folders live in `docs/phase1/dbmigrate/`, and the tooling in `tools/phase1/dbmigrate/` (previously `docs/DATA_MIGRATION.md`, `docs/dbmigrate/`, `tools/dbmigrate/`). Older commits and the Word reports inside the iteration folders show the old paths.
 
-This is the parent document for `tools/phase1/dbmigrate/` and `docs/phase1/dbmigrate/iteration{N}/`. Each iteration folder contains the detailed, iteration-specific evidence — a plan (`ITERATION{N}_PLAN.md`), a record of what actually happened (`ITERATION{N}.md`), and two Word documents (`MigrationVerificationReport{N}.docx`, `SQLiteDatabaseGuide{N}.docx`). This document sits above all of that: it's the strategy, the roadmap, and the security policy that every iteration is expected to follow. Read this first; go to a specific iteration's docs for the detailed proof that a given step actually worked.
+This is the parent document for `tools/phase1/dbmigrate/` and `docs/phase1/dbmigrate/iteration{N}/`. Each iteration folder contains the detailed, iteration-specific evidence — two documents for two readers (a `README.md` for people in `docs/phase1/dbmigrate/iteration{N}/`, describing what the iteration does and its latest results, and a `CLAUDE.md` with the instructions for Claude Code in `tools/phase1/dbmigrate/iteration{N}/`), plus the generated reports and guides (`MigrationVerificationReport{N}.docx` and `SQLiteDatabaseGuide{N}.docx`; iteration 5 uses HTML). Both documents describe the current state only; git holds the history. This document sits above all of that: it's the strategy, the roadmap, and the security policy that every iteration is expected to follow. Read this first; go to a specific iteration's docs for the detailed proof that a given step actually worked.
 
 ## 1. Purpose and scope
 
@@ -33,7 +33,7 @@ Target database (SQLite / MySQL / PostgreSQL)
       ▼
 verification-results.json  →  MigrationVerificationReport{N}.docx
                             →  SQLiteDatabaseGuide{N}.docx (or equivalent per dialect)
-                            →  ITERATION{N}.md (plain-language record)
+                            →  iteration{N}/README.md (plain-language description and latest results)
 ```
 
 **Export** reads the source database's own catalog (tables, columns, types, keys, indexes, defaults, identity/auto-increment state), works out a safe table load order, and converts every row to one canonical text form — so two exports of unchanged source data are byte-identical, and any two databases built from the same export are directly comparable by hashing. This is what makes steps 3 and 4 possible without hand-inspection.
@@ -50,11 +50,11 @@ verification-results.json  →  MigrationVerificationReport{N}.docx
 
 | # | What | Runs on | Status | Docs |
 |---|---|---|---|---|
-| 1 | SQL Server → SQLite, native | Windows | Done; credential sanitization added 2026-09-22 (§10 of `ITERATION1.md`) | `docs/phase1/dbmigrate/iteration1/` |
-| 2 | SQL Server → SQLite inside a Docker Linux container, loaded at container-runtime | Windows orchestrates; target is Linux | Done; credential sanitization added 2026-09-22 (§10 of `ITERATION2.md`) | `docs/phase1/dbmigrate/iteration2/` |
+| 1 | SQL Server → SQLite, native | Windows | Done; credentials sanitized at export (re-run 2026-09-24: 42 of 42 checks, self-test 6 of 6) | `docs/phase1/dbmigrate/iteration1/` |
+| 2 | SQL Server → SQLite inside a Docker Linux container, loaded at container-runtime | Windows orchestrates; target is Linux | Done; credentials sanitized at export (re-run 2026-09-24: 42 of 42 checks, self-test 6 of 6) | `docs/phase1/dbmigrate/iteration2/` |
 | 3 | SQL Server (via iteration 2's export) → SQLite baked into a Docker image at build time; verification and tooling run **entirely on Linux**, with **no dependency on iteration 1/2's stored results** and **credentials sanitized before anything is built or committed** | Linux, end to end | Done | `docs/phase1/dbmigrate/iteration3/` |
 | — | MySQL in Docker | Windows | Extra work, not a numbered iteration | (results embedded in iteration 1/2 regression runs) |
-| 4 | SQL Server → sanitized **PostgreSQL** schema and data files (`01-schema.sql`, `02-data-sanitized.sql`) plus a `source-metadata.json`, checked into git, plus a Word export report. **Export only; no Docker; no target database.** Details: §8 (the earlier database-agnostic idea was considered and set aside: §7) | Windows | **Built and run 2026-09-23** (self-test 9 of 9; the generated SQL was loaded into PostgreSQL 16 during the build and all 8 table counts and hashes matched); record in `ITERATION4.md` | `docs/phase1/dbmigrate/iteration4/` |
+| 4 | SQL Server → sanitized **PostgreSQL** schema and data files (`01-schema.sql`, `02-data-sanitized.sql`) plus a `source-metadata.json`, checked into git, plus a Word export report. **Export only; no Docker; no target database.** Details: §8 (the earlier database-agnostic idea was considered and set aside: §7) | Windows | **Built and run 2026-09-23** (self-test 9 of 9; the generated SQL was loaded into PostgreSQL 16 during the build and all 8 table counts and hashes matched); description in `iteration4/README.md` (re-run 2026-09-24: self-test 9 of 9, SQL files unchanged) | `docs/phase1/dbmigrate/iteration4/` |
 | 5 | The iteration 4 files → a fully populated **PostgreSQL** database in a **Docker container**, verified against `source-metadata.json`, with an HTML verification report. bash + Docker only (no Python, no Java, no host PostgreSQL client). Details: §8 | Linux | **Built and run 2026-09-23** (verification 80 of 80 checks, 155 of 155 rows identical; self-test 7 of 7); description in `iteration5/README.md`. Database guide written (decision 16): `PostgreSQLDatabaseGuide.html` | `docs/phase1/dbmigrate/iteration5/` |
 | — | Oracle | — | **Not pursued** (user decision, 2026-09-23): Phase 2 uses PostgreSQL, so iteration 5 is the migration to the final database | — |
 
@@ -67,7 +67,7 @@ To add a target (for example in another project; this one's final target, Postgr
 1. Add a new file under `migration/dialects/` implementing the same interface `sqlite.ps1`/`mysql.ps1` already implement (or, for a Linux-native iteration like iteration 3, the equivalent Python/bash functions verify.py expects).
 2. Add a `target` block to `migration.config.json` naming the dialect, the runner (`local` client, or `docker`), and where reports/guides should land.
 3. No change is needed to `Export.ps1`, `Verify.ps1`, `SelfTest.ps1`, or `Report.ps1` — they only ever call through the dialect interface.
-4. Write `ITERATION{N}_PLAN.md` before starting, and `ITERATION{N}.md` after, following the same shape as the existing ones.
+4. Write `tools/phase1/dbmigrate/iteration{N}/CLAUDE.md` (instructions for Claude Code) and `docs/phase1/dbmigrate/iteration{N}/README.md` (description and latest results), following the shape of the existing ones.
 
 ## 5. Security
 
@@ -114,7 +114,7 @@ A verification step that only checks "does this match what a previous run alread
 
 ## 6. What's not built yet
 
-- ~~Sanitize-first for iterations 1 and 2~~ — **done** (2026-09-22). Implemented and verified on the Windows machine per [docs/phase1/dbmigrate/SANITIZE_FIRST_REFACTOR.md](SANITIZE_FIRST_REFACTOR.md); results in `ITERATION1.md`/`ITERATION2.md` §10. The bullet below is the still-open piece of that plan's scope.
+- ~~Sanitize-first for iterations 1 and 2~~ — **done** (2026-09-22). Credentials are sanitized in memory before any SQL is rendered (`Protect-SensitiveData`); how it works and is verified is in `tools/phase1/dbmigrate/iteration1/CLAUDE.md`. The bullet below is the still-open piece.
 - **Config-driven sensitive-column declarations** (§5.2.5) — today, sanitization is a bespoke, hardcoded transform per iteration (`Users.PasswordHash`/`SecurityStamp` → `MustResetPassword`); it should become a `migration.config.json`-declared policy the export/verify pipeline enforces generically, for any table/column, not just this one.
 - ~~**Oracle dialect**~~ — **not pursued** (2026-09-23): Phase 2 uses PostgreSQL, migrated and verified in iterations 4 and 5 (§8).
 - **A formal data-classification step before export** — right now, sensitive columns are identified by inspection (a human, or Claude, reading the schema). A real engagement should start with an explicit classification pass (PII/PCI/PHI/credential/none) per column, signed off by the data owner, before any export tooling runs.
@@ -152,7 +152,7 @@ The two properties cannot both hold: files fed straight to a database must be SQ
 
 **Goal.** Move the SQL Server database to PostgreSQL in two separate, repeatable, command-line iterations that need no Claude session to run. Each has its own detailed plan that a fresh session can be pointed to:
 
-- **Iteration 4 (Windows, export only):** export the SQL Server database into sanitized **PostgreSQL** schema and data files plus a metadata file, checked into git. **No Docker, no target database.** Plan: `docs/phase1/dbmigrate/iteration4/ITERATION4_PLAN.md`; directories `tools/phase1/dbmigrate/iteration4/` and `docs/phase1/dbmigrate/iteration4/`.
+- **Iteration 4 (Windows, export only):** export the SQL Server database into sanitized **PostgreSQL** schema and data files plus a metadata file, checked into git. **No Docker, no target database.** Description: `docs/phase1/dbmigrate/iteration4/README.md`; instructions for Claude: `tools/phase1/dbmigrate/iteration4/CLAUDE.md`; directories `tools/phase1/dbmigrate/iteration4/` and `docs/phase1/dbmigrate/iteration4/`.
 - **Iteration 5 (Linux, Docker):** read those files, create a fully populated PostgreSQL database in a **Docker container**, and verify the data is the same as the source it was exported from. Description: `docs/phase1/dbmigrate/iteration5/README.md`; instructions for Claude: `tools/phase1/dbmigrate/iteration5/CLAUDE.md`; directories `tools/phase1/dbmigrate/iteration5/` and `docs/phase1/dbmigrate/iteration5/`.
 
 The decisions below are shared by both plans; §8.8 is the full decision log.
@@ -193,7 +193,7 @@ Statement mechanics: tables are loaded in dependency order inside one transactio
 ### 8.4 Names and case
 
 - **Identifiers are lowercased** so nothing needs quoting: `users`, not `"Users"`. PostgreSQL folds unquoted names to lowercase, so keeping the source's mixed case would force quoted names in every query, `psql` session, JDBC call and Hibernate mapping for ever. No two source identifiers differ only by case, and none is a PostgreSQL reserved word, so lowercasing cannot collide. Index names are schema-wide, so the existing table-prefix rule for colliding names (for example `IX_UserId`) still applies.
-- **Decided (decision 1, §8.8): snake_case** (`created_at`, `password_hash`, `user_id`), the PostgreSQL convention and Spring Boot's default mapping. Plain lowercase (`createdat`) was rejected as a mechanical but unreadable mapping that Spring's default naming would not match. The rename map is written down in `ITERATION4_PLAN.md`; the metadata JSON records the source name and target name of every table and column, and verification maps between them explicitly.
+- **Decided (decision 1, §8.8): snake_case** (`created_at`, `password_hash`, `user_id`), the PostgreSQL convention and Spring Boot's default mapping. Plain lowercase (`createdat`) was rejected as a mechanical but unreadable mapping that Spring's default naming would not match. The rename map lives in `tools/phase1/dbmigrate/iteration4/migration/dialects/postgres.ps1` (its rules are in `tools/phase1/dbmigrate/iteration4/CLAUDE.md`); the metadata JSON records the source name and target name of every table and column, and verification maps between them explicitly.
 - **Data is never lowercased.** Only identifiers change. Comment text and ticket descriptions (case carries meaning in a grammatical sentence), role names (`Manager`), usernames and emails are all stored exactly as in the source, so the fidelity claim stays "every column identical except credentials, which are sanitized". A username lowercased in storage cannot be shown as the user typed it (the case is unrecoverable), so usernames are deliberately not lowercased for user-friendliness.
 - **Usernames are case-insensitive**, as they were in SQL Server (its default collation is case-insensitive; PostgreSQL's is case-sensitive). The rule goes in the index, not in the data (decision 2, §8.8): `CREATE UNIQUE INDEX ... ON users (lower(name)) WHERE deleted_at IS NULL`. "Bob" and "bob" cannot both be active, and the soft-delete reuse rule still holds. **Phase 2 requirement:** authentication must compare `lower(name) = lower(:input)` (lowering both the stored name and the user's input) so the query uses the index. `citext` and ICU nondeterministic collations were considered and set aside (extension dependency; `LIKE` limitations). A `CHECK (name = lower(name))` was considered and rejected because it would force lowercase storage.
 - **Email** is likewise treated as case-insensitive but stored as entered, compared by the application with `lower()`. The legacy schema has no email index, so there is no database rule now; if email uniqueness is added later it uses the same `lower()` index form. **URLs:** there is no URL column today; if one is introduced, only the scheme and host are case-insensitive (the path and query can be case-sensitive), so the rule would be "host lowercased, the rest as entered", decided when it appears.
@@ -227,11 +227,11 @@ Windows can prove that the export is deterministic (two exports byte-identical),
 
 - **Decision 16 (settled 2026-09-23):** iteration 5 has a PostgreSQL database guide, in HTML: `docs/phase1/dbmigrate/iteration5/PostgreSQLDatabaseGuide.html` (psql from bash, application logins, network routes, and a tested Spring Boot 4.1.1 JPA/JDBC project with a first-login password change). All decisions are settled (§8.8).
 - Automating the hand-off copy from iteration 4 to iteration 5 is out of scope for now.
-- Both iterations are built and run (2026-09-23); `ITERATION4.md` and `iteration5/README.md` describe the results, with real numbers, including where the built tools differ from their plans.
+- Both iterations are built and run (2026-09-23); `iteration4/README.md` and `iteration5/README.md` describe the results, with real numbers.
 
 ### 8.8 Summary of the effort and decision points
 
-**Effort so far (both iterations built and run on 2026-09-23; see `ITERATION4.md` and `iteration5/README.md`).** Iteration 4 started as "database-agnostic files loadable into SQLite, PostgreSQL or Oracle". Working through the actual schema showed that is not possible with SQL text (§7), so the goal became a PostgreSQL-specific export: a `postgres.ps1` dialect at the sanitize-first seam on Windows, three checked-in files (`01-schema.sql`, `02-data-sanitized.sql`, `source-metadata.json`), and (iteration 5) a Linux tool that loads the files into a PostgreSQL Docker container and verifies the database against the metadata JSON. The design was settled one decision at a time; every decision is settled below. Both tools were then built and run: the export on Windows (self-test 9 of 9), and the load and verification on Linux (80 of 80 checks, all 155 rows identical, self-test 7 of 7). Iteration 5 pinned the image to `postgres:16.1` (decision 15 said `postgres:16`).
+**Effort so far (both iterations built and run on 2026-09-23; see `iteration4/README.md` and `iteration5/README.md`).** Iteration 4 started as "database-agnostic files loadable into SQLite, PostgreSQL or Oracle". Working through the actual schema showed that is not possible with SQL text (§7), so the goal became a PostgreSQL-specific export: a `postgres.ps1` dialect at the sanitize-first seam on Windows, three checked-in files (`01-schema.sql`, `02-data-sanitized.sql`, `source-metadata.json`), and (iteration 5) a Linux tool that loads the files into a PostgreSQL Docker container and verifies the database against the metadata JSON. The design was settled one decision at a time; every decision is settled below. Both tools were then built and run: the export on Windows (self-test 9 of 9), and the load and verification on Linux (80 of 80 checks, all 155 rows identical, self-test 7 of 7). Iteration 5 pinned the image to `postgres:16.1` (decision 15 said `postgres:16`).
 
 **Settled decisions**
 
@@ -258,12 +258,12 @@ Windows can prove that the export is deterministic (two exports byte-identical),
 
 ## 9. Document map
 
-| Iteration | Plan | Record | Verification report | Database guide |
+| Iteration | Description (README, for people) | Instructions for Claude (CLAUDE.md) | Reports | Database guide |
 |---|---|---|---|---|
-| 1 | `docs/phase1/dbmigrate/iteration1/ITERATION1_PLAN.md` | `ITERATION1.md` | `MigrationVerificationReport1.docx` | `SQLiteDatabaseGuide1.docx` |
-| 2 | `docs/phase1/dbmigrate/iteration2/ITERATION2_PLAN.md` | `ITERATION2.md` | `MigrationVerificationReport2.docx` | `SQLiteDatabaseGuide2.docx` |
-| 3 | `docs/phase1/dbmigrate/iteration3/ITERATION3_PLAN.md` | `ITERATION3.md` | `MigrationVerificationReport3.docx` | `SQLiteDatabaseGuide3.docx` |
-| 4 | `docs/phase1/dbmigrate/iteration4/ITERATION4_PLAN.md` | `ITERATION4.md` | `MigrationExportReport4.docx` (an export report; no verification) | — |
-| 5 | `tools/phase1/dbmigrate/iteration5/CLAUDE.md` | `README.md` | `MigrationVerificationReport5.html` | `PostgreSQLDatabaseGuide.html` |
+| 1 | `docs/phase1/dbmigrate/iteration1/README.md` | `tools/phase1/dbmigrate/iteration1/CLAUDE.md` | `MigrationVerificationReport1.docx` | `SQLiteDatabaseGuide1.docx` |
+| 2 | `docs/phase1/dbmigrate/iteration2/README.md` | `tools/phase1/dbmigrate/iteration2/CLAUDE.md` | `MigrationVerificationReport2.docx` | `SQLiteDatabaseGuide2.docx` |
+| 3 | `docs/phase1/dbmigrate/iteration3/README.md` | `tools/phase1/dbmigrate/iteration3/CLAUDE.md` | `MigrationVerificationReport3.docx` | `SQLiteDatabaseGuide3.docx` (source: `tools/phase1/dbmigrate/iteration3/guide.md`) |
+| 4 | `docs/phase1/dbmigrate/iteration4/README.md` | `tools/phase1/dbmigrate/iteration4/CLAUDE.md` | `MigrationExportReport4.docx` (an export report; no verification) | — |
+| 5 | `docs/phase1/dbmigrate/iteration5/README.md` | `tools/phase1/dbmigrate/iteration5/CLAUDE.md` | `MigrationVerificationReport5.html` | `PostgreSQLDatabaseGuide.html` |
 
 This document should be updated whenever a new iteration starts (add its row to §3 and §9) or whenever the security policy in §5 changes in a way that should apply retroactively to how future iterations are reviewed.
