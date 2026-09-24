@@ -1,4 +1,0 @@
-# Local settings: copy ingest.conf.example to ingest.conf to override the defaults. Never holds a password (none is stored).
-ingest.conf
-# Local logs.
-*.log

@@ -1,0 +1,10 @@
+# Local settings: copy ingest.conf.example to ingest.conf to override the defaults. Never holds a password (none is stored).
+ingest.conf
+# Local logs.
+*.log
+# Build output of the guide's sample project (Gradle and Maven); the wrapper jar stays tracked.
+guide/mar-db-client/build/
+guide/mar-db-client/.gradle/
+guide/mar-db-client/target/
+guide/kts/build/
+guide/kts/.gradle/

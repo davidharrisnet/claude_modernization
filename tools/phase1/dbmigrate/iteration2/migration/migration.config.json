@@ -1,0 +1,25 @@
+{
+  "source": {
+    "server": "(localdb)\\MSSQLLocalDB",
+    "database": "aspnet-MasterAntiqueRepair-e93a6129-7f74-4486-97e8-8d4ab1a709b4"
+  },
+  "outputDir": "tools/phase1/dbmigrate",
+  "targets": {
+    "sqlite-linux": {
+      "dialect": "sqlite",
+      "iteration": 2,
+      "iterationTitle": "SQLite in a Dockerized Linux container",
+      "outputSubdir": "iteration2",
+      "reportDir": "docs/phase1/dbmigrate/iteration2",
+      "guideFile": "SQLiteDatabaseGuide2.docx",
+      "runner": {
+        "mode": "docker",
+        "container": "mar-sqlite",
+        "image": "alpine:3.20",
+        "autoStart": true
+      },
+      "file": "/data/masterantique.sqlite",
+      "sanitizeCredentials": true
+    }
+  }
+}
