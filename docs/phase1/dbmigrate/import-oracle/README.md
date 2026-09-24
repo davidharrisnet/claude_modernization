@@ -1,6 +1,6 @@
 # import-oracle: the migrated database in Oracle, in Docker
 
-import-oracle takes the MasterAntiqueRepair database, exported from SQL Server by [export-oracle](../export-oracle/README.md), loads it into an **Oracle AI Database 26ai Free** database running in a **Docker container** on Linux, and **proves that nothing changed on the way**: every table, every row and every rule matches the original. It is a proof of concept alongside the PostgreSQL path ([import-postgresql](../import-postgresql/README.md)); Phase 2 uses PostgreSQL.
+import-oracle takes the MasterAntiqueRepair database, exported from SQL Server by [export-oracle](../export-oracle/README.md), loads it into an **Oracle AI Database 26ai Free** database running in a **Docker container** on Linux, and **proves that nothing changed on the way**: every table, every row and every rule matches the original. It is a proof of concept alongside the PostgreSQL path; Phase 2 uses PostgreSQL. It is self-contained: the Oracle tools, database, guide and backend need nothing from the PostgreSQL ones.
 
 ## What it does
 
@@ -64,5 +64,5 @@ Commands and options: [tools/phase1/dbmigrate/import-oracle/README.md](../../../
 
 - [tools/phase1/dbmigrate/import-oracle/CLAUDE.md](../../../../tools/phase1/dbmigrate/import-oracle/CLAUDE.md): how the tool works and how to maintain it (written for Claude Code).
 - [../export-oracle/](../export-oracle/): the export that produced this tool's input.
-- [../import-postgresql/](../import-postgresql/): the PostgreSQL equivalent, which this tool mirrors.
+- The Oracle backend built on this database: `master-antique-repair-claude/backend/oracle/`, planned and documented in [docs/phase2/model/oracle/CLAUDE.md](../../../phase2/model/oracle/CLAUDE.md).
 - [../DATA_MIGRATION.md](../DATA_MIGRATION.md): the migration strategy and security policy (§10 the Oracle decisions).

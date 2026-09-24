@@ -1,5 +1,5 @@
 {
-  "iteration": 5,
+  "tool": "import-postgresql",
   "status": "PASS",
   "passed": 7,
   "total": 7,

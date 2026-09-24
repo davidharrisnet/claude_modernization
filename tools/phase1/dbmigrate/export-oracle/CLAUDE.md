@@ -3,9 +3,9 @@
 This folder is the export-oracle tool: it exports the MasterAntiqueRepair database from SQL Server LocalDB into sanitized
 **Oracle** (AI Database 26ai) schema and data files plus a metadata record, and builds a Word export report. It runs when the user
 says **`Run export-oracle`**. It is export only: no Docker, no Oracle, no target database. It is a proof of concept alongside the
-PostgreSQL path (Phase 2 stays on PostgreSQL). It is a self-contained copy of `tools/phase1/dbmigrate/export-postgresql/` with one
-different dialect file, `migration\dialects\oracle.ps1`; a fix to shared code (reading the source, sanitizing, canonical form,
-report helpers) usually has to be made in both copies. The human description is `docs/phase1/dbmigrate/export-oracle/README.md`; a
+PostgreSQL path (Phase 2 stays on PostgreSQL). It is self-contained: it needs no PostgreSQL folder. It shares its design with
+`tools/phase1/dbmigrate/export-postgresql/`, which differs only in its dialect file; if that folder is present, a fix to the common code
+(reading the source, sanitizing, canonical form, report helpers) usually has to be made in both. The human description is `docs/phase1/dbmigrate/export-oracle/README.md`; a
 shorter how-to for people is `README.md` in this folder; the strategy and security policy is `docs/phase1/dbmigrate/DATA_MIGRATION.md`
 (§5 security, §7 why the export is database-specific, §10 the Oracle decisions). The Linux side that loads and verifies these files is
 import-oracle: `tools/phase1/dbmigrate/import-oracle/CLAUDE.md`.
@@ -177,8 +177,8 @@ full row hashes. It carries no verification PASS/FAIL against a target.
 
 ## Contracts
 
-- **`source-metadata.json`** (`schemaVersion` 1; import-oracle's `verify.sql` reads exactly this, so a change here is a change there). It is
-  export-postgresql's contract with these Oracle differences: `meta.minOracleVersion` 23 (not `minPostgresVersion`); `meta.tool`
+- **`source-metadata.json`** (`schemaVersion` 1; import-oracle's `verify.sql` reads exactly this, so a change here is a change there). Its
+  Oracle-specific parts: `meta.minOracleVersion` 23 (not `minPostgresVersion`); `meta.tool`
   `export-oracle`; `columns[]` add `precision` and `scale` (`dataType` is the `ALL_TAB_COLUMNS.DATA_TYPE` spelling: `NUMBER`, `BOOLEAN`,
   `TIMESTAMP(3)`, `VARCHAR2`, `CLOB`; `maxLength` is the character length of a `VARCHAR2`); `indexes[].columns[].expression` is the **full key
   expression** (`CASE WHEN deleted_at IS NULL THEN LOWER(name) END`) or null for a plain column; `indexes[].filter` documents the rule in
@@ -190,12 +190,12 @@ full row hashes. It carries no verification PASS/FAIL against a target.
   `expectedRows`); `expectations` (`totalRows` 155, `usersSanitized`, `usersCount` 12, `noDuplicateActiveUsernamesIgnoringCase`);
   `renameMap`; `excludedTables`; `knownDifferences`; `run` (`runTimeUtc`, `toolGitCommit`: the only non-deterministic part). It contains no
   credentials, personal data, raw comment text or executable SQL.
-- **Canonical row form (identical to export-postgresql's, database-independent; must match import-oracle's `verify.sql` byte for byte):** cells
+- **Canonical row form (database-independent; must match import-oracle's `verify.sql` byte for byte):** cells
   joined by `|` in column order; NULL `~`; `i:<decimal>`, `b:1|0`, `t:yyyy-MM-dd HH:mm:ss.fff`, `s:<lowercase hex of UTF-8>`; rows **sorted
   ascending by their own canonical text in byte order**, joined by LF, SHA-256 lowercase hex; an empty table hashes the empty string
   (`e3b0c442…`); sanitized columns hash as `~`. Because the form is database-independent, **every table's `rowSha256`, every
-  `summaries[].expectedRows`, the row counts and `identityLast` must equal export-postgresql's** for the same source data. That equality is the
-  cross-check of the shared reading code (last run: all eight tables equal).
+  `summaries[].expectedRows`, the row counts and `identityLast` equal those of any other target's export** of the same source data (when
+  export-postgresql's files are present, that equality cross-checks the common reading code; last run: all eight tables equal).
 - **Summary rows:** cells joined by `|`, NULL as the empty string, timestamps as above, booleans 1/0, sorted in byte order.
 - Outputs `01-schema.sql` and `02-data-sanitized.sql`: SQL*Plus scripts for Oracle AI Database 26ai (23ai or later), pure ASCII, LF.
 
@@ -237,7 +237,7 @@ longest data line is 306 characters); the stress test in "Testing changes", load
 
 - Run `all --target oracle`: exit 0, self-test 13 of 13, three files rewritten. `git diff` must show `01-schema.sql` and
   `02-data-sanitized.sql` unchanged unless the change was meant to alter them, and `source-metadata.json` changed only in `run`.
-- **Cross-check with PostgreSQL** after any change to reading, sanitizing or the canonical form: `rowSha256`, row counts, `identityLast`
+- **Cross-check with PostgreSQL** (optional; only if `tools/phase1/dbmigrate/export-postgresql/` is present) after any change to reading, sanitizing or the canonical form: `rowSha256`, row counts, `identityLast`
   and `summaries[].expectedRows` in this metadata equal `export-postgresql`'s.
 - **Test the literal rendering on awkward strings** after a change to `Ora-StringExpr` or `Ora-RenderRow`: dot-source `migration\Common.ps1`
   and `migration\dialects\oracle.ps1` in PowerShell and call `Ora-Literal` on text with quotes, a backslash, `&`, CR/LF/TAB, accents, an emoji,

@@ -2,19 +2,18 @@
 
 `docs/phase1/dbmigrate/import-oracle/OracleDatabaseGuide.html` is generated from this folder. **Every code block in the guide
 is copied from a file here that was run against the database**, so the page cannot drift from what was tested. To
-change the guide: change the file here, test it again, rebuild the page. It mirrors import-postgresql's guide
-(`tools/phase1/dbmigrate/import-postgresql/guide/`); keep the two alike.
+change the guide: change the file here, test it again, rebuild the page. Self-contained: it needs nothing from the PostgreSQL tools.
 
 | File | What it is |
 |---|---|
 | `guide.tpl.html` | The page: text, layout, styles, and markers where code goes |
-| `build-guide.py` | Builds the page from the template (Python 3, standard library only; the one host tool besides bash and Docker, as for import-postgresql's guide) |
+| `build-guide.py` | Builds the page from the template (Python 3, standard library only; the one host tool besides bash and Docker) |
 | `mar-roles.sql` | Creates the `mar_app` and `mar_readonly` logins with schema privileges on `masterantique`; passwords arrive as SQL*Plus substitution variables on standard input |
 | `queries.sql` | The sample queries shown in the guide (SQL*Plus, run as SYS) |
 | `mar-db-client/` | The sample Spring Boot 4.1.1 project for Oracle: entities, repositories, connection check, first-login password change; `build.gradle` (Gradle, Groovy DSL), `pom.xml` (Maven), `JdbcSmokeTest.java` (plain JDBC, no Spring), Gradle wrapper |
 | `kts/` | The same build in the Gradle Kotlin DSL (`build.gradle.kts`, `settings.gradle.kts`). To build it, copy `mar-db-client/src`, `gradlew` and `gradle/` next to them |
 
-Differences from the PostgreSQL project, all found by running it: the driver is `com.oracle.database.jdbc:ojdbc11`
+Oracle-specific points, all found by running it: the driver is `com.oracle.database.jdbc:ojdbc11`
 (BOM-managed, 23.26.3.0.0); the login does not own the tables, so `spring.datasource.hikari.connection-init-sql` switches
 every connection to `MASTERANTIQUE` (enough for Hibernate's validation; no `hibernate.default_schema`);
 `hibernate.jdbc.fetch_size=100` (the driver's default of 10 makes Hibernate warn); the three `CLOB` columns need `@Lob`;

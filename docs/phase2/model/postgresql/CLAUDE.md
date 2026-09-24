@@ -6,7 +6,7 @@ The code lives in a different repository from this document:
 
 | What | Where |
 |---|---|
-| This plan | `claude_modernization/docs/phase2/model/postgresql/MODEL_PLAN.md` |
+| This plan | `claude_modernization/docs/phase2/model/postgresql/CLAUDE.md` |
 | The code | `~/dev/claude_work/master-antique-repair-claude/backend/postgresql/` (origin `github.com/davidharrisnet/master-antique-repair-claude`, branch `main`) |
 | The database it connects to | import-postgresql's `mar-postgres` container: [docs/phase1/dbmigrate/import-postgresql/README.md](../../../phase1/dbmigrate/import-postgresql/README.md) |
 | How to reach that database (logins, network routes) | [../../phase1/dbmigrate/import-postgresql/PostgreSQLDatabaseGuide.html](../../../phase1/dbmigrate/import-postgresql/PostgreSQLDatabaseGuide.html) |
@@ -155,5 +155,5 @@ Git is read-only for Claude in this project; the user commits. In `master-antiqu
 - **A real `IdentityCheck`**: a single-use, expiring code issued by a manager, or an email reset link (every migrated `email` is NULL, so addresses must be collected first).
 - **Audit logging**: record workflow changes and password changes in the legacy `audit_logs` format (ids and timestamps, never comment text or passwords); the numeric action codes need mapping from the legacy application.
 - **View** (`docs/phase2/view/`): the Angular app in `frontend/`.
-- **Database target**: settled on 2026-09-23 — **PostgreSQL for Phase 2.** This model runs on the database the migration produced, so no further data migration is planned. Oracle (named in the exercise brief) is a separate proof of concept: its migration is import-oracle, and the plan for a matching backend is [../oracle/MODEL_PLAN.md](../oracle/MODEL_PLAN.md).
+- **Database target**: settled on 2026-09-23 — **PostgreSQL for Phase 2.** This model runs on the database the migration produced, so no further data migration is planned. Oracle (named in the exercise brief) is a separate proof of concept: its migration is import-oracle, and the plan for a matching backend is [../oracle/CLAUDE.md](../oracle/CLAUDE.md).
 - **Time zones**: `TIMESTAMP` columns are read as `LocalDateTime` with no conversion; whether the legacy system stored UTC or local time is still unknown.

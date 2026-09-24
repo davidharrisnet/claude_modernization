@@ -14,7 +14,7 @@ change the guide: change the file here, test it again, rebuild the page.
 | `kts/` | The same build in the Gradle Kotlin DSL (`build.gradle.kts`, `settings.gradle.kts`). To build it, copy `mar-db-client/src`, `gradlew` and `gradle/` next to them |
 
 The Phase 2 backend (`master-antique-repair-claude/backend/postgresql/`) was built from `mar-db-client/`; see
-`docs/phase2/model/postgresql/MODEL_PLAN.md`.
+`docs/phase2/model/postgresql/CLAUDE.md`.
 
 ## Rebuild the page
 

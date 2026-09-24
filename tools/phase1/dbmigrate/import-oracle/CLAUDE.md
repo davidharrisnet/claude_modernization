@@ -5,7 +5,8 @@ container on Linux and verifies it against the export's record of the source. It
 It is a proof of concept alongside PostgreSQL (Phase 2 stays on PostgreSQL). The human description is
 `docs/phase1/dbmigrate/import-oracle/README.md`; the strategy and security policy is `docs/phase1/dbmigrate/DATA_MIGRATION.md` (§5
 security, §10 the Oracle decisions). The Windows side that writes the input files is `tools/phase1/dbmigrate/export-oracle/CLAUDE.md`.
-The design is import-postgresql's (`tools/phase1/dbmigrate/import-postgresql/`) translated to Oracle; keep the two alike.
+The tool is self-contained: it needs no PostgreSQL folder. It has a PostgreSQL counterpart, import-postgresql, with the same design
+(commands, exit codes, check categories, self-test); if that folder is present, keep the two alike when changing either.
 
 ## Rules
 
@@ -24,7 +25,7 @@ The design is import-postgresql's (`tools/phase1/dbmigrate/import-postgresql/`) 
    `docs/phase1/dbmigrate/import-oracle/MigrationVerificationReport.html`, `docs/.../OracleDatabaseGuide.html` (see `guide/README.md`).
 7. **Keep LF line endings** (`.gitattributes`): the metadata records hashes of the LF form, and bash breaks on CRLF.
 8. **Only bash and Docker on the host for the tool** (plus `sha256sum`, `grep`, `sed`, `awk`): `sqlplus` runs inside the container.
-   No Python, Java, `jq` or host Oracle client in `ingest.sh`. The database guide is separate (as for import-postgresql): its
+   No Python, Java, `jq` or host Oracle client in `ingest.sh`. The database guide is separate: its
    builder is Python 3 (standard library) and its sample project needs Java 21 with Gradle or Maven.
 9. **No commit and no git command that changes anything.** The user reviews `git status` and commits.
 
@@ -140,7 +141,7 @@ suspecting the data.
 ## How `selftest` works
 
 Needs the delivered container running (compared against) but never changes it; everything else happens in `<CONTAINER>-selftest`,
-removed at the end. Seven tests, as import-postgresql's: two fresh loads give identical results (JSON compared without the
+removed at the end. Seven tests: two fresh loads give identical results (JSON compared without the
 `runTimeUtc` lines); the delivered database gives the same check lines (why no system-generated names such as `ISEQ$$_…` may appear
 in a detail); a damaged copy (a second schema `ingest_selftest_damaged` loaded from the same files in the self-test container, then one
 comment edited, the last ticket deleted, `ix_users_name_active` dropped) makes verify exit 1 naming tickets, comments, the users
@@ -153,7 +154,7 @@ Writes `selftest-results.json` (no timestamps).
 Copies the two results files (or a `null` stub for a missing self-test) and `report.sql` to `/tmp/marreport/` and runs `report.sql`
 in the container's **root** (no pluggable database: it reads only the JSON). It builds the page in a CLOB and prints it between
 `HTML-BEGIN` and `HTML-END`; `ingest.sh` writes it to `docs/phase1/dbmigrate/import-oracle/MigrationVerificationReport.html`.
-Self-contained HTML (inline CSS, light/dark, phone width), the same sections as import-postgresql's report; the same JSON always gives
+Self-contained HTML (inline CSS, light/dark, phone width), sections: summary, method, tables, schema, summaries, sanitization, rules, self-test, known differences, all checks, reproducibility; the same JSON always gives
 the same bytes (checked). `all` runs load, verify, selftest (subshell), report; exit 2 if any step errored, 1 if verify or selftest
 found differences.
 
@@ -165,7 +166,7 @@ found differences.
 as `mar_app` / `mar_readonly` created by `mar-roles.sql` (passwords as SQL*Plus `DEFINE` values on stdin with `SET VERIFY OFF`;
 Oracle 23ai schema privileges `GRANT ... ANY TABLE ON SCHEMA masterantique`, which also cover identity columns); the logins do not
 own the tables, so each session needs `ALTER SESSION SET CURRENT_SCHEMA = masterantique` (Hikari `connection-init-sql` in
-Spring Boot); the JDBC URL names the service, `jdbc:oracle:thin:@//host:port/FREEPDB1`; network routes as import-postgresql's
+Spring Boot); the JDBC URL names the service, `jdbc:oracle:thin:@//host:port/FREEPDB1`; network routes
 (container address, shared Docker network, `alpine/socat` proxy on 127.0.0.1:1522); sign-in must compare
 `CASE WHEN deleted_at IS NULL THEN LOWER(name) END = LOWER(:input)` to use the index; SQL*Plus commits on `EXIT` unless
 `SET EXITCOMMIT OFF`.
@@ -191,8 +192,8 @@ Spring Boot); the JDBC URL names the service, `jdbc:oracle:thin:@//host:port/FRE
 
 ## Input contract with export-oracle
 
-If export-oracle changes any of this, `verify.sql` changes with it. The metadata is export-postgresql's contract with the Oracle
-differences listed in `tools/phase1/dbmigrate/export-oracle/CLAUDE.md` ("Contracts"): `meta.minOracleVersion`; `columns[]` with
+If export-oracle changes any of this, `verify.sql` changes with it. The metadata contract is defined in
+`tools/phase1/dbmigrate/export-oracle/CLAUDE.md` ("Contracts"); the Oracle-specific parts: `meta.minOracleVersion`; `columns[]` with
 `dataType` in `ALL_TAB_COLUMNS` spelling, `maxLength` in characters, `precision`, `scale`; `indexes[].columns[].expression` as the full
 key expression; `foreignKeys[].onDelete` `NO ACTION` for an omitted clause. The column kinds handled are `int`, `bit`, `datetime`,
 `string` (`binary` and `guid` are refused by the export and would fail here). `01-schema.sql` and `02-data-sanitized.sql` are SQL*Plus

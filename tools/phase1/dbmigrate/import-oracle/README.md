@@ -1,6 +1,6 @@
 # import-oracle: load the Oracle export into Docker and verify it (Linux)
 
-Loads the three files from export-oracle into an Oracle AI Database 26ai Free container and checks the result against the export's record of the source. A proof of concept alongside import-postgresql; Phase 2 uses PostgreSQL.
+Loads the three files from export-oracle into an Oracle AI Database 26ai Free container and checks the result against the export's record of the source. A proof of concept: Phase 2 uses PostgreSQL. Self-contained: it needs nothing from the PostgreSQL tools.
 
 - What the tool does and its latest results: `docs/phase1/dbmigrate/import-oracle/README.md`. Instructions for Claude Code: `CLAUDE.md` in this folder.
 - The input comes from export-oracle (Windows export): `docs/phase1/dbmigrate/export-oracle/README.md`.

@@ -351,7 +351,7 @@ OUT-->
 
 <section aria-labelledby="spring">
 <h2 id="spring">Spring Boot project</h2>
-<p>A small, complete Spring Boot 4.1.1 application (Java 21) that connects with JDBC and JPA, maps the migrated tables, checks the mapping against the live schema at start-up, and demonstrates the first-login password change. The same source builds with Gradle or Maven. It is the PostgreSQL guide's project with the Oracle changes this page points out.</p>
+<p>A small, complete Spring Boot 4.1.1 application (Java 21) that connects with JDBC and JPA, maps the migrated tables, checks the mapping against the live schema at start-up, and demonstrates the first-login password change. The same source builds with Gradle or Maven. The Oracle backend <code>master-antique-repair-claude/backend/oracle/</code> was built from it.</p>
 <div class="code out"><div class="code-head"><span>Project layout</span></div><pre class="tree"><code>mar-db-client/
 ├── build.gradle            (or build.gradle.kts, or pom.xml)
 ├── settings.gradle
@@ -447,7 +447,7 @@ OUT-->
 
 <section aria-labelledby="firstlogin">
 <h2 id="firstlogin">First login: change password</h2>
-<p>The migration deliberately carried no passwords over: the legacy PBKDF2 hashes were removed and every account is marked <code>must_reset_password = TRUE</code>. So the first thing any sign-in meets is &ldquo;you must change your password&rdquo;. This mock-up shows the whole flow against the real table; the Java code is the same as for PostgreSQL.</p>
+<p>The migration deliberately carried no passwords over: the legacy PBKDF2 hashes were removed and every account is marked <code>must_reset_password = TRUE</code>. So the first thing any sign-in meets is &ldquo;you must change your password&rdquo;. This mock-up shows the whole flow against the real table.</p>
 <ol class="flow">
   <li><span class="n">1</span><div><b>Sign in.</b> The username is looked up ignoring case among active users. The account has no password yet, so the answer is <span class="state">MUST_CHANGE_PASSWORD</span>, whatever was typed.</div></li>
   <li><span class="n">2</span><div><b>Prove who you are.</b> With no old password to check, the user enters a one-time code (in a real system: issued by a manager, or a link sent to a verified email address). The demo accepts one fixed code.</div></li>

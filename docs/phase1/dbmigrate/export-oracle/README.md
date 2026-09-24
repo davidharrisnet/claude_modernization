@@ -1,6 +1,6 @@
 # export-oracle: exporting the database from SQL Server to sanitized Oracle files, on Windows
 
-export-oracle takes the MasterAntiqueRepair database from **SQL Server (LocalDB)** and exports it as **Oracle** files (Oracle AI Database 26ai) that are checked into git, so that a Linux machine can build an Oracle database from them ([import-oracle](../import-oracle/README.md)). It is a proof of concept alongside the PostgreSQL path ([export-postgresql](../export-postgresql/README.md)): Phase 2 stays on PostgreSQL. It is **export only**: there is no Docker and no target database, so it does not verify a database; it proves that the export is repeatable, that no password leaves SQL Server, that the row counts match the live source, and that the SQL follows Oracle's rules. Passwords are removed on purpose before anything is written.
+export-oracle takes the MasterAntiqueRepair database from **SQL Server (LocalDB)** and exports it as **Oracle** files (Oracle AI Database 26ai) that are checked into git, so that a Linux machine can build an Oracle database from them ([import-oracle](../import-oracle/README.md)). It is a proof of concept alongside the PostgreSQL path: Phase 2 stays on PostgreSQL. It is self-contained and needs nothing from the PostgreSQL tools. It is **export only**: there is no Docker and no target database, so it does not verify a database; it proves that the export is repeatable, that no password leaves SQL Server, that the row counts match the live source, and that the SQL follows Oracle's rules. Passwords are removed on purpose before anything is written.
 
 ## What it does
 
@@ -78,5 +78,4 @@ The commands are `export`, `selftest`, `report` and `all`. The exit code is 0 on
 
 - [tools/phase1/dbmigrate/export-oracle/CLAUDE.md](../../../../tools/phase1/dbmigrate/export-oracle/CLAUDE.md): the detailed instructions for running and maintaining this tool (written for Claude Code).
 - [../import-oracle/](../import-oracle/): the load and verification of these files in Oracle in Docker.
-- [../export-postgresql/](../export-postgresql/): the PostgreSQL export this tool was derived from.
 - [../DATA_MIGRATION.md](../DATA_MIGRATION.md): the migration strategy and security policy (§7 why database-agnostic files are impossible, §10 the Oracle decisions).

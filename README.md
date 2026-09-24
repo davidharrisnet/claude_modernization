@@ -83,7 +83,7 @@ Run backend-postgresql
 ```
 
 or, to rebuild the backend code from scratch, `Rebuild the backend.` Claude Code follows
-`docs/phase2/model/postgresql/MODEL_PLAN.md`: it creates the database login and the local network route the backend needs, runs
+`docs/phase2/model/postgresql/CLAUDE.md`: it creates the database login and the local network route the backend needs, runs
 the backend (connection check), then the first-login password change. Run import-postgresql first if the database does not
 exist; running it again also removes the backend's login and route, which the demonstration then recreates.
 
