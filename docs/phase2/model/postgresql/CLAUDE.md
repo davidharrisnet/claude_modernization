@@ -1,13 +1,13 @@
-# Plan: Phase 2 model layer - a Spring Boot backend connected to the migrated PostgreSQL database
+# Plan: Phase 2 model layer - a Spring Boot model connected to the migrated PostgreSQL database
 
-**Status: EXECUTED (2026-09-23).** This is the plan as it was carried out, written so the work can be repeated, or rebuilt from scratch, by a person or a new Claude session with no memory of the original conversation. Result: the backend builds, its 6 unit tests pass, and it connects to the migrated database, validates every entity against the live schema, and demonstrates the first-login password change.
+**Status: EXECUTED (2026-09-23).** This is the plan as it was carried out, written so the work can be repeated, or rebuilt from scratch, by a person or a new Claude session with no memory of the original conversation. Result: the model builds, its 6 unit tests pass, and it connects to the migrated database, validates every entity against the live schema, and demonstrates the first-login password change.
 
 The code lives in a different repository from this document:
 
 | What | Where |
 |---|---|
 | This plan | `claude_modernization/docs/phase2/model/postgresql/CLAUDE.md` |
-| The code | `~/dev/claude_work/master-antique-repair-claude/backend/postgresql/` (origin `github.com/davidharrisnet/master-antique-repair-claude`, branch `main`) |
+| The code | `~/dev/claude_work/master-antique-repair-claude/model/postgresql/` (origin `github.com/davidharrisnet/master-antique-repair-claude`, branch `main`) |
 | The database it connects to | import-postgresql's `mar-postgres` container: [docs/phase1/dbmigrate/import-postgresql/README.md](../../../phase1/dbmigrate/import-postgresql/README.md) |
 | How to reach that database (logins, network routes) | [../../phase1/dbmigrate/import-postgresql/PostgreSQLDatabaseGuide.html](../../../phase1/dbmigrate/import-postgresql/PostgreSQLDatabaseGuide.html) |
 
@@ -22,13 +22,15 @@ Phase 2 rebuilds the legacy ASP.NET Web Forms repair-shop application as Spring 
 | `view/` | The Angular app | Not started |
 | `security/` | Spring Security, authentication, sessions or tokens | Not started |
 
-**The goal of this step is a demonstration**: show that a Spring Boot backend can connect to the PostgreSQL database produced by the data migration, read it through JPA with a mapping the database itself confirms, and carry the one business rule every migrated user meets first, the forced password change on first login.
+**The goal of this step is a demonstration**: show that a Spring Boot model can connect to the PostgreSQL database produced by the data migration, read it through JPA with a mapping the database itself confirms, and carry the one business rule every migrated user meets first, the forced password change on first login.
 
 **Deliberately out of scope:** a controller, a web layer, Spring Security and the front end. They belong to the other components and need their own design (sessions or tokens, error format, how Angular calls the API); bolting them onto a connection demonstration would decide those questions by accident.
 
-In the code repository the Spring Boot project is `backend/postgresql/`: it will eventually hold model, controller and security together; only the view will live beside it in `frontend/`.
+In the code repository the Spring Boot project is `model/postgresql/`: it will eventually hold model, controller and security together; only the view will live beside it in `frontend/`.
 
 ## 2. Run the demonstration
+
+**The operating instructions now live with the code:** `master-antique-repair-claude/model/postgresql/CLAUDE.md` (read automatically by a Claude session opened in that repository; its section "Run model-postgresql" runs the whole demonstration on a temporary copy, with `model/postgresql/db/mar-roles.sql`). The steps below are the same demonstration done by hand against the delivered `mar-postgres`.
 
 Prerequisites: Java 21, Docker Engine, the `mar-postgres` container from import-postgresql (`tools/phase1/dbmigrate/import-postgresql/ingest.sh load` if it does not exist), and a clone of `master-antique-repair-claude`.
 
@@ -50,9 +52,9 @@ Prerequisites: Java 21, Docker Engine, the `mar-postgres` container from import-
    docker run -d --name mar-postgres-proxy --network mar-net -p 127.0.0.1:5433:5432 \
      alpine/socat tcp-listen:5432,fork,reuseaddr tcp-connect:mar-postgres:5432
    ```
-3. **Run the backend** (normal mode: connect and report):
+3. **Run the model** (normal mode: connect and report):
    ```
-   cd ~/dev/claude_work/master-antique-repair-claude/backend/postgresql
+   cd ~/dev/claude_work/master-antique-repair-claude/model/postgresql
    read -rsp 'mar_app password: ' MAR_DB_PASSWORD; echo; export MAR_DB_PASSWORD
    ./gradlew bootRun
    ```
@@ -67,7 +69,7 @@ Prerequisites: Java 21, Docker Engine, the `mar-postgres` container from import-
 4. **Run the first-login demonstration** (the `demo` profile). **It really changes the stored password of the user you name**, so run it against a test copy of the database, or rebuild afterwards with `ingest.sh load --recreate` (which also removes the logins and network links from steps 1 and 2):
    ```
    ./gradlew bootJar
-   java -jar build/libs/backend-0.0.1-SNAPSHOT.jar --spring.profiles.active=demo \
+   java -jar build/libs/model-postgresql-0.0.1-SNAPSHOT.jar --spring.profiles.active=demo \
      --demo.username=Customer1 --demo.password=anything \
      --demo.one-time-code=DEMO-1234 --demo.new-password=Walnut-Armoire-1887
    ```
@@ -89,10 +91,10 @@ To take the route down again: `docker rm -f mar-postgres-proxy; docker network d
 
 | Decision | Choice | Why |
 |---|---|---|
-| Where the code goes | A real backend in `backend/postgresql/` of `master-antique-repair-claude` (not a standalone sample, not the repository root) | It is the start of the Phase 2 service; `frontend/` will sit beside it. |
+| Where the code goes | A real model project in `model/postgresql/` of `master-antique-repair-claude` (not a standalone sample, not the repository root) | It is the start of the Phase 2 service; `frontend/` will sit beside it. |
 | Build tool | **Gradle with the Kotlin DSL** (`build.gradle.kts`), Gradle 9.4.1 wrapper | Chosen after comparing Maven, Gradle Groovy and Gradle Kotlin; all three were built and run first. The Kotlin DSL is type-checked in the editor and is Gradle's default for new builds. The wrapper means nobody installs Gradle. |
 | Spring Boot version | **4.1.1** on Java 21 | Confirmed with the user; this settles, for this code, the README's Spring Boot 3 vs 4 discrepancy noted in `CLAUDE.md`. |
-| Package | `com.masterantique.backend` | |
+| Package | `com.masterantique` | |
 | Documentation layout | `docs/phase2/<component>/`, this plan in `model/postgresql/` (the Oracle proof of concept's in `model/oracle/`) | Organised by architectural component (model, controller, view, security). |
 | Password changes outside the demo | Refused (`RejectingIdentityCheck`) | Migrated users have no password, so identity must be proven another way before a first password is set. Until a real check exists, no account can be taken over by someone who only knows a username. |
 
@@ -102,11 +104,11 @@ All paths are under `master-antique-repair-claude/`.
 
 | File | Purpose |
 |---|---|
-| `backend/postgresql/settings.gradle.kts`, `backend/postgresql/build.gradle.kts` | Spring Boot 4.1.1 plugin, `io.spring.dependency-management` 1.1.7, Java 21 toolchain. Dependencies: `spring-boot-starter-data-jpa` (Hibernate, Spring Data JPA, JDBC, HikariCP), `spring-security-crypto` (password hashing only), `postgresql` (runtime), `spring-boot-starter-test` and `junit-platform-launcher` (tests). Versions come from the Boot BOM: Hibernate 7.4.5, HikariCP 7.0.2, PostgreSQL JDBC 42.7.11. |
-| `backend/postgresql/gradlew`, `gradlew.bat`, `gradle/wrapper/*` | Gradle 9.4.1 wrapper (created with `gradle wrapper --gradle-version 9.4.1`). |
+| `model/postgresql/settings.gradle.kts`, `model/postgresql/build.gradle.kts` | Spring Boot 4.1.1 plugin, `io.spring.dependency-management` 1.1.7, Java 21 toolchain. Dependencies: `spring-boot-starter-data-jpa` (Hibernate, Spring Data JPA, JDBC, HikariCP), `spring-security-crypto` (password hashing only), `postgresql` (runtime), `spring-boot-starter-test` and `junit-platform-launcher` (tests). Versions come from the Boot BOM: Hibernate 7.4.5, HikariCP 7.0.2, PostgreSQL JDBC 42.7.11. |
+| `model/postgresql/gradlew`, `gradlew.bat`, `gradle/wrapper/*` | Gradle 9.4.1 wrapper (created with `gradle wrapper --gradle-version 9.4.1`). |
 | `src/main/resources/application.properties` | Connection from environment variables only: `jdbc:postgresql://${MAR_DB_HOST:localhost}:${MAR_DB_PORT:5433}/${MAR_DB_NAME:masterantique}`, user `${MAR_DB_USER:mar_app}`, password `${MAR_DB_PASSWORD}` (never in a file). HikariCP pool `mar-pool` (5 connections, 10 s timeout). `spring.jpa.hibernate.ddl-auto=validate`, `open-in-view=false`, `spring.sql.init.mode=never`. |
 | `src/main/resources/application-demo.properties` | Quiet console output for the demo profile. |
-| `BackendApplication.java` | Entry point. |
+| `ModelApplication.java` | Entry point. |
 | `DatabaseCheck.java` | Start-up runner (not in the demo profile): logs the connection through `JdbcTemplate` and the counts through the repositories. |
 | `model/AppUser.java` | Table `users`. One entity for customers, employees and managers (the legacy table-per-hierarchy `discriminator` is a plain column). Every column named explicitly; `GenerationType.IDENTITY`; `LocalDateTime` for `TIMESTAMP`; `setNewPassword(hash, stamp)` clears `must_reset_password`. |
 | `model/Ticket.java`, `model/TicketState.java` | Table `tickets`; `state` is the enum's ordinal 0/1/2 = `SUBMITTED`, `INPROGRESS`, `COMPLETED`; `assignee` (`user_id`) and `customer` (`customer_id`) are lazy `@ManyToOne`. |
@@ -123,14 +125,14 @@ All paths are under `master-antique-repair-claude/`.
 | `.gitignore` | The original ignored every `*.jar`, which would have dropped the Gradle wrapper jar. Added `!**/gradle/wrapper/gradle-wrapper.jar`, `.gradle/`, `build/`, IDE folders, `.env`. |
 | `README.md` | What exists, layout, the environment variables, build/test/run, the first-login design, next steps. |
 
-**Where the code came from:** the entities, repositories, `LoginService` and demo classes are the tested sample project from the PostgreSQL database guide (`tools/phase1/dbmigrate/import-postgresql/guide/mar-db-client/`, package `com.masterantique.dbclient`), copied with the package renamed. New for the backend: `RejectingIdentityCheck`, the `demo` profile on the demo classes, `DatabaseCheck` (replacing the sample's console `ConnectionCheck`), the test suite, and the build and ignore files.
+**Where the code came from:** the entities, repositories, `LoginService` and demo classes are the tested sample project from the PostgreSQL database guide (`tools/phase1/dbmigrate/import-postgresql/guide/mar-db-client/`, package `com.masterantique.dbclient`), copied with the package renamed. New for the model: `RejectingIdentityCheck`, the `demo` profile on the demo classes, `DatabaseCheck` (replacing the sample's console `ConnectionCheck`), the test suite, and the build and ignore files.
 
 ## 5. How to rebuild it from scratch
 
-1. In `master-antique-repair-claude`, create `backend/postgresql/` with `settings.gradle.kts` and `build.gradle.kts` as described in section 4.
-2. Copy the sources from `claude_modernization/tools/phase1/dbmigrate/import-postgresql/guide/mar-db-client/src/main/java/com/masterantique/dbclient/` into `backend/postgresql/src/main/java/com/masterantique/backend/`, changing `com.masterantique.dbclient` to `com.masterantique.backend`: `model/*`, `repo/*`, `login/LoginResult`, `login/IdentityCheck`, `login/LoginService`. Put `DemoIdentityCheck` and `FirstLoginDemo` in `demo/`, annotate both `@Profile("demo")`, and rename the `FirstLoginDemo` profile from `first-login-demo` to `demo`.
-3. Add `RejectingIdentityCheck`, `BackendApplication`, `DatabaseCheck`, the two properties files and `LoginServiceTest` (section 4).
-4. `gradle wrapper --gradle-version 9.4.1` inside `backend/postgresql/`; fix `.gitignore`; write the README.
+1. In `master-antique-repair-claude`, create `model/postgresql/` with `settings.gradle.kts` and `build.gradle.kts` as described in section 4.
+2. Copy the sources from `claude_modernization/tools/phase1/dbmigrate/import-postgresql/guide/mar-db-client/src/main/java/com/masterantique/dbclient/` into `model/postgresql/src/main/java/com/masterantique/`, changing `com.masterantique.dbclient` to `com.masterantique`: `model/*`, `repo/*`, `login/LoginResult`, `login/IdentityCheck`, `login/LoginService`. Put `DemoIdentityCheck` and `FirstLoginDemo` in `demo/`, annotate both `@Profile("demo")`, and rename the `FirstLoginDemo` profile from `first-login-demo` to `demo`.
+3. Add `RejectingIdentityCheck`, `ModelApplication`, `DatabaseCheck`, the two properties files and `LoginServiceTest` (section 4).
+4. `gradle wrapper --gradle-version 9.4.1` inside `model/postgresql/`; fix `.gitignore`; write the README.
 5. Verify as in section 6.
 
 ## 6. How it was verified (2026-09-23)
@@ -146,7 +148,7 @@ All paths are under `master-antique-repair-claude/`.
 
 ## 7. For the user: committing
 
-Git is read-only for Claude in this project; the user commits. In `master-antique-repair-claude`, `git status` shows the changed `.gitignore` and `README.md` and the new `backend/postgresql/`. Make sure `backend/postgresql/gradle/wrapper/gradle-wrapper.jar` is included (it is a `.jar`, which the `.gitignore` otherwise excludes). Nothing under `backend/postgresql/build/` or `backend/postgresql/.gradle/` should be committed.
+Git is read-only for Claude in this project; the user commits. In `master-antique-repair-claude`, `git status` shows the changed `.gitignore` and `README.md` and the new `model/postgresql/`. Make sure `model/postgresql/gradle/wrapper/gradle-wrapper.jar` is included (it is a `.jar`, which the `.gitignore` otherwise excludes). Nothing under `model/postgresql/build/` or `model/postgresql/.gradle/` should be committed.
 
 ## 8. Open items and next components
 
@@ -155,5 +157,5 @@ Git is read-only for Claude in this project; the user commits. In `master-antiqu
 - **A real `IdentityCheck`**: a single-use, expiring code issued by a manager, or an email reset link (every migrated `email` is NULL, so addresses must be collected first).
 - **Audit logging**: record workflow changes and password changes in the legacy `audit_logs` format (ids and timestamps, never comment text or passwords); the numeric action codes need mapping from the legacy application.
 - **View** (`docs/phase2/view/`): the Angular app in `frontend/`.
-- **Database target**: settled on 2026-09-23 — **PostgreSQL for Phase 2.** This model runs on the database the migration produced, so no further data migration is planned. Oracle (named in the exercise brief) is a separate proof of concept: its migration is import-oracle, and the plan for a matching backend is [../oracle/CLAUDE.md](../oracle/CLAUDE.md).
+- **Database target**: settled on 2026-09-23 — **PostgreSQL for Phase 2.** This model runs on the database the migration produced, so no further data migration is planned. Oracle (named in the exercise brief) is a separate proof of concept: its migration is import-oracle, and the plan for a matching model is [../oracle/CLAUDE.md](../oracle/CLAUDE.md).
 - **Time zones**: `TIMESTAMP` columns are read as `LocalDateTime` with no conversion; whether the legacy system stored UTC or local time is still unknown.

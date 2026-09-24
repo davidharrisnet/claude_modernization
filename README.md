@@ -74,18 +74,18 @@ alongside PostgreSQL: `export-oracle` produces sanitized Oracle files (Oracle AI
 rules (such as never testing on the delivered database). Each tool's human description is
 `docs/phase1/dbmigrate/<tool>/README.md`.
 
-**The backend (Phase 2 model).** "Run import-postgresql" rebuilds and verifies the database only. The Spring Boot
-backend that uses it lives in the separate repository `master-antique-repair-claude` (`backend/postgresql/`). With this
+**The model (Phase 2).** "Run import-postgresql" rebuilds and verifies the database only. The Spring Boot
+model that uses it lives in the separate repository `master-antique-repair-claude` (`model/postgresql/`). With this
 repository open in Claude Code, type:
 
 ```
-Run backend-postgresql
+Run model-postgresql
 ```
 
-or, to rebuild the backend code from scratch, `Rebuild the backend.` Claude Code follows
-`docs/phase2/model/postgresql/CLAUDE.md`: it creates the database login and the local network route the backend needs, runs
-the backend (connection check), then the first-login password change. Run import-postgresql first if the database does not
-exist; running it again also removes the backend's login and route, which the demonstration then recreates.
+or, to rebuild the model code from scratch, `Rebuild the model.` Claude Code follows
+`docs/phase2/model/postgresql/CLAUDE.md`: it creates the database login and the local network route the model needs, runs
+the model (connection check), then the first-login password change. Run import-postgresql first if the database does not
+exist; running it again also removes the model's login and route, which the demonstration then recreates.
 
 ### Components
 These experiments took on a modular approach, focusing on each project component as separate tasks. 
@@ -107,8 +107,35 @@ Angular
 #### SQLite
 #### Java
 
- ## Results
+## Results
 
+### How the model got here
+The model component (the database) was built in iterations, each a git branch (`model-iteration*`), over four days in September 2026. SQLite was the test case: the point was to prove the export, load and verify pipeline before committing to a target database.
+
+* **Iteration 1 (21 Sep), SQLite on Windows.** The first end-to-end migration: export from SQL Server LocalDB, build a SQLite database, verify it is identical to the source, and write a report.
+* **Iteration 2 (21 Sep), SQLite in Docker on Linux.** The same migration, with the new database created and checked inside a Linux container. Dockerizing the database was the decision that made everything after it repeatable: a disposable, verifiable target that needs nothing installed but Docker.
+* **Iteration 3 (22 Sep), an independently verified image built entirely on Linux.** Review caught two real problems: the verifier trusted results inherited from earlier iterations, and real password hashes had been committed to git. The fix was to sanitize first: the export now nulls `PasswordHash` and `SecurityStamp` and sets `MustResetPassword`, so every migrated user resets their password on first login. This became a rule for every later tool.
+* **Iteration 4 (23 Sep), export for PostgreSQL.** The upgrade from SQLite to a database that could be the real target. It became `export-postgresql`.
+* **Iteration 5 (23 Sep), PostgreSQL in Docker.** It became `import-postgresql`. Its database guide (how to connect, including from Spring Boot) seeded the plan for the Phase 2 model.
+* **Oracle (24 Sep).** Phase 2 explicitly lists Oracle, so the same pair was built for it: `export-oracle` and `import-oracle`, targeting Oracle AI Database 26ai Free. Every Oracle detail that could not be tested on Windows was confirmed on Linux without changing the export.
+
+On 24 Sep the working tree was reduced to the four final tools. Iterations 1–3 remain in git history and the `model-iteration*` branches.
+
+### Where things landed
+**The database migration is done, for two targets.**
+
+| Tool | Runs on | Result |
+|---|---|---|
+| `export-postgresql` | Windows | Sanitized PostgreSQL schema and data from SQL Server |
+| `import-postgresql` | Linux | 80 of 80 checks, 155 of 155 rows identical, self-test 7 of 7 |
+| `export-oracle` | Windows | Sanitized Oracle files, self-test 13 of 13, row fingerprints equal to the PostgreSQL export's |
+| `import-oracle` | Linux | 86 of 86 checks, 155 of 155 rows identical, self-test 7 of 7 |
+
+**The Phase 2 model has started.** In `master-antique-repair-claude`, `model/postgresql/` is a Spring Boot 4.1.1 (Java 21) model layer on the migrated PostgreSQL database: JPA entities for the migrated tables, repositories, and a `LoginService` that enforces the password change on first login, with unit tests. Hibernate runs with `ddl-auto=validate` so the schema belongs to the migration. `model/oracle/` is the same layer on the Oracle database, self-contained and independent of the PostgreSQL one. Each was seeded by its import tool's database guide.
+
+**Not started:** the controller (REST API), security (Spring Security, a real identity check, lockout, audit logging in the legacy format) and the view (Angular).
+
+**Lessons.** Sanitize credentials before anything is written, not after. Verify against an independent record of the source, not against a previous run's output. A disposable Docker target makes every run repeatable.
 
 ## Further Work
 Random Samples

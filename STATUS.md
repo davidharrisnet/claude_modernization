@@ -22,7 +22,7 @@ See:
 * export-postgresql (then iteration 4), the export from SQL Server (Windows): [docs/phase1/dbmigrate/export-postgresql/](docs/phase1/dbmigrate/export-postgresql/) and its report [MigrationExportReport.docx](docs/phase1/dbmigrate/export-postgresql/MigrationExportReport.docx)
 * import-postgresql (then iteration 5), the PostgreSQL database in Docker (Linux): [README.md](docs/phase1/dbmigrate/import-postgresql/README.md), [MigrationVerificationReport.html](docs/phase1/dbmigrate/import-postgresql/MigrationVerificationReport.html) (80 of 80 checks, 155 of 155 rows identical) and [PostgreSQLDatabaseGuide.html](docs/phase1/dbmigrate/import-postgresql/PostgreSQLDatabaseGuide.html) (how to connect, including from Spring Boot)
 
-Used Claude to create a Spring Boot 4.1.1 backend (the model layer) in `master-antique-repair-claude/backend/postgresql/`. It connects to the PostgreSQL database, maps the migrated tables with JPA, and demonstrates the first-login password change every migrated user must make. See [docs/phase2/model/postgresql/CLAUDE.md](docs/phase2/model/postgresql/CLAUDE.md).
+Used Claude to create the Spring Boot 4.1.1 model layer in `master-antique-repair-claude/model/postgresql/`. It connects to the PostgreSQL database, maps the migrated tables with JPA, and demonstrates the first-login password change every migrated user must make. See [docs/phase2/model/postgresql/CLAUDE.md](docs/phase2/model/postgresql/CLAUDE.md).
 
 Also reorganised the repository by phase (`docs/phase1/`, `tools/phase1/`, `docs/phase2/`), regression-tested the database tools after the move, and gave the import tool a `README.md` for people and a `CLAUDE.md` for Claude Code.
 

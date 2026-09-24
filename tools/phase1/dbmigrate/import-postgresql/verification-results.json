@@ -1,7 +1,7 @@
 {
     "run": {
-        "runTimeUtc": "2026-09-24 15:21:41",
-        "toolGitCommit": "4828fbb"
+        "runTimeUtc": "2026-09-24 21:50:25",
+        "toolGitCommit": "a65023a"
     },
     "tool": "import-postgresql",
     "checks": [
