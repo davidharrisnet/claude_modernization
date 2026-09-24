@@ -155,5 +155,5 @@ Git is read-only for Claude in this project; the user commits. In `master-antiqu
 - **A real `IdentityCheck`**: a single-use, expiring code issued by a manager, or an email reset link (every migrated `email` is NULL, so addresses must be collected first).
 - **Audit logging**: record workflow changes and password changes in the legacy `audit_logs` format (ids and timestamps, never comment text or passwords); the numeric action codes need mapping from the legacy application.
 - **View** (`docs/phase2/view/`): the Angular app in `frontend/`.
-- **Database target**: Phase 2 names Oracle; this model runs on the PostgreSQL database from the migration work. An Oracle target would be another migration iteration; the entities use only portable JPA mappings except `columnDefinition = "text"` on three `users` columns (`password_hash`, `security_stamp`, `phone_number`; optional, see the guide).
+- **Database target**: settled on 2026-09-23 — **PostgreSQL only; Oracle (named in the exercise brief) is not pursued.** This model runs on the database the migration produced, so no further data migration is planned.
 - **Time zones**: `TIMESTAMP` columns are read as `LocalDateTime` with no conversion; whether the legacy system stored UTC or local time is still unknown.

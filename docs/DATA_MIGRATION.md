@@ -4,7 +4,7 @@ This is the parent document for `tools/dbmigrate/` and `docs/dbmigrate/iteration
 
 ## 1. Purpose and scope
 
-This project's Phase 2 target is Angular / Spring Boot / Oracle (see `README.md`). Before application code exists, the data layer is being proven out on its own, iteration by iteration, against the real Phase 1 database (`MasterAntiqueRepair`, currently SQL Server LocalDB). Each iteration answers one question about moving that data somewhere else, and every iteration follows the same four-step discipline so results are comparable and auditable across the whole series:
+This project's Phase 2 target is Angular / Spring Boot / **PostgreSQL**. The exercise brief (`README.md`) names Oracle; on 2026-09-23 the user decided on PostgreSQL only, and Oracle is not pursued. Before application code exists, the data layer is being proven out on its own, iteration by iteration, against the real Phase 1 database (`MasterAntiqueRepair`, currently SQL Server LocalDB). Each iteration answers one question about moving that data somewhere else, and every iteration follows the same four-step discipline so results are comparable and auditable across the whole series:
 
 1. **Export** the data from the source database into portable, plain-text SQL.
 2. **Populate** a new, independent target database from that export.
@@ -25,7 +25,7 @@ SQL Server (LocalDB)
 01-schema.sql + 02-data-sanitized.sql   ← the only artifacts that cross between environments
       │  populate (dialect-specific: local client, or docker exec, or docker build)
       ▼
-Target database (SQLite / MySQL / future: PostgreSQL, Oracle)
+Target database (SQLite / MySQL / PostgreSQL)
       │  verify (row counts, canonical content hashes, schema facts, business-summary
       │          queries, behaviour/rule tests, tooling self-test)
       ▼
@@ -54,13 +54,13 @@ verification-results.json  →  MigrationVerificationReport{N}.docx
 | — | MySQL in Docker | Windows | Extra work, not a numbered iteration | (results embedded in iteration 1/2 regression runs) |
 | 4 | SQL Server → sanitized **PostgreSQL** schema and data files (`01-schema.sql`, `02-data-sanitized.sql`) plus a `source-metadata.json`, checked into git, plus a Word export report. **Export only; no Docker; no target database.** Details: §8 (the earlier database-agnostic idea was considered and set aside: §7) | Windows | **Built and run 2026-09-23** (self-test 9 of 9; the generated SQL was loaded into PostgreSQL 16 during the build and all 8 table counts and hashes matched); record in `ITERATION4.md` | `docs/dbmigrate/iteration4/` |
 | 5 | The iteration 4 files → a fully populated **PostgreSQL** database in a **Docker container**, verified against `source-metadata.json`, with an HTML verification report. bash + Docker only (no Python, no Java, no host PostgreSQL client). Details: §8 | Linux | **Built and run 2026-09-23** (verification 80 of 80 checks, 155 of 155 rows identical; self-test 7 of 7); record in `ITERATION5.md`. Database guide written (decision 16): `PostgreSQLDatabaseGuide.html` | `docs/dbmigrate/iteration5/` |
-| 6+ | Oracle (the actual Phase 2 target) | TBD | Not started | — |
+| — | Oracle | — | **Not pursued** (user decision, 2026-09-23): Phase 2 uses PostgreSQL, so iteration 5 is the migration to the final database | — |
 
 Each iteration is self-contained under `tools/dbmigrate/iteration{N}/` — its own copy of whatever tooling and input files it needs — so an iteration's results can be reproduced without depending on a later iteration's state. Iteration 3 is the strictest example of this: it doesn't read anything from `tools/dbmigrate/iteration1/` or `iteration2/` at verification time, only at input-copy time (see §5.3).
 
 ## 4. Extending the tool to a new target database
 
-To add a target (PostgreSQL next, per the roadmap; eventually Oracle for the real Phase 2 cutover):
+To add a target (for example in another project; this one's final target, PostgreSQL, is done):
 
 1. Add a new file under `migration/dialects/` implementing the same interface `sqlite.ps1`/`mysql.ps1` already implement (or, for a Linux-native iteration like iteration 3, the equivalent Python/bash functions verify.py expects).
 2. Add a `target` block to `migration.config.json` naming the dialect, the runner (`local` client, or `docker`), and where reports/guides should land.
@@ -114,7 +114,7 @@ A verification step that only checks "does this match what a previous run alread
 
 - ~~Sanitize-first for iterations 1 and 2~~ — **done** (2026-09-22). Implemented and verified on the Windows machine per [docs/dbmigrate/SANITIZE_FIRST_REFACTOR.md](dbmigrate/SANITIZE_FIRST_REFACTOR.md); results in `ITERATION1.md`/`ITERATION2.md` §10. The bullet below is the still-open piece of that plan's scope.
 - **Config-driven sensitive-column declarations** (§5.2.5) — today, sanitization is a bespoke, hardcoded transform per iteration (`Users.PasswordHash`/`SecurityStamp` → `MustResetPassword`); it should become a `migration.config.json`-declared policy the export/verify pipeline enforces generically, for any table/column, not just this one.
-- **Oracle dialect** — the actual Phase 2 destination; it doesn't exist yet. PostgreSQL is planned in iterations 4 and 5 (§8).
+- ~~**Oracle dialect**~~ — **not pursued** (2026-09-23): Phase 2 uses PostgreSQL, migrated and verified in iterations 4 and 5 (§8).
 - **A formal data-classification step before export** — right now, sensitive columns are identified by inspection (a human, or Claude, reading the schema). A real engagement should start with an explicit classification pass (PII/PCI/PHI/credential/none) per column, signed off by the data owner, before any export tooling runs.
 
 ## 7. Database-agnostic exports: what is and isn't possible
@@ -144,7 +144,7 @@ The two properties cannot both hold: files fed straight to a database must be SQ
 
 **Why the sanitize-first seam is the right place.** `Invoke-Export` already holds the schema model and the rows in memory before any dialect renders SQL, and credentials are sanitized there (§5.2). A neutral export is one more output at the same point, so everything it writes is credential-free by construction.
 
-**Decision:** neither route was taken. Iteration 4 is a PostgreSQL-specific export (§8). A future Oracle target would be another dialect at the same seam, not a reuse of the PostgreSQL files.
+**Decision:** neither route was taken. Iteration 4 is a PostgreSQL-specific export (§8). An Oracle target would have been another dialect at the same seam, not a reuse of the PostgreSQL files; Oracle has since been dropped (§3).
 
 ## 8. PostgreSQL (iterations 4 and 5)
 
