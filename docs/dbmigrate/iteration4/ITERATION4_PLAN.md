@@ -1,0 +1,173 @@
+# Plan: Iteration 4 - export the SQL Server database to sanitized PostgreSQL schema and data files (Windows)
+
+**Status: BUILT AND RUN (2026-09-23). All decisions are settled (1-4, 2b, 8, 11, 12, 14). The record of what actually happened, with real numbers, is `ITERATION4.md`. Where this plan and the built tool differ (they are noted inline as "built:"), the built tool and `ITERATION4.md` are authoritative.**
+
+This plan is written so a **new Claude session with no memory of the design conversation** can read it and build (or maintain) the tool. Read this file first, then `docs/DATA_MIGRATION.md` §5 (security policy) and §7 (why database-agnostic SQL is impossible). The Linux side that consumes this iteration's output is a separate iteration: `docs/dbmigrate/iteration5/ITERATION5_PLAN.md`. Once built, the tool is run from the command line with no AI involved.
+
+## 1. Goal
+
+**Iteration 4 is export only, and it runs on Windows.** Export the legacy SQL Server database (MasterAntiqueRepair) into **sanitized PostgreSQL schema and data files**, plus a metadata file describing the source, plus an export report. The three data files are checked into git; a Linux machine then uses them (iteration 5) to create a PostgreSQL database in a Docker container and verify it.
+
+- **Command:** `tools\dbmigrate\iteration4\dbmigrate4.cmd <export|selftest|report|all> --target postgres`, from a plain Windows command prompt, with the legacy app's LocalDB database as the source. Deterministic; no AI in the loop. Exit codes: 0 ok, 1 selftest differences, 2 error, 3 refused.
+- **Outputs (checked in):** `01-schema.sql`, `02-data-sanitized.sql`, `source-metadata.json`, in `tools/dbmigrate/iteration4/`; and `docs/dbmigrate/iteration4/MigrationExportReport4.docx`.
+- **Iteration 4 verifies nothing against a target** (there is none), so it does not produce a "verification report". Its report is an **export report**. `MigrationVerificationReport5.html` is iteration 5's responsibility.
+- **Self-contained:** own copy of the tooling; reads nothing from `tools/dbmigrate/iteration1|2|3/` at run time. Copy code out of iteration 2 once, at build time.
+- Directories: `tools/dbmigrate/iteration4/` and `docs/dbmigrate/iteration4/`.
+
+**Non-goals:** loading into PostgreSQL or verifying a database (iteration 5, on Linux, in Docker); Docker (not used by this iteration); Oracle or other targets (a future dialect at the same seam); database-agnostic SQL (impossible, §7 of DATA_MIGRATION.md).
+
+## 2. Principles (from DATA_MIGRATION.md §5 and the decisions)
+
+1. **Sanitize first.** Credentials are sanitized in memory before anything is rendered, so a raw `02-data.sql` never exists on disk. The postgres target must always sanitize: the tool refuses to run with `sanitizeCredentials` false (exit 2).
+2. **Only identifiers are lowercased, never data.** Comment text, descriptions, role names, usernames and emails are stored exactly as in the source. Fidelity claim: every column identical except credentials, which are sanitized.
+3. **The SQL carries no environment details.** No database name, owner, schema name or password.
+4. **The metadata comes from an independent code path** (the source catalog and the same in-memory rows, not the rendered SQL), so iteration 5 can use it as a real check of the renderer and the load.
+
+## 3. Decision log
+
+Numbering is shared with `ITERATION5_PLAN.md` (decisions 5, 6, 7, 9, 10, 13, 15 and 16 belong to iteration 5).
+
+| # | Decision | Status | Answer / default |
+|---|---|---|---|
+| 1 | Identifier style | **Settled** | **snake_case** (`created_at`, `user_id`); explicit rename map in section 6.1. |
+| 2 | Case-insensitive names | **Settled** | **Usernames stored as typed.** `CREATE UNIQUE INDEX ix_users_name_active ON users (lower(name)) WHERE deleted_at IS NULL`. Authentication (Phase 2) must compare `lower(name) = lower(:input)`. Email stored as typed, no database rule (legacy has none); same `lower()` index form if uniqueness is added later. URLs: none today; if added, only scheme and host are case-insensitive. A `CHECK (name = lower(name))` was rejected: it would force lowercase storage and lose the case the user typed. |
+| 2b | `roles.name` unique index form | **Settled** | **Plain, case-sensitive unique index** (`ix_roles_name ON roles (name)`). Roles are created only programmatically, never typed by a user, so the database does not need to enforce case-insensitivity; keeping role names consistent (stored exactly as in the source: `Customer`, `Employee`, `Manager`) is a convention for the technical team and Claude Code. |
+| 3 | `datetime` type | **Settled** | **`TIMESTAMP` without time zone**, values stored exactly as in the source, no interpretation. Literals rendered with 3 fractional digits (source precision is milliseconds). **Caveat to keep:** it is not known whether the legacy app stored UTC or local times (only `LockoutEndDateUtc` is UTC by name); Phase 2 must decide the zone. |
+| 4 | Identity columns | **Settled** | **`GENERATED BY DEFAULT AS IDENTITY`**; the data supplies explicit ids; the data file ends with a `setval` per identity table. |
+| 8 | Windows tooling | **Settled** | Own self-contained copy of the tooling under `tools/dbmigrate/iteration4/`, per the per-iteration convention. |
+| 14 | Metadata and report | **Settled** | The export writes `source-metadata.json` (the data about the source database, recorded at export) and a Word **export report** built from it, following the pattern of the `MigrationVerificationReport{N}.docx` files: `MigrationExportReport4.docx`. **The report stays a Word file**, built on Windows by the existing generator (a trimmed copy of `Report.ps1`); iteration 5's report is HTML. The verification report is iteration 5's. |
+| 11 | Output file names | **Settled** | `01-schema.sql`, `02-data-sanitized.sql`, `source-metadata.json`, all in `tools/dbmigrate/iteration4/`. |
+| 12 | Data load statements | **Settled** | **Multi-row `INSERT ... VALUES`** (100 rows per statement), inside one transaction. `COPY` is not needed at 155 rows. |
+
+## 4. Facts about the source and the existing tooling (so nothing has to be rediscovered)
+
+**Source:** SQL Server LocalDB `(localdb)\MSSQLLocalDB`, database `aspnet-MasterAntiqueRepair-e93a6129-7f74-4486-97e8-8d4ab1a709b4`. Eight tables, 155 rows: Roles 3, Users 12, AuditLogs 78, Tickets 24, Comments 26, UserClaims 0, UserLogins 0, UserRoles 12. `__MigrationHistory` is excluded on purpose. Usernames are all lowercase today (`manager`, `employee1-3`, `customer1-8`); `Users.Email` is NULL in every row.
+
+**Existing tooling to copy from (iteration 2, `tools/dbmigrate/iteration2/`):**
+- `dbmigrate.cmd` wraps `migration\DbMigrate.ps1` (commands `export|import|verify|selftest|report|guide|all`, `--target`, `--config`, `--recreate`; exit codes 0 ok, 1 verify differences, 2 error, 3 refused).
+- `migration\Common.ps1`: config loading (`Get-MigrationConfig`, `Get-TargetSettings`, `Get-Dialect`), the source model (`Get-SourceModel`), row reading (`Read-SourceRows`, canonical string per cell, `$null` = NULL), `Protect-SensitiveData` (Users only: `PasswordHash` and `SecurityStamp` to NULL, appends synthetic column `MustResetPassword` bit NOT NULL default 0, value `1`), `Write-TextFile` (UTF-8 without BOM, LF), `Resolve-RepoPath`. `RepoRoot` is computed from `$PSScriptRoot` with a fixed `..` depth: **fix the depth after copying** (`iteration4\migration\` is 4 levels below the repo root).
+- `migration\Export.ps1`: `Invoke-Export` does `Get-SourceModel`, then `Read-SourceRows` per table, then `Protect-SensitiveData` when `sanitizeCredentials`, then the dialect's `RenderSchema`/`RenderData`, then `Write-TextFile`. **This is the sanitize-first seam.** Add the metadata writer here.
+- `migration\Report.ps1` and `Guide.ps1`: the OpenXML helpers (`Rn`, `Pg`, `PT`, `Bullet`, `Table`, `Save-Docx`) and the chart rendering with `System.Drawing`, reused for the export report.
+- `migration\Verify.ps1`: the ten business-summary definitions (the `domain` list), to be ported for the metadata's `summaries`.
+- `migration\dialects\sqlite.ps1`: the reference dialect. `New-Dialect` returns a hashtable with `Name`, `DisplayName`, `KnownDifferences`, `RenderSchema`, `RenderData` and target-side members (`Import`, `Query`, `ReadRows`, ...). **The export command uses only `RenderSchema` and `RenderData`**; check `Get-Dialect` in `Common.ps1` for any other member it requires when building `postgres.ps1`.
+- Model shape (from `Get-SourceModel`): `Tables[]` with `Name`, `Columns[]` (`Name`, `TypeName`, `Kind` in `int|bit|datetime|binary|guid|string`, `Length` (-1 = max), `Nullable`, `IsIdentity`, `Default`), `PrimaryKey[]`, `Identity`, `IdentityLast`, `ForeignKeys[]` (`Name`, `Columns`, `RefTable`, `RefColumns`, `OnDelete`), `Indexes[]` (`TargetName`, `Unique`, `Filter`, `Columns[]` with `Name`, `Descending`). Tables come topologically sorted (Kahn, alphabetical tie-break).
+- The SQLite dialect translates index filters of the form `[col] IS [NOT] NULL` (AND-ed) and **throws on anything else** so a rule is never silently dropped. Keep that rule.
+
+## 5. Layout
+
+```
+tools/dbmigrate/iteration4/
+  dbmigrate4.cmd                    Windows wrapper (export, selftest, report, all)
+  README.md                         how to run it (no Claude needed)
+  migration/                        copied from iteration 2, trimmed to what export needs
+    DbMigrate.ps1  Common.ps1  Export.ps1  SelfTest.ps1 (determinism and no-credential checks)
+    Metadata.ps1                    NEW: writes source-metadata.json
+    Report.ps1  ExportReport.ps1    helpers copied from iteration 2; the export report built from source-metadata.json
+    dialects/postgres.ps1           NEW
+    migration.config.json           source + target "postgres" block
+  01-schema.sql                     OUTPUT, checked in
+  02-data-sanitized.sql             OUTPUT, checked in (credentials sanitized)
+  source-metadata.json              OUTPUT, checked in
+  .gitattributes                    *.sql and *.json: text eol=lf (see 9)
+docs/dbmigrate/iteration4/
+  ITERATION4_PLAN.md (this file)    ITERATION4.md (written after the real run)
+  MigrationExportReport4.docx       OUTPUT, checked in
+```
+
+Config `migration.config.json` (paths relative to the repo root): `source` (server, database as in section 4), `outputDir: "tools/dbmigrate"`, `reportDir: "docs/dbmigrate/iteration4"`, target `postgres`: `dialect: "postgres"`, `outputSubdir: "iteration4"`, `sanitizeCredentials: true`, `caseInsensitiveUniqueIndexes: [{ "table": "Users", "column": "Name" }]`.
+
+## 6. PostgreSQL rendering rules (`dialects/postgres.ps1`)
+
+### 6.1 Names (snake_case, decision 1)
+All identifiers are lowercase snake_case, **unquoted** in the output. The rename map is authoritative (an algorithm would mishandle acronyms); the dialect holds it as data and **fails if the model contains a name that is not in the map**, so a new source column is never silently renamed differently.
+
+| Source table | Target | Columns (source to target) |
+|---|---|---|
+| `Roles` | `roles` | `Id`->`id`, `Name`->`name` |
+| `Users` | `users` | `Id`, `Name`, `CreatedAt`->`created_at`, `PasswordHash`->`password_hash`, `Discriminator`->`discriminator`, `DeletedAt`->`deleted_at`, `Email`, `EmailConfirmed`->`email_confirmed`, `SecurityStamp`->`security_stamp`, `PhoneNumber`->`phone_number`, `PhoneNumberConfirmed`->`phone_number_confirmed`, `TwoFactorEnabled`->`two_factor_enabled`, `LockoutEndDateUtc`->`lockout_end_date_utc`, `LockoutEnabled`->`lockout_enabled`, `AccessFailedCount`->`access_failed_count`, `MustResetPassword`->`must_reset_password` |
+| `AuditLogs` | `audit_logs` | `Id`, `Timestamp`->`timestamp`, `UserId`->`user_id`, `Action`->`action`, `EntityType`->`entity_type`, `EntityId`->`entity_id` |
+| `Tickets` | `tickets` | `Id`, `State`->`state`, `Description`->`description`, `User_Id`->`user_id`, `Customer_Id`->`customer_id`, `SubmittedDate`->`submitted_date`, `AssignedDate`->`assigned_date`, `CompletedDate`->`completed_date` |
+| `Comments` | `comments` | `Id`, `UserId`->`user_id`, `TicketId`->`ticket_id`, `Text`->`text`, `CreatedAt`->`created_at` |
+| `UserClaims` | `user_claims` | `Id`, `UserId`->`user_id`, `ClaimType`->`claim_type`, `ClaimValue`->`claim_value` |
+| `UserLogins` | `user_logins` | `LoginProvider`->`login_provider`, `ProviderKey`->`provider_key`, `UserId`->`user_id` |
+| `UserRoles` | `user_roles` | `UserId`->`user_id`, `RoleId`->`role_id` |
+
+(Lowercase-only names like `Id`, `Name`, `Email` map to themselves lowercased.) `timestamp`, `text`, `action`, `state`, `name` and `description` are not reserved words in PostgreSQL 15 and are valid unquoted column names; **iteration 5's load on a real PostgreSQL is the first proof.**
+
+**Constraint and index names** (schema-wide in PostgreSQL; must not collide):
+- Foreign keys: rule `fk_<table>_<reftable>_<columns joined by _>`, e.g. `fk_tickets_users_customer_id`, `fk_tickets_users_user_id`, `fk_comments_tickets_ticket_id`, `fk_user_roles_roles_role_id`. This replaces the source names (`FK_dbo.Orders_dbo.Users_Customer_Id`), which contain dots and a stale table name.
+- Indexes: the model's `TargetName` (already prefixed with the table where source names collided) converted to snake_case with acronyms as words: `RoleNameIndex`->`ix_roles_name`, `IX_Users_Name_Active`->`ix_users_name_active`, `AuditLogs_IX_UserId`->`ix_audit_logs_user_id`, `IX_Customer_Id`->`ix_tickets_customer_id`, `IX_User_Id`->`ix_tickets_user_id`, `Comments_IX_UserId`->`ix_comments_user_id`, `IX_TicketId`->`ix_comments_ticket_id`, `UserClaims_IX_UserId`->`ix_user_claims_user_id`, `UserLogins_IX_UserId`->`ix_user_logins_user_id`, `IX_RoleId`->`ix_user_roles_role_id`, `UserRoles_IX_UserId`->`ix_user_roles_user_id`. Hold these in the same map; fail on an unmapped name.
+
+### 6.2 Types and defaults
+
+| `Kind` / source | PostgreSQL | Notes |
+|---|---|---|
+| `int`, identity single-column PK | `INTEGER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY` | Same "single-column integer PK only" guard as the SQLite dialect; other identity shapes are an error. |
+| `int` other | `INTEGER` | |
+| `bit` | `BOOLEAN` | Source default `0`/`1` becomes `DEFAULT FALSE`/`TRUE`. No `CHECK` needed. Literals `true`/`false`. |
+| `datetime` | `TIMESTAMP` | Decision 3. Literal `'yyyy-MM-dd HH:mm:ss.fff'` (the canonical 7-digit source text truncated to 3 digits; the extra digits are always zero). |
+| `string`, length n | `VARCHAR(n)` | |
+| `string`, max/`text`/`ntext` (Length -1) | `TEXT` | `password_hash`, `security_stamp`, `phone_number`, `claim_type`, `claim_value`. |
+| `binary` | `BYTEA` | Not present in the schema; implement or throw a clear error. |
+| `guid` | `UUID` | Not present in the schema; implement or throw a clear error. |
+
+Anything else: hard error, never a silent guess (same rule as the other dialects).
+
+### 6.3 Schema file (`01-schema.sql`)
+Header comment; `BEGIN;`; `CREATE TABLE` per table in the model's dependency order with inline `CONSTRAINT ... FOREIGN KEY ... ON DELETE CASCADE|NO ACTION`; composite PKs as table constraints (`user_logins`, `user_roles`); then all indexes; `COMMIT;`. `ix_users_name_active` is a unique partial expression index on `lower(name)` (`caseInsensitiveUniqueIndexes` config, which lists only `Users.Name`); `ix_roles_name` is a plain, case-sensitive unique index (decision 2b); other indexes are plain non-unique. Filters are translated only for `[col] IS [NOT] NULL` shapes (renamed column), else error. Sort indexes and FKs by name for deterministic output.
+
+### 6.4 Data file (`02-data-sanitized.sql`)
+Header comment; `SET client_encoding = 'UTF8'; SET standard_conforming_strings = on;` `BEGIN;`; per table in dependency order, multi-row `INSERT INTO t (cols) VALUES (...),(...)` (100 rows per statement, explicit column lists, primary-key order); for each identity table with `IdentityLast` not null: `SELECT setval(pg_get_serial_sequence('t','id'), <IdentityLast>);` (skip empty or never-used tables); `COMMIT;`. Foreign keys are satisfied by load order; no way to disable them is needed.
+- Strings: `'...'` with `''` doubling. Reject NUL. Emit CR (`\r`) as `chr(13)` concatenation (`'a' || chr(13) || 'b'`) so git line-ending conversion cannot alter data; TAB and LF stay raw; other control characters also as `chr(n)`.
+- Booleans `true`/`false`, integers raw, NULL as `NULL`, timestamps as quoted literals per 6.2.
+- `users` rows come out sanitized (`Protect-SensitiveData` runs first): `password_hash` NULL, `security_stamp` NULL, `must_reset_password` true.
+
+## 7. `source-metadata.json`
+
+Written by `Metadata.ps1` in `Invoke-Export`, from the catalog and the **same in-memory rows** the SQL is rendered from (after sanitizing). It is the data about the source database, recorded at export (decision 14), and the input to both the export report and iteration 5's verification. It must not contain credentials, personal data or raw comment text. **It contains no SQL text** (iteration 5 builds its own queries from the names). Contents:
+
+- `meta`: iteration, `schemaVersion` (1) of the JSON format, `source` (server, database, SQL Server version), `minPostgresVersion` (15), `schemaFile`/`schemaSha256` and `dataFile`/`dataSha256` (SHA-256 of `01-schema.sql` and `02-data-sanitized.sql`), `sanitizeCredentials`. **Built:** the tool git commit and the run time are in the separate top-level `run` section (`run.runTimeUtc`, `run.toolGitCommit`), the only non-deterministic parts, excluded from determinism checks.
+- `tables[]`, in load order: `sourceName` and `targetName`, `rowCount`, `identityLast`, `rowSha256`, `columns[]` (`sourceName`, `sourceType`, `kind`, `targetName`, `targetType`, `dataType` and `maxLength` as `information_schema` reports them, `nullable`, `default`, `identity`, `synthetic`), `primaryKey[]` (target names), `foreignKeys[]` (`targetName`, `sourceName`, `columns`, `refTable`, `refColumns`, `onDelete`), `indexes[]` (`targetName`, `sourceName`, `unique`, `columns[]` with `column`, `expression` and `descending`, and the partial `filter` in target form).
+- **Canonical row form (defined independent of any database):** **built: rows sorted ascending by their canonical text (ordinal, byte order), not by primary key** (this needs no collation or primary-key knowledge on the PostgreSQL side: `ORDER BY r COLLATE "C"`), joined by LF; cells joined by `|` in column order; a NULL cell is `~`; otherwise a one-letter prefix and a value: `i:<decimal>` for integers, `b:1|0` for booleans, `t:yyyy-MM-dd HH:mm:ss.fff` for timestamps, `s:<lowercase hex of the UTF-8 bytes>` for strings (`x:` hex for binary, `g:` for guid; not present in this schema). Table hash = lowercase hex SHA-256 of the UTF-8 text. An empty table hashes the empty string (`e3b0c442...`). Sanitized columns hash as `~`, so no credential is ever hashed. The Windows side computes this from its in-memory rows; iteration 5 recomputes it in SQL on the loaded database (**proven during the build**: all 8 table hashes recomputed in PostgreSQL 16 with a dynamic PL/pgSQL block reading the JSON matched).
+- `summaries[]`: the ten business summaries from the earlier iterations (users by type, active vs soft-deleted, users per role, tickets by state, assigned vs unassigned, audit events by action, comments per ticket, comment and ticket totals, ticket date ranges, account and audit date ranges): `name`, `sourceSql` (the SQL Server query, **recorded for documentation only, never executed from the JSON**) and `expectedRows` computed on the source: sorted ordinally, cells joined by `|`, **NULL as the empty string**, timestamps `yyyy-MM-dd HH:mm:ss.fff`, booleans 1/0. Ported from `Verify.ps1`. Iteration 5 holds its own PostgreSQL queries.
+- `renameMap`: source to target names of every table and column (section 6.1); `excludedTables` (`__MigrationHistory`); `knownDifferences` (text, used by the report).
+- `expectations`: `totalRows` (155), `usersSanitized` (every user has NULL `password_hash` and `security_stamp` and `must_reset_password` true), `usersCount`, `noDuplicateActiveUsernamesIgnoringCase`.
+
+## 8. The export report (`MigrationExportReport4.docx`)
+
+Built by `dbmigrate4.cmd report` from `source-metadata.json` only (like the earlier reports, which read only their results JSON), with the same look (OpenXML written directly, charts via `System.Drawing`, deterministic, rebuilt byte-identical from the same JSON). Contents: (1) title and executive summary ("8 tables and 155 rows exported; credentials sanitized for 12 users; PostgreSQL 15+ target") with a status banner for the export checks below; (2) scope and method in plain English; (3) table inventory with row counts and per-table hashes; (4) schema: columns, keys, foreign keys, indexes, with source-to-target names and the type mapping; (5) business summaries with charts (users by role, active vs soft-deleted, tickets by state, audit events by action); (6) the sanitization statement (what was blanked, what was not); (7) known differences (`TIMESTAMP` without time zone and the unknown source zone, snake_case names, the `lower()` username index, `roles.name` case-sensitive, dates and booleans mapped, `__MigrationHistory` excluded); (8) reproducibility (commands, file hashes, git commit, run date); (9) hand-off instructions for iteration 5. It does **not** carry a verification PASS/FAIL against a target and has no behaviour tests.
+
+## 9. Git, hand-off and repeatability
+
+- Check in `01-schema.sql`, `02-data-sanitized.sql`, `source-metadata.json` and the report. Nothing sensitive is written: no raw `02-data.sql` ever exists, and the tool refuses to run unsanitized.
+- Add `tools/dbmigrate/iteration4/.gitattributes` with `*.sql text eol=lf` and `*.json text eol=lf`. The metadata records SHA-256 hashes of the LF form and string literals may contain raw LF; git line-ending conversion on Windows would otherwise break both the transfer hash and the data. Verify after a fresh clone on Windows and Linux.
+- **Hand-off to iteration 5** (manual, on Windows, after a successful export): copy the three files into `tools/dbmigrate/iteration5/input/` and commit them together with `tools/dbmigrate/iteration4/`. Iteration 5 reads only its own `input/` folder.
+
+## 10. Acceptance criteria (definition of done, Windows only)
+
+- `dbmigrate4.cmd export --target postgres` exits 0 and writes the three files; row counts total 155 and match section 4.
+- `dbmigrate4.cmd selftest --target postgres` exits 0: two exports are byte-identical (SQL and metadata, ignoring `runTimeUtc`); the report rebuilds byte-identical from the same JSON; **no credential value that was read from the source appears in any output file** (the tool keeps the original values in memory only for this check); the tool refuses to run with `sanitizeCredentials` false (exit 2).
+- `dbmigrate4.cmd report --target postgres` writes `MigrationExportReport4.docx`, which opens in Word, has no unresolved placeholders, and its numbers match `source-metadata.json`.
+- The three files are copied into `tools/dbmigrate/iteration5/input/` and committed.
+- **Not provable here:** that the SQL loads into PostgreSQL. The first load is iteration 5, in a Docker container on the Linux machine; a rendering bug found there is fixed in `postgres.ps1` and the export re-run.
+
+## 11. Build order for a fresh session
+
+1. Read this plan and DATA_MIGRATION.md §5 and §7. All decisions are settled (section 3); do not reopen them without the user.
+2. Create `tools/dbmigrate/iteration4/`; copy `migration/` from iteration 2; trim to what export needs; write `dbmigrate4.cmd`, config, `.gitattributes`. (**Built:** iteration 2's `RepoRoot` depth `..\..\..\..` was already correct for this layout, so no fix was needed. Report content is in `ExportReport.ps1`, the helpers copied from iteration 2 are in `Report.ps1`.)
+3. Write `dialects/postgres.ps1` (section 6), including the rename map and the guards.
+4. Write `Metadata.ps1` and call it from `Invoke-Export` (section 7); adapt `SelfTest.ps1` (section 10).
+5. Run the export; inspect the three files by hand.
+6. Write the trimmed `Report.ps1` (section 8); build the report.
+7. Run the acceptance criteria (section 10); do the hand-off copy (section 9).
+8. Write `README.md`, `docs/dbmigrate/iteration4/ITERATION4.md` (what actually happened, with real numbers), and update `docs/DATA_MIGRATION.md` (§3 status, §8 and §9 document map) and the commands paragraph of `CLAUDE.md`.
+
+## 12. Risks and known differences
+
+- The load is unproven until iteration 5 runs; a hand-off that fails there loops back here.
+- Timestamp zone is unknown (decision 3); no conversion is made.
+- Phase 2 authentication must lower both sides for the username compare (decision 2), or the `lower()` index is not used and case rules are not honoured.
+- snake_case names differ from the legacy schema: a parity note for Phase 2, not a data change. FK and index names are also renamed.
+- `timestamp` as a column name and any other name-related PostgreSQL surprise are first confirmed in iteration 5.
+- Line endings: see section 9.
+- The SQL, metadata and report contain sanitized data only, but usernames, timestamps and comment text are still real project data.

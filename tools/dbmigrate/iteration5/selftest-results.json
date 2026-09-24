@@ -1,0 +1,15 @@
+{
+  "iteration": 5,
+  "status": "PASS",
+  "passed": 7,
+  "total": 7,
+  "tests": [
+    { "name": "Repeatable load", "status": "PASS", "detail": "two fresh loads both pass verification; check output and results JSON identical (apart from the run time)" },
+    { "name": "Delivered database matches a fresh load", "status": "PASS", "detail": "mar-postgres gives the same check results as the fresh self-test load" },
+    { "name": "Damaged copy detected", "status": "PASS", "detail": "one comment edited, one ticket deleted, the username index dropped: verify exits 1 and names tickets (count, hash), comments (hash), the users index and the case rule; untouched tables still pass" },
+    { "name": "Tampered metadata hash detected", "status": "PASS", "detail": "roles hash zeroed in a copy of the metadata: verify exits 1 with exactly one failure, naming roles" },
+    { "name": "Corrupted input refused", "status": "PASS", "detail": "one byte changed in 02-data-sanitized.sql: load exits 2 on the integrity check and creates no container" },
+    { "name": "Existing database protected", "status": "PASS", "detail": "load without --recreate on an existing container exits 3 and changes nothing" },
+    { "name": "Docker unavailable reported", "status": "PASS", "detail": "with Docker unreachable, the tool exits 2 with a clear message" }
+  ]
+}

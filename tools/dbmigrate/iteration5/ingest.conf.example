@@ -1,0 +1,16 @@
+# Iteration 5 settings (bash key=value, read by ingest.sh). Non-secret: the database password is generated when the
+# container is created and is never stored or printed.
+# Copy to ingest.conf to change anything; without ingest.conf, ingest.sh uses exactly these defaults.
+
+# Docker container that holds the database (the database lives only in this container).
+CONTAINER=mar-postgres
+# PostgreSQL image; must be version 15 or later (ingest.sh refuses an older server).
+# 16.1 is pinned: it is the version iteration 4's load proof used, and it is already on this machine.
+PG_IMAGE=postgres:16.1
+# Database and user created by the image at first start.
+PG_DATABASE=masterantique
+PG_USER=masterantique
+# Schema the tables are created in.
+PG_SCHEMA=public
+# Folder with 01-schema.sql, 02-data-sanitized.sql and source-metadata.json (relative to this folder, or absolute).
+INPUT_DIR=input

@@ -52,7 +52,9 @@ verification-results.json  →  MigrationVerificationReport{N}.docx
 | 2 | SQL Server → SQLite inside a Docker Linux container, loaded at container-runtime | Windows orchestrates; target is Linux | Done; credential sanitization added 2026-09-22 (§10 of `ITERATION2.md`) | `docs/dbmigrate/iteration2/` |
 | 3 | SQL Server (via iteration 2's export) → SQLite baked into a Docker image at build time; verification and tooling run **entirely on Linux**, with **no dependency on iteration 1/2's stored results** and **credentials sanitized before anything is built or committed** | Linux, end to end | Done | `docs/dbmigrate/iteration3/` |
 | — | MySQL in Docker | Windows | Extra work, not a numbered iteration | (results embedded in iteration 1/2 regression runs) |
-| 4+ | PostgreSQL in Docker; eventually Oracle (the actual Phase 2 target) | TBD | Not started | — |
+| 4 | SQL Server → sanitized **PostgreSQL** schema and data files (`01-schema.sql`, `02-data-sanitized.sql`) plus a `source-metadata.json`, checked into git, plus a Word export report. **Export only; no Docker; no target database.** Details: §8 (the earlier database-agnostic idea was considered and set aside: §7) | Windows | **Built and run 2026-09-23** (self-test 9 of 9; the generated SQL was loaded into PostgreSQL 16 during the build and all 8 table counts and hashes matched); record in `ITERATION4.md` | `docs/dbmigrate/iteration4/` |
+| 5 | The iteration 4 files → a fully populated **PostgreSQL** database in a **Docker container**, verified against `source-metadata.json`, with an HTML verification report. bash + Docker only (no Python, no Java, no host PostgreSQL client). Details: §8 | Linux | **Built and run 2026-09-23** (verification 80 of 80 checks, 155 of 155 rows identical; self-test 7 of 7); record in `ITERATION5.md`. Database guide written (decision 16): `PostgreSQLDatabaseGuide.html` | `docs/dbmigrate/iteration5/` |
+| 6+ | Oracle (the actual Phase 2 target) | TBD | Not started | — |
 
 Each iteration is self-contained under `tools/dbmigrate/iteration{N}/` — its own copy of whatever tooling and input files it needs — so an iteration's results can be reproduced without depending on a later iteration's state. Iteration 3 is the strictest example of this: it doesn't read anything from `tools/dbmigrate/iteration1/` or `iteration2/` at verification time, only at input-copy time (see §5.3).
 
@@ -112,15 +114,154 @@ A verification step that only checks "does this match what a previous run alread
 
 - ~~Sanitize-first for iterations 1 and 2~~ — **done** (2026-09-22). Implemented and verified on the Windows machine per [docs/dbmigrate/SANITIZE_FIRST_REFACTOR.md](dbmigrate/SANITIZE_FIRST_REFACTOR.md); results in `ITERATION1.md`/`ITERATION2.md` §10. The bullet below is the still-open piece of that plan's scope.
 - **Config-driven sensitive-column declarations** (§5.2.5) — today, sanitization is a bespoke, hardcoded transform per iteration (`Users.PasswordHash`/`SecurityStamp` → `MustResetPassword`); it should become a `migration.config.json`-declared policy the export/verify pipeline enforces generically, for any table/column, not just this one.
-- **PostgreSQL and Oracle dialects** — the roadmap's next two targets; Oracle is the actual Phase 2 destination and doesn't exist yet.
+- **Oracle dialect** — the actual Phase 2 destination; it doesn't exist yet. PostgreSQL is planned in iterations 4 and 5 (§8).
 - **A formal data-classification step before export** — right now, sensitive columns are identified by inspection (a human, or Claude, reading the schema). A real engagement should start with an explicit classification pass (PII/PCI/PHI/credential/none) per column, signed off by the data owner, before any export tooling runs.
 
-## 7. Document map
+## 7. Database-agnostic exports: what is and isn't possible
+
+**Status: considered and set aside.** Iteration 4 was first framed as producing one set of files loadable into any database (SQLite, PostgreSQL or Oracle). This section records why that is not possible; iteration 4 as decided targets PostgreSQL only (§8).
+
+**The original goal.** Produce schema and data files that are checked into git, pulled on a Linux machine, and loaded into whichever database is required: SQLite, PostgreSQL or Oracle. Nothing in the files should be specific to one database, and the data must be credential-sanitized (§5.2).
+
+**Finding: completely database-agnostic SQL files are not possible.** SQL itself differs per database at exactly the points this schema uses. Iterations 1-3 emit SQLite SQL (`AUTOINCREMENT`, `PRAGMA`, a partial index, dates as ISO text), which is why they cannot simply be reused for another target.
+
+| Feature in this schema | Why no single SQL spelling works on SQLite, PostgreSQL and Oracle |
+|---|---|
+| Filtered unique index `IX_Users_Name_Active` (`WHERE DeletedAt IS NULL`; soft delete frees the username) | Native in SQLite and PostgreSQL; Oracle needs a function-based index; a portable composite unique index on `(Name, DeletedAt)` behaves differently per database (NULLs are distinct in PostgreSQL and SQLite, compared in Oracle). The rule cannot be enforced by portable DDL. |
+| Auto-increment (`Id` columns) | `AUTOINCREMENT`, `GENERATED ... AS IDENTITY` and sequences have no common form. The fallback is a plain `INTEGER PRIMARY KEY` with explicit ids, which loses "the next id continues the sequence". |
+| Timestamps (`CreatedAt`, `DeletedAt`, ...) | No date or timestamp literal is accepted by all three; Oracle rejects a plain string unless a session setting matches. A single script means storing timestamps as text. |
+| Long text (`PasswordHash`, `SecurityStamp`, `PhoneNumber`, claim columns) | `TEXT` does not exist in Oracle and `CLOB` does not exist in PostgreSQL; it has to become `VARCHAR(n)`, and Oracle counts `VARCHAR` in bytes (multi-byte text can overflow; 4000-byte limit). |
+| Load mechanics | `PRAGMA` and `BEGIN` versus implicit transactions, multi-row `INSERT ... VALUES` (not in older Oracle), Oracle treating `''` as NULL, identifier case folding (quoted names then required forever), `&` prompts in SQL*Plus. |
+
+A "lowest common denominator" SQL script that all three accept unchanged is possible only by giving things up: timestamps stored as text, no filtered unique rule, no identity, one-row `INSERT`s, no transaction or `PRAGMA` statements.
+
+**What can be agnostic is a description, not SQL.** Two kinds of artifact must be kept apart:
+
+1. **Loadable files** (SQL): always target one database's dialect, so they can never be fully agnostic. Iterations 1-3 produce these, for SQLite.
+2. **Neutral files**: the schema as structured data (logical types, keys, foreign keys with delete actions, indexes with the filter as structured data, not SQL text) and the data as typed records (real `null` versus empty string, ISO timestamps, true/false). These are agnostic, but need a small **per-database renderer** to become SQL. The renderer runs on the Linux side, so the checked-in files stay neutral and each target's SQL is generated at load time.
+
+The two properties cannot both hold: files fed straight to a database must be SQL (not agnostic), and files that are agnostic need a translator before a database can use them.
+
+**Why the sanitize-first seam is the right place.** `Invoke-Export` already holds the schema model and the rows in memory before any dialect renders SQL, and credentials are sanitized there (§5.2). A neutral export is one more output at the same point, so everything it writes is credential-free by construction.
+
+**Decision:** neither route was taken. Iteration 4 is a PostgreSQL-specific export (§8). A future Oracle target would be another dialect at the same seam, not a reuse of the PostgreSQL files.
+
+## 8. PostgreSQL (iterations 4 and 5)
+
+**Goal.** Move the SQL Server database to PostgreSQL in two separate, repeatable, command-line iterations that need no Claude session to run. Each has its own detailed plan that a fresh session can be pointed to:
+
+- **Iteration 4 (Windows, export only):** export the SQL Server database into sanitized **PostgreSQL** schema and data files plus a metadata file, checked into git. **No Docker, no target database.** Plan: `docs/dbmigrate/iteration4/ITERATION4_PLAN.md`; directories `tools/dbmigrate/iteration4/` and `docs/dbmigrate/iteration4/`.
+- **Iteration 5 (Linux, Docker):** read those files, create a fully populated PostgreSQL database in a **Docker container**, and verify the data is the same as the source it was exported from. Plan: `docs/dbmigrate/iteration5/ITERATION5_PLAN.md`; directories `tools/dbmigrate/iteration5/` and `docs/dbmigrate/iteration5/`.
+
+The decisions below are shared by both plans; §8.8 is the full decision log.
+
+### 8.1 Where each stage runs
+
+| Stage | Runs on | Why |
+|---|---|---|
+| Export (read SQL Server, sanitize, render PostgreSQL files, write the metadata JSON) | Windows | The source is SQL Server LocalDB; the tooling is Windows PowerShell (§5, iterations 1-2). |
+| Check-in and hand-off | git | The three files below are the only artifacts that cross to Linux. After a successful export they are copied (manually) into `tools/dbmigrate/iteration5/input/` and committed. |
+| Load, verify, report (iteration 5) | Linux | bash and Docker only: a `postgres:16` container (`mar-postgres`) holds the database; `psql` runs inside it. No Python, no Java, no host PostgreSQL client. |
+
+The Windows side is iteration 4's own copy of iteration 2's tooling plus one new dialect file, `postgres.ps1`, implementing the same `RenderSchema`/`RenderData` interface as `sqlite.ps1`. It is called at the sanitize-first seam: after `Protect-SensitiveData` and before anything is written, so raw credentials never reach disk (§5.2). Iteration 4 exports only; the tool does not import into or query a PostgreSQL server on Windows.
+
+### 8.2 Outputs (checked in)
+
+| File | Content |
+|---|---|
+| `01-schema.sql` | PostgreSQL DDL: tables, keys, foreign keys with delete actions, indexes, defaults. |
+| `02-data-sanitized.sql` | The data as PostgreSQL `INSERT`s, credentials sanitized (`PasswordHash`/`SecurityStamp` NULL, `MustResetPassword` true), ending with the identity-sequence resets. |
+| `source-metadata.json` | The metadata report from the SQL Server source, used by the Linux side to verify the new database (§8.5). Contains counts and hashes of sanitized rows only: no credentials and no personal data. It holds no SQL to be executed (the source queries are recorded as documentation only). |
+| `docs/dbmigrate/iteration4/MigrationExportReport4.docx` | The export report (Word), built on Windows from `source-metadata.json` by the existing report generator; for people, not consumed by iteration 5. It carries no PASS/FAIL against a target. |
+
+### 8.3 SQL Server to PostgreSQL mapping
+
+| SQL Server | PostgreSQL | Note |
+|---|---|---|
+| `int` (and other integer types) | `INTEGER` (`BIGINT`/`SMALLINT` to match) | |
+| identity primary key | `INTEGER GENERATED BY DEFAULT AS IDENTITY` | The data supplies explicit ids; the data file ends with a sequence reset per table so the next id continues from the maximum. |
+| `bit` | `BOOLEAN` | `true`/`false` literals; no `CHECK` needed. Includes the new `MustResetPassword`. |
+| `nvarchar(n)` | `VARCHAR(n)` | |
+| `nvarchar(max)` | `TEXT` | |
+| `datetime` | `TIMESTAMP` (without time zone) | SQL Server has no time zone. Precision is milliseconds at the source, so literals are rendered with 3 fractional digits (PostgreSQL keeps 6). |
+| Filtered unique index `IX_Users_Name_Active` | native partial unique index | See §8.4 for the case-insensitive form. |
+
+Statement mechanics: tables are loaded in dependency order inside one transaction; `BEGIN`/`COMMIT` are valid in PostgreSQL; standard string literals with `''` doubling are safe (`standard_conforming_strings` is on by default). Strings containing NUL are rejected, as in the earlier dialects.
+
+### 8.4 Names and case
+
+- **Identifiers are lowercased** so nothing needs quoting: `users`, not `"Users"`. PostgreSQL folds unquoted names to lowercase, so keeping the source's mixed case would force quoted names in every query, `psql` session, JDBC call and Hibernate mapping for ever. No two source identifiers differ only by case, and none is a PostgreSQL reserved word, so lowercasing cannot collide. Index names are schema-wide, so the existing table-prefix rule for colliding names (for example `IX_UserId`) still applies.
+- **Decided (decision 1, §8.8): snake_case** (`created_at`, `password_hash`, `user_id`), the PostgreSQL convention and Spring Boot's default mapping. Plain lowercase (`createdat`) was rejected as a mechanical but unreadable mapping that Spring's default naming would not match. The rename map is written down in `ITERATION4_PLAN.md`; the metadata JSON records the source name and target name of every table and column, and verification maps between them explicitly.
+- **Data is never lowercased.** Only identifiers change. Comment text and ticket descriptions (case carries meaning in a grammatical sentence), role names (`Manager`), usernames and emails are all stored exactly as in the source, so the fidelity claim stays "every column identical except credentials, which are sanitized". A username lowercased in storage cannot be shown as the user typed it (the case is unrecoverable), so usernames are deliberately not lowercased for user-friendliness.
+- **Usernames are case-insensitive**, as they were in SQL Server (its default collation is case-insensitive; PostgreSQL's is case-sensitive). The rule goes in the index, not in the data (decision 2, §8.8): `CREATE UNIQUE INDEX ... ON users (lower(name)) WHERE deleted_at IS NULL`. "Bob" and "bob" cannot both be active, and the soft-delete reuse rule still holds. **Phase 2 requirement:** authentication must compare `lower(name) = lower(:input)` (lowering both the stored name and the user's input) so the query uses the index. `citext` and ICU nondeterministic collations were considered and set aside (extension dependency; `LIKE` limitations). A `CHECK (name = lower(name))` was considered and rejected because it would force lowercase storage.
+- **Email** is likewise treated as case-insensitive but stored as entered, compared by the application with `lower()`. The legacy schema has no email index, so there is no database rule now; if email uniqueness is added later it uses the same `lower()` index form. **URLs:** there is no URL column today; if one is introduced, only the scheme and host are case-insensitive (the path and query can be case-sensitive), so the rule would be "host lowercased, the rest as entered", decided when it appears.
+
+### 8.5 The metadata JSON and Linux-side verification
+
+`source-metadata.json` is written on Windows from the SQL Server catalog and the same in-memory rows the SQL is rendered from (after sanitizing), by a code path independent of the SQL rendering. It contains:
+
+- **Structure:** tables, columns (source type, target name and type, nullability, defaults), primary keys, foreign keys with delete actions, indexes including the soft-delete filter and the case-insensitive expression.
+- **Data facts:** row count per table and a SHA-256 per table over a canonical row form (defined independent of any database: rows sorted ascending by their own canonical text, so no primary-key or collation knowledge is needed; integers in decimal, booleans as 0/1, timestamps as `yyyy-MM-dd HH:mm:ss.fff`, strings as hex of their UTF-8 bytes, NULL distinct from the empty string). Sanitized rows only, so no credential is hashed.
+- **Business summaries:** the same counts checked in earlier iterations (users by type, tickets by state, audit events by action, and so on).
+- **Expectations:** credential columns NULL and `MustResetPassword` true for every user; the active-username rule holds.
+- **Provenance:** SHA-256 of `01-schema.sql` and `02-data-sanitized.sql`, source database name, tool version, and the run time (the only non-deterministic field, kept in its own section).
+
+The Linux ingest step (iteration 5: bash and Docker only; `psql` runs inside the container; a static `verify.sql` reads the JSON with `jsonb`, so the JSON needs no SQL text):
+
+1. Confirms the SQL files match the recorded SHA-256 values (transfer integrity).
+2. Starts the `postgres:16` container (`mar-postgres`; no published port; a generated password that is never stored) and loads `01-schema.sql` then `02-data-sanitized.sql` with `psql` inside it, stopping at the first error.
+3. Recomputes the per-table canonical hashes from the database it built, and compares row counts, schema (columns, types, keys, foreign keys, the partial index) and the business summaries against the JSON. A mismatch fails with the exact table and column.
+4. Runs the rule tests inside a transaction that is rolled back (no scratch copy needed): duplicate active username rejected, including differing only by case; soft-deleted username reusable; orphan foreign key rejected; the identity continues from the maximum.
+5. Checks the sanitization expectations.
+6. Writes `verification-results.json` and `MigrationVerificationReport5.html` (a self-contained HTML report generated on Linux).
+
+**What this verification is and isn't.** It verifies the loaded database against a manifest, not against the live source, because the Linux machine cannot reach SQL Server. It is still a real end-to-end check of the renderer and the load, since the manifest comes from an independent code path. It guards against mistakes, not tampering: anyone with write access could edit both the manifest and the SQL.
+
+### 8.6 What cannot be proven on Windows
+
+Windows can prove that the export is deterministic (two exports byte-identical), that the row counts in the generated SQL match the source, and that the credentials are sanitized. It cannot prove the SQL loads, because iteration 4 is export only and has no PostgreSQL. The load is proven in iteration 5, in a Docker container on the Linux machine; a rendering bug found there is fixed in iteration 4's `postgres.ps1` and the export is re-run (decision 10: no separate throwaway PostgreSQL is needed).
+
+### 8.7 Open items
+
+- **Decision 16 (settled 2026-09-23):** iteration 5 has a PostgreSQL database guide, in HTML: `docs/dbmigrate/iteration5/PostgreSQLDatabaseGuide.html` (psql from bash, application logins, network routes, and a tested Spring Boot 4.1.1 JPA/JDBC project with a first-login password change). All decisions are settled (§8.8).
+- Automating the hand-off copy from iteration 4 to iteration 5 is out of scope for now.
+- Both iterations are built and run (2026-09-23); `ITERATION4.md` and `ITERATION5.md` record what actually happened, with real numbers, including where the built tools differ from their plans.
+
+### 8.8 Summary of the effort and decision points
+
+**Effort so far (both iterations built and run on 2026-09-23; see `ITERATION4.md` and `ITERATION5.md`).** Iteration 4 started as "database-agnostic files loadable into SQLite, PostgreSQL or Oracle". Working through the actual schema showed that is not possible with SQL text (§7), so the goal became a PostgreSQL-specific export: a `postgres.ps1` dialect at the sanitize-first seam on Windows, three checked-in files (`01-schema.sql`, `02-data-sanitized.sql`, `source-metadata.json`), and (iteration 5) a Linux tool that loads the files into a PostgreSQL Docker container and verifies the database against the metadata JSON. The design was settled one decision at a time; every decision is settled below. Both tools were then built and run: the export on Windows (self-test 9 of 9), and the load and verification on Linux (80 of 80 checks, all 155 rows identical, self-test 7 of 7). Iteration 5 pinned the image to `postgres:16.1` (decision 15 said `postgres:16`); the other differences from the plan are listed in `ITERATION5.md` §7.
+
+**Settled decisions**
+
+| # | Decision | Answer | Reasoning |
+|---|---|---|---|
+| 1 | How to lowercase identifiers | **snake_case** (`created_at`, `user_id`) | Readable, PostgreSQL convention, matches Spring Boot's default naming. Needs a written, reviewable rename map; names differ from the legacy schema (a parity note, not a data change). |
+| 2 | Case-insensitive names | **Usernames stored as typed; a `lower()` partial unique index on `users.name` (where `deleted_at IS NULL`); authentication lowers both the stored name and the input.** Email stored as typed with no database rule. **No data is lowercased.** | Storing lowercase would lose the case the user typed and show it wrongly on the page. Free text such as comments keeps its case because case carries meaning. Cost: mixed-case names can be stored, and lookups must use `lower()`. |
+| 3 | `datetime` column type | **`TIMESTAMP` (without time zone)** | A faithful 1:1 mapping: SQL Server `datetime` has no time zone, so values are stored exactly as they are with no interpretation. `TIMESTAMPTZ` would need an assumed source zone. **Caveat to keep:** it is not known whether the legacy application stored UTC or local times (only `LockoutEndDateUtc` is UTC by name), so no conversion is made and a Phase 2 mapping must decide the zone. Literals are rendered with 3 fractional digits (the source has millisecond precision). |
+| 2b | `roles.name` unique index (iteration 4) | **Plain, case-sensitive unique index** (`ix_roles_name`) | Roles are created only programmatically, never typed by a user, so the database does not need to enforce case-insensitivity; keeping role names consistent is a convention for the technical team and Claude Code. |
+| 4 | Identity columns (iteration 4) | **`GENERATED BY DEFAULT AS IDENTITY`** | It accepts the explicit ids in the data; the data file ends with a `setval` per identity table so the next id continues from the maximum. `ALWAYS` would need `OVERRIDING SYSTEM VALUE` in every insert. |
+| 5 | Database and schema setup (iteration 5) | **The tool starts a PostgreSQL container that creates the database; the SQL files are environment-free; a small config file supplies names; default schema `public`; the password is generated and never stored; nothing is published to the host.** | Keeps environment details and secrets out of git. No superuser or extension is needed. |
+| 6 | PostgreSQL version (iteration 5) | **15 or later** (image `postgres:16`; the tool refuses an older server) | 14 reaches end of life in November 2026, and 15 gives clean ownership of the `public` schema. |
+| 7 | Linux tooling (iteration 5) | **bash and Docker only**; `psql` runs inside the container. No Python, no Java, no host PostgreSQL client. | Smallest prerequisite set; verification is SQL run through `psql`. |
+| 8 | Windows tooling (iteration 4) | **Own self-contained copy** of iteration 2's tooling plus a new `postgres.ps1` dialect | Per-iteration convention: reproducible without depending on other iterations. |
+| 9 | How verification reads the metadata (iteration 5) | **A static `verify.sql` reads `source-metadata.json` with `jsonb`; the JSON holds no SQL text** | One source of truth; nothing executable is read from a data file. |
+| 10 | Where the generated SQL is proven to load | **In the Docker container on the Linux machine, in iteration 5** | That container is the deliverable; no separate throwaway PostgreSQL. A rendering bug found there is fixed in iteration 4. |
+| 11 | Output file names (iteration 4) | **`01-schema.sql`, `02-data-sanitized.sql`, `source-metadata.json`** in `tools/dbmigrate/iteration4/` | Continuity with iteration 3's naming; the `-sanitized` name says the file is safe to commit. |
+| 12 | Data load statements (iteration 4) | **Multi-row `INSERT ... VALUES`** (100 rows per statement) in one transaction | Readable, and `COPY` is unnecessary at 155 rows. |
+| 13 | Verification report (iteration 5) | **`MigrationVerificationReport5.html`**, generated on Linux from `verification-results.json` with bash and standard text tools | The Word generator needs PowerShell and `System.Drawing`; HTML needs no conversion tool and rebuilds byte-identically. |
+| 14 | Metadata and export report (iteration 4) | **`source-metadata.json` is written at export; a Word export report `MigrationExportReport4.docx` is built from it on Windows** with the existing generator | The data about the source database is recorded at export, following the earlier reports' pattern. Iteration 4 verifies nothing against a target, so it produces an export report, not a verification report. |
+| 15 | Container details (iteration 5) | **`postgres:16`, container `mar-postgres`, database and user `masterantique`, generated password, no published port, database stored in the container's own storage (no named volume)** | The database lives only in the container; `docker rm -f -v` removes it, and `--recreate` does exactly that. |
+
+**Decision 16 (settled 2026-09-23): a PostgreSQL database guide, in HTML** (`docs/dbmigrate/iteration5/PostgreSQLDatabaseGuide.html`), tested against a copy of the database. Spring Boot 4.1.1 was confirmed with the user for its examples.
+
+## 9. Document map
 
 | Iteration | Plan | Record | Verification report | Database guide |
 |---|---|---|---|---|
 | 1 | `docs/dbmigrate/iteration1/ITERATION1_PLAN.md` | `ITERATION1.md` | `MigrationVerificationReport1.docx` | `SQLiteDatabaseGuide1.docx` |
 | 2 | `docs/dbmigrate/iteration2/ITERATION2_PLAN.md` | `ITERATION2.md` | `MigrationVerificationReport2.docx` | `SQLiteDatabaseGuide2.docx` |
 | 3 | `docs/dbmigrate/iteration3/ITERATION3_PLAN.md` | `ITERATION3.md` | `MigrationVerificationReport3.docx` | `SQLiteDatabaseGuide3.docx` |
+| 4 | `docs/dbmigrate/iteration4/ITERATION4_PLAN.md` | `ITERATION4.md` | `MigrationExportReport4.docx` (an export report; no verification) | — |
+| 5 | `docs/dbmigrate/iteration5/ITERATION5_PLAN.md` | `ITERATION5.md` | `MigrationVerificationReport5.html` | `PostgreSQLDatabaseGuide.html` |
 
-This document should be updated whenever a new iteration starts (add its row to §3 and §7) or whenever the security policy in §5 changes in a way that should apply retroactively to how future iterations are reviewed.
+This document should be updated whenever a new iteration starts (add its row to §3 and §9) or whenever the security policy in §5 changes in a way that should apply retroactively to how future iterations are reviewed.

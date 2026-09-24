@@ -1,0 +1,1300 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MasterAntiqueRepair PostgreSQL Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+:root {
+  --ground: #f3f5f7; --surface: #ffffff; --ink: #18212b; --muted: #56616e; --line: #d5dbe1;
+  --accent: #875a13; --accent-soft: #f6ecd9; --code-bg: #1c252f; --code-ink: #e3e8ee; --code-muted: #8d99a6;
+  --note-bg: #eaf1f7; --note-line: #9db7cf; --warn-bg: #fbf0e0; --warn-line: #d9a857;
+  --ok: #1f6b3a; --focus: #2f6fa8;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --cond: "IBM Plex Sans Condensed", "IBM Plex Sans", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --ground: #10151a; --surface: #171e25; --ink: #e3e8ed; --muted: #97a2ae; --line: #2b343e;
+    --accent: #dcaa55; --accent-soft: #2c2415; --code-bg: #0b1015; --code-ink: #dfe5eb; --code-muted: #7d8995;
+    --note-bg: #16222e; --note-line: #3c5a78; --warn-bg: #2a2116; --warn-line: #8a6a33; --ok: #8fd4a6; --focus: #7fb2e0;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ground: #10151a; --surface: #171e25; --ink: #e3e8ed; --muted: #97a2ae; --line: #2b343e;
+  --accent: #dcaa55; --accent-soft: #2c2415; --code-bg: #0b1015; --code-ink: #dfe5eb; --code-muted: #7d8995;
+  --note-bg: #16222e; --note-line: #3c5a78; --warn-bg: #2a2116; --warn-line: #8a6a33; --ok: #8fd4a6; --focus: #7fb2e0;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body { margin: 0; background: var(--ground); color: var(--ink); font: 16px/1.6 var(--sans); padding-inline: 16px; }
+.shell { max-width: 1180px; margin: 0 auto; padding-block: 28px 72px; display: grid; gap: 40px; grid-template-columns: 1fr; }
+@media (min-width: 1000px) { .shell { grid-template-columns: 230px minmax(0, 1fr); } }
+nav.toc { font-size: .9rem; }
+@media (min-width: 1000px) { nav.toc { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 20px); align-self: start; max-height: calc(100vh - 40px); overflow-y: auto; } }
+nav.toc p { font: 600 .74rem/1 var(--cond); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; }
+nav.toc ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+nav.toc a { display: block; padding: 5px 10px; border-radius: 6px; color: var(--ink); text-decoration: none; border-left: 2px solid transparent; }
+nav.toc a:hover { background: var(--surface); border-left-color: var(--accent); }
+nav.toc ol ol { margin: 2px 0 6px 12px; font-size: .84rem; }
+nav.toc ol ol a { color: var(--muted); padding-block: 3px; }
+main { min-width: 0; max-width: 820px; }
+@media (max-width: 999px) { nav.toc ol ol { display: none; } nav.toc > ol { display: flex; flex-wrap: wrap; gap: 6px; } nav.toc a { border: 1px solid var(--line); border-radius: 999px; padding: 4px 11px; background: var(--surface); } }
+header.hero { padding-bottom: 24px; border-bottom: 1px solid var(--line); margin-bottom: 8px; }
+.eyebrow { font: 600 .78rem/1.3 var(--cond); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); margin: 0 0 8px; }
+h1 { font: 600 clamp(1.9rem, 4.2vw, 2.6rem)/1.12 var(--cond); margin: 0 0 12px; text-wrap: balance; letter-spacing: -.01em; }
+h2 { font: 600 1.6rem/1.2 var(--cond); margin: 56px 0 12px; text-wrap: balance; scroll-margin-top: 16px; }
+h3 { font: 600 1.18rem/1.3 var(--cond); margin: 34px 0 8px; text-wrap: balance; scroll-margin-top: 16px; }
+h4 { font: 600 1rem/1.35 var(--sans); margin: 22px 0 6px; }
+p, li { max-width: 68ch; }
+.lede { font-size: 1.08rem; color: var(--muted); margin: 0; }
+a { color: var(--accent); text-underline-offset: 2px; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
+code { font: .88em var(--mono); background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; margin: 22px 0 8px; }
+.facts div { background: var(--surface); padding: 12px 14px; }
+.facts dt { font: 600 .72rem/1.2 var(--cond); letter-spacing: .07em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+.facts dd { margin: 0; font: 500 .95rem/1.4 var(--mono); overflow-wrap: anywhere; }
+.callout { border-left: 3px solid var(--note-line); background: var(--note-bg); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 18px 0; }
+.callout.warn { border-left-color: var(--warn-line); background: var(--warn-bg); }
+.callout > :first-child { margin-top: 0; } .callout > :last-child { margin-bottom: 0; }
+.callout strong:first-child { font-family: var(--cond); letter-spacing: .02em; }
+.code { margin: 12px 0 18px; border-radius: 10px; background: var(--code-bg); overflow: hidden; border: 1px solid var(--line); }
+.code-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 7px 8px 7px 14px; border-bottom: 1px solid rgba(255,255,255,.08); font: 500 .78rem/1.3 var(--mono); color: var(--code-muted); }
+.code-head span { overflow-wrap: anywhere; }
+.code-head button { font: 500 .76rem/1 var(--sans); color: var(--code-ink); background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14); border-radius: 6px; padding: 6px 10px; cursor: pointer; flex: none; }
+.code-head button:hover { background: rgba(255,255,255,.16); }
+.code pre { margin: 0; padding: 14px 16px; overflow-x: auto; color: var(--code-ink); font: .84rem/1.55 var(--mono); tab-size: 4; }
+.code pre code { background: none; padding: 0; font: inherit; overflow-wrap: normal; }
+.code.out { background: var(--surface); }
+.code.out .code-head { color: var(--muted); border-bottom-color: var(--line); }
+.code.out pre { color: var(--ink); }
+.table-wrap { overflow-x: auto; margin: 12px 0 18px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+th, td { text-align: left; vertical-align: top; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+thead th { font: 600 .76rem/1.3 var(--cond); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+tbody tr:last-child td { border-bottom: 0; }
+td code, th code { white-space: nowrap; }
+.tabs { margin: 12px 0 18px; }
+.tablist { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: -1px; }
+.tablist button { font: 500 .88rem/1 var(--sans); padding: 9px 14px; border: 1px solid var(--line); border-bottom: 0; border-radius: 8px 8px 0 0; background: var(--ground); color: var(--muted); cursor: pointer; }
+.tablist button[aria-selected="true"] { background: var(--surface); color: var(--ink); border-color: var(--line); box-shadow: inset 0 2px 0 var(--accent); }
+.tabpanel { border: 1px solid var(--line); border-radius: 0 10px 10px 10px; background: var(--surface); padding: 4px 14px 2px; }
+.routes { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 16px 0; }
+.route { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; display: grid; gap: 6px; align-content: start; }
+.route .tag { font: 600 .72rem/1 var(--cond); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+.route h4 { margin: 0; font-family: var(--cond); font-size: 1.05rem; }
+.route p { margin: 0; font-size: .9rem; color: var(--muted); }
+.route .url { font: .8rem/1.4 var(--mono); color: var(--ink); overflow-wrap: anywhere; }
+ol.steps { padding-left: 1.3em; } ol.steps li { margin: 6px 0; }
+.flow { list-style: none; padding: 0; margin: 16px 0; display: grid; gap: 0; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface); }
+.flow li { display: grid; grid-template-columns: 2.2em 1fr; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--line); max-width: none; }
+.flow li:last-child { border-bottom: 0; }
+.flow .n { font: 600 1rem/1.5 var(--cond); color: var(--accent); }
+.flow b { font-family: var(--cond); font-weight: 600; }
+.flow .state { font: 500 .78rem/1 var(--mono); padding: 3px 7px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); white-space: nowrap; }
+footer { margin-top: 64px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: .88rem; }
+.tree { font: .84rem/1.6 var(--mono); }
+</style>
+
+<div class="shell">
+<nav class="toc" aria-label="Contents">
+  <p>Contents</p>
+  <ol>
+    <li><a href="#glance">At a glance</a></li>
+    <li><a href="#bash">Connect from a terminal</a></li>
+    <li><a href="#logins">Create application logins</a></li>
+    <li><a href="#routes">Choose a network route</a></li>
+    <li><a href="#jdbc">Test with plain JDBC</a></li>
+    <li><a href="#spring">Spring Boot project</a>
+      <ol>
+        <li><a href="#build">Gradle and Maven</a></li>
+        <li><a href="#props">application.properties</a></li>
+        <li><a href="#entities">Entities</a></li>
+        <li><a href="#repos">Repositories</a></li>
+        <li><a href="#check">Connection check</a></li>
+        <li><a href="#run">Build and run</a></li>
+      </ol>
+    </li>
+    <li><a href="#firstlogin">First login: change password</a></li>
+    <li><a href="#trouble">Troubleshooting</a></li>
+    <li><a href="#reference">Reference</a></li>
+  </ol>
+</nav>
+
+<main>
+<header class="hero">
+  <p class="eyebrow">MasterAntiqueRepair &middot; database migration &middot; iteration 5</p>
+  <h1>Connecting to the MasterAntiqueRepair PostgreSQL database</h1>
+  <p class="lede">The migrated database runs in a Docker container on the Linux machine. This guide takes you from a first query in the terminal to a Spring Boot 4.1.1 application that reads it with JDBC and JPA, including the password change every migrated user is forced to make on first login. Every command and file here was run against a copy of this database before it was written down.</p>
+</header>
+
+<section aria-labelledby="glance">
+<h2 id="glance">At a glance</h2>
+<dl class="facts">
+  <div><dt>Container</dt><dd>mar-postgres</dd></div>
+  <div><dt>Image</dt><dd>postgres:16.1</dd></div>
+  <div><dt>Database</dt><dd>masterantique</dd></div>
+  <div><dt>Owner login</dt><dd>masterantique</dd></div>
+  <div><dt>Schema</dt><dd>public</dd></div>
+  <div><dt>Data</dt><dd>8 tables, 155 rows</dd></div>
+</dl>
+<p>The tables hold 12 users (1 manager, 3 employees, 8 customers), 24 repair tickets (8 each <code>SUBMITTED</code>, <code>INPROGRESS</code>, <code>COMPLETED</code>), 26 comments, 78 audit log rows and 12 user-role links. Names are lowercase snake_case (<code>created_at</code>, <code>user_id</code>), so nothing ever needs quoting.</p>
+
+<div class="callout warn">
+  <p><strong>Two things are locked down on purpose.</strong> The container publishes <em>no network port</em>, and the owner login's password was generated when the container was created and then thrown away. Inside the container none of that matters: <code>docker exec ... psql</code> connects over a local socket without a password, so section 2 works right away. An application outside the container needs two extra things, both set up in minutes: its own login with a password you choose (section 3) and a network route to the database (section 4).</p>
+</div>
+<div class="callout">
+  <p><strong>Every migrated user must change their password.</strong> The migration removed all passwords: <code>password_hash</code> and <code>security_stamp</code> are NULL and <code>must_reset_password</code> is true for all 12 users. Section 7 shows a working sign-in that sends them to a password change first.</p>
+</div>
+</section>
+
+<section aria-labelledby="bash">
+<h2 id="bash">Connect from a terminal</h2>
+<p>No setup, no password. Open an interactive <code>psql</code> session inside the container:</p>
+<div class="code"><div class="code-head"><span>bash</span><button type="button">Copy</button></div><pre><code>docker exec -it mar-postgres psql -U masterantique -d masterantique</code></pre></div>
+<p>You get the <code>masterantique=#</code> prompt. Type <code>\q</code> to leave. Useful commands at that prompt:</p>
+<div class="table-wrap"><table>
+<thead><tr><th scope="col">Command</th><th scope="col">What it does</th></tr></thead>
+<tbody>
+<tr><td><code>\dt</code></td><td>List the tables</td></tr>
+<tr><td><code>\d users</code></td><td>Columns, types, keys and indexes of one table</td></tr>
+<tr><td><code>\di</code></td><td>List the indexes</td></tr>
+<tr><td><code>\du</code></td><td>List the logins (roles)</td></tr>
+<tr><td><code>\x</code></td><td>Toggle one-column-per-line output, handy for wide rows</td></tr>
+<tr><td><code>\timing</code></td><td>Show how long each query takes</td></tr>
+<tr><td><code>\?</code> / <code>\h SELECT</code></td><td>Help on psql commands / on an SQL statement</td></tr>
+</tbody></table></div>
+
+<h3>One-off queries and scripts</h3>
+<p>Run one statement and get plain output (<code>-A</code> unaligned, <code>-t</code> no headers), for use in shell scripts:</p>
+<div class="code"><div class="code-head"><span>bash</span><button type="button">Copy</button></div><pre><code>docker exec mar-postgres psql -U masterantique -d masterantique -Atc &quot;select count(*) from tickets&quot;</code></pre></div>
+<div class="code out"><div class="code-head"><span>Output</span></div><pre><code>24</code></pre></div>
+<p>Run a whole SQL file from your machine by piping it in (<code>-i</code> keeps standard input open):</p>
+<div class="code"><div class="code-head"><span>bash</span><button type="button">Copy</button></div><pre><code>docker exec -i mar-postgres psql -X -U masterantique -d masterantique &lt; queries.sql</code></pre></div>
+
+<h3>Sample queries</h3>
+<p>Save these as <code>queries.sql</code> and run them as above, or paste them at the prompt.</p>
+<div class="code"><div class="code-head"><span>queries.sql</span><button type="button">Copy</button></div><pre><code>-- Users by type (customers, employees, managers share one table)
+SELECT discriminator, count(*) FROM users GROUP BY discriminator ORDER BY discriminator;
+
+-- Tickets by workflow state (0 SUBMITTED, 1 INPROGRESS, 2 COMPLETED)
+SELECT state,
+       CASE state WHEN 0 THEN &#x27;SUBMITTED&#x27; WHEN 1 THEN &#x27;INPROGRESS&#x27; WHEN 2 THEN &#x27;COMPLETED&#x27; END AS workflow_state,
+       count(*)
+FROM tickets GROUP BY state ORDER BY state;
+
+-- Open tickets with customer and assigned employee
+SELECT t.id, c.name AS customer, e.name AS employee, left(t.description, 50) AS description
+FROM tickets t
+JOIN users c ON c.id = t.customer_id
+LEFT JOIN users e ON e.id = t.user_id
+WHERE t.state &lt;&gt; 2
+ORDER BY t.id
+LIMIT 5;
+
+-- Comments on one ticket, oldest first
+SELECT cm.created_at, u.name, cm.text
+FROM comments cm JOIN users u ON u.id = cm.user_id
+WHERE cm.ticket_id = 1
+ORDER BY cm.created_at;
+
+-- Latest audit events
+SELECT a.timestamp, u.name, a.action, a.entity_type, a.entity_id
+FROM audit_logs a JOIN users u ON u.id = a.user_id
+ORDER BY a.timestamp DESC
+LIMIT 5;
+
+-- Case-insensitive username lookup, the way sign-in must do it (uses ix_users_name_active)
+SELECT id, name, discriminator, must_reset_password
+FROM users WHERE lower(name) = lower(&#x27;MANAGER&#x27;) AND deleted_at IS NULL;</code></pre></div>
+<p>Part of the output:</p>
+<div class="code out"><div class="code-head"><span>Output</span></div><pre><code> state | workflow_state | count
+-------+----------------+-------
+     0 | SUBMITTED      |     8
+     1 | INPROGRESS     |     8
+     2 | COMPLETED      |     8
+(3 rows)
+
+ id |  name   | discriminator | must_reset_password
+----+---------+---------------+---------------------
+  1 | manager | Manager       | t
+(1 row)</code></pre></div>
+
+<h3>Export to CSV</h3>
+<div class="code"><div class="code-head"><span>bash</span><button type="button">Copy</button></div><pre><code>docker exec mar-postgres psql -X -q -U masterantique -d masterantique \
+  -c &quot;\copy (SELECT id, state, customer_id, user_id, submitted_date FROM tickets ORDER BY id) TO STDOUT WITH (FORMAT csv, HEADER)&quot; \
+  &gt; tickets.csv</code></pre></div>
+<div class="code out"><div class="code-head"><span>Output</span></div><pre><code>id,state,customer_id,user_id,submitted_date
+1,2,5,2,2026-09-11 05:57:49
+2,1,5,2,2026-09-11 03:17:37</code></pre></div>
+
+<h3>Experiment safely</h3>
+<p>Wrap changes in a transaction and roll them back; nothing is saved.</p>
+<div class="code"><div class="code-head"><span>sql</span><button type="button">Copy</button></div><pre><code>BEGIN;
+UPDATE tickets SET state = 2 WHERE id = 3;
+SELECT id, state FROM tickets WHERE id = 3;   -- shows 2
+ROLLBACK;
+SELECT id, state FROM tickets WHERE id = 3;   -- back to 0</code></pre></div>
+
+<h3>Start, stop, rebuild</h3>
+<div class="table-wrap"><table>
+<thead><tr><th scope="col">Command</th><th scope="col">Effect</th></tr></thead>
+<tbody>
+<tr><td><code>docker stop mar-postgres</code><br><code>docker start mar-postgres</code></td><td>Stops and restarts the database. The data and any logins you created are kept.</td></tr>
+<tr><td><code>docker logs --tail 50 mar-postgres</code></td><td>The server's recent log.</td></tr>
+<tr><td><code>tools/dbmigrate/iteration5/ingest.sh verify</code></td><td>Re-checks the database against the migration record (80 checks). Logins you add do not affect it.</td></tr>
+<tr><td><code>tools/dbmigrate/iteration5/ingest.sh load --recreate</code></td><td>Deletes the container and rebuilds it from the migration files. Your logins and network links are gone afterwards: repeat sections 3 and 4.</td></tr>
+<tr><td><code>docker rm -f -v mar-postgres</code></td><td>Deletes the container and its data for good.</td></tr>
+</tbody></table></div>
+</section>
+
+<section aria-labelledby="logins">
+<h2 id="logins">Create application logins</h2>
+<p>An application should never use the owner login. Create two logins once: <code>mar_app</code> (read and write, for the application) and <code>mar_readonly</code> (read only, for reports and database tools). You choose both passwords; they travel into the container as environment variables, so they never appear in a file, in your shell history or in the process list.</p>
+<p>Save this as <code>mar-roles.sql</code>:</p>
+<div class="code"><div class="code-head"><span>mar-roles.sql</span><button type="button">Copy</button></div><pre><code>-- mar-roles.sql: application logins for the MasterAntiqueRepair database. Run once, as the database owner.
+-- The passwords are read from the environment variables APP_PW and RO_PW, never written in this file.
+\set ON_ERROR_STOP on
+\getenv app_pw APP_PW
+\getenv ro_pw RO_PW
+
+-- Read/write login for the application.
+CREATE ROLE mar_app LOGIN PASSWORD :&#x27;app_pw&#x27;;
+GRANT CONNECT ON DATABASE masterantique TO mar_app;
+GRANT USAGE ON SCHEMA public TO mar_app;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO mar_app;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO mar_app;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO mar_app;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO mar_app;
+
+-- Read-only login for reports and ad-hoc tools.
+CREATE ROLE mar_readonly LOGIN PASSWORD :&#x27;ro_pw&#x27;;
+GRANT CONNECT ON DATABASE masterantique TO mar_readonly;
+GRANT USAGE ON SCHEMA public TO mar_readonly;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO mar_readonly;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO mar_readonly;</code></pre></div>
+<p>Then run it, typing each password when asked (nothing is echoed):</p>
+<div class="code"><div class="code-head"><span>bash</span><button type="button">Copy</button></div><pre><code>read -rsp &#x27;New password for mar_app: &#x27; APP_PW; echo
+read -rsp &#x27;New password for mar_readonly: &#x27; RO_PW; echo
+export APP_PW RO_PW
+docker exec -i -e APP_PW -e RO_PW mar-postgres \
+  psql -X -q -U masterantique -d masterantique &lt; mar-roles.sql
+unset APP_PW RO_PW</code></pre></div>
+<p>Check it: <code>docker exec mar-postgres psql -U masterantique -d masterantique -c '\du'</code> lists both logins. Keep the <code>mar_app</code> password somewhere safe (a password manager, or your platform's secret store); the application reads it from the <code>MAR_DB_PASSWORD</code> environment variable.</p>
+
+<h3>Change or remove a login</h3>
+<div class="code"><div class="code-head"><span>bash</span><button type="button">Copy</button></div><pre><code>read -rsp &#x27;New password for mar_app: &#x27; NEW_PW; echo; export NEW_PW
+docker exec -i -e NEW_PW mar-postgres psql -X -q -U masterantique -d masterantique &lt;&lt;&#x27;SQL&#x27;
+\getenv new_pw NEW_PW
+ALTER ROLE mar_app PASSWORD :&#x27;new_pw&#x27;;
+SQL
+unset NEW_PW
+
+# remove a login and everything granted to it
+docker exec mar-postgres psql -U masterantique -d masterantique \
+  -c &#x27;DROP OWNED BY mar_readonly; DROP ROLE mar_readonly;&#x27;</code></pre></div>
+<div class="callout"><p>The logins live with the database: they survive <code>docker stop</code>/<code>start</code>, and are lost only when the container is rebuilt with <code>--recreate</code>. Running <code>mar-roles.sql</code> a second time stops with <code>ERROR: role "mar_app" already exists</code>; use <code>ALTER ROLE</code> above to change a password instead.</p></div>
+</section>
+
+<section aria-labelledby="routes">
+<h2 id="routes">Choose a network route</h2>
+<p>The database container has no published port, so pick one of three ways to reach PostgreSQL's port 5432. All three were tested; none of them changes the database container itself.</p>
+<div class="routes">
+  <div class="route"><span class="tag">Route A</span><h4>Container address</h4><p>Quickest. Linux with Docker Engine only (not Docker Desktop). The address can change after a restart.</p><span class="url">jdbc:postgresql://172.17.0.x:5432/masterantique</span></div>
+  <div class="route"><span class="tag">Route B</span><h4>App in a container</h4><p>For an application that runs in Docker. Stable: reach the database by its container name.</p><span class="url">jdbc:postgresql://mar-postgres:5432/masterantique</span></div>
+  <div class="route"><span class="tag">Route C</span><h4>localhost port</h4><p>For an IDE or an app on your machine. A small proxy container listens on 127.0.0.1 only. Works on Docker Desktop too. The defaults in this guide assume it.</p><span class="url">jdbc:postgresql://localhost:5433/masterantique</span></div>
+</div>
+
+<h3>Route A: the container's address</h3>
+<div class="code"><div class="code-head"><span>bash</span><button type="button">Copy</button></div><pre><code>docker inspect -f &#x27;{{index .NetworkSettings.Networks &quot;bridge&quot; &quot;IPAddress&quot;}}&#x27; mar-postgres</code></pre></div>
+<p>That prints something like <code>172.17.0.5</code>; connect to it on port 5432. Use this exact form of the command: once the container joins a second network (route B or C), the shorter <code>{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}</code> prints two addresses run together.</p>
+
+<h3>Route B: an application container on a shared network</h3>
+<div class="code"><div class="code-head"><span>bash</span><button type="button">Copy</button></div><pre><code>docker network create mar-net
+docker network connect mar-net mar-postgres
+
+# run the Spring Boot jar from section 6 in a container on that network
+docker run --rm --network mar-net \
+  -v &quot;$PWD/build/libs:/app:ro&quot; \
+  -e MAR_DB_HOST=mar-postgres -e MAR_DB_PORT=5432 -e MAR_DB_PASSWORD \
+  eclipse-temurin:21-jre java -jar /app/mar-db-client-0.0.1-SNAPSHOT.jar</code></pre></div>
+<p><code>-e MAR_DB_PASSWORD</code> without a value passes on the variable already set in your shell, so the password is not written on the command line.</p>
+
+<h3>Route C: a localhost-only port through a proxy</h3>
+<p>Needs the <code>mar-net</code> network from route B (the first two lines). Then start a tiny <code>socat</code> proxy that publishes port 5433 on <code>127.0.0.1</code> only, so nothing on your network can reach it:</p>
+<div class="code"><div class="code-head"><span>bash</span><button type="button">Copy</button></div><pre><code>docker network create mar-net                  # skip if it exists
+docker network connect mar-net mar-postgres    # skip if already connected
+
+docker run -d --name mar-postgres-proxy --network mar-net \
+  -p 127.0.0.1:5433:5432 \
+  alpine/socat tcp-listen:5432,fork,reuseaddr tcp-connect:mar-postgres:5432
+
+docker port mar-postgres-proxy      # 5432/tcp -&gt; 127.0.0.1:5433</code></pre></div>
+<p>If port 5433 is taken on your machine, use another (for example <code>127.0.0.1:5434:5432</code>) and set <code>MAR_DB_PORT</code> to match. To take it all down again:</p>
+<div class="code"><div class="code-head"><span>bash</span><button type="button">Copy</button></div><pre><code>docker rm -f mar-postgres-proxy
+docker network disconnect mar-net mar-postgres
+docker network rm mar-net</code></pre></div>
+<div class="callout"><p><strong>Why not publish a port on the database container?</strong> Docker cannot add a port to an existing container, and the migration tool creates it without one on purpose, so the database is never reachable from the network by accident. The proxy gives you a local port you can remove at any time without touching the data.</p></div>
+</section>
+
+<section aria-labelledby="jdbc">
+<h2 id="jdbc">Test with plain JDBC</h2>
+<p>Before bringing in Spring, prove the login and the route with one Java file and the PostgreSQL driver. Java 11 and later run a single source file directly.</p>
+<div class="code"><div class="code-head"><span>JdbcSmokeTest.java</span><button type="button">Copy</button></div><pre><code>import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.util.Properties;
+
+/**
+ * The smallest possible connection test: plain JDBC, no Spring. Run it straight from source (Java 11+):
+ *   MAR_DB_PASSWORD=... java -cp postgresql-42.7.13.jar JdbcSmokeTest.java
+ */
+public class JdbcSmokeTest {
+
+    public static void main(String[] args) throws Exception {
+        String host = env(&quot;MAR_DB_HOST&quot;, &quot;localhost&quot;);
+        String port = env(&quot;MAR_DB_PORT&quot;, &quot;5433&quot;);
+        String url = &quot;jdbc:postgresql://&quot; + host + &quot;:&quot; + port + &quot;/&quot; + env(&quot;MAR_DB_NAME&quot;, &quot;masterantique&quot;);
+
+        Properties props = new Properties();
+        props.setProperty(&quot;user&quot;, env(&quot;MAR_DB_USER&quot;, &quot;mar_app&quot;));
+        props.setProperty(&quot;password&quot;, System.getenv(&quot;MAR_DB_PASSWORD&quot;));   // required; never hard-code it
+        props.setProperty(&quot;connectTimeout&quot;, &quot;10&quot;);                          // seconds
+
+        try (Connection conn = DriverManager.getConnection(url, props);
+             Statement st = conn.createStatement();
+             ResultSet rs = st.executeQuery(
+                     &quot;select version(), (select count(*) from users), (select count(*) from tickets)&quot;)) {
+            rs.next();
+            System.out.println(&quot;Connected to &quot; + url);
+            System.out.println(rs.getString(1));
+            System.out.println(&quot;users=&quot; + rs.getLong(2) + &quot; tickets=&quot; + rs.getLong(3));
+        }
+    }
+
+    private static String env(String name, String fallback) {
+        String v = System.getenv(name);
+        return v == null || v.isBlank() ? fallback : v;
+    }
+}</code></pre></div>
+<div class="code"><div class="code-head"><span>bash</span><button type="button">Copy</button></div><pre><code>curl -fsSLO https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.11/postgresql-42.7.11.jar
+read -rsp &#x27;mar_app password: &#x27; MAR_DB_PASSWORD; echo; export MAR_DB_PASSWORD
+java -cp postgresql-42.7.11.jar JdbcSmokeTest.java</code></pre></div>
+<div class="code out"><div class="code-head"><span>Output</span></div><pre><code>Connected to jdbc:postgresql://localhost:5433/masterantique
+PostgreSQL 16.1 (Debian 16.1-1.pgdg120+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit
+users=12 tickets=24</code></pre></div>
+<p>For route A, add <code>MAR_DB_HOST=172.17.0.x MAR_DB_PORT=5432</code> in front of the <code>java</code> command.</p>
+</section>
+
+<section aria-labelledby="spring">
+<h2 id="spring">Spring Boot project</h2>
+<p>A small, complete Spring Boot 4.1.1 application (Java 21) that connects with JDBC and JPA, maps the migrated tables, checks the mapping against the live schema at start-up, and demonstrates the first-login password change. The same source builds with Gradle or Maven.</p>
+<div class="code out"><div class="code-head"><span>Project layout</span></div><pre class="tree"><code>mar-db-client/
+├── build.gradle            (or build.gradle.kts, or pom.xml)
+├── settings.gradle
+├── JdbcSmokeTest.java      (section 5, not part of the build)
+└── src/main/
+    ├── resources/application.properties
+    └── java/com/masterantique/dbclient/
+        ├── MarDbClientApplication.java
+        ├── ConnectionCheck.java
+        ├── model/   AppUser, Ticket, TicketState, Comment, AuditLog
+        ├── repo/    AppUserRepository, TicketRepository, CommentRepository, AuditLogRepository
+        └── login/   LoginResult, LoginService, IdentityCheck, DemoIdentityCheck, FirstLoginDemo</code></pre></div>
+
+<h3 id="build">Gradle and Maven</h3>
+<p>Pick one build tool. All three versions below were built and run. The Spring Boot parent (Maven) or plugin (Gradle) manages every library version: with Boot 4.1.1 that is Hibernate 7.4.5, HikariCP 7.0.2, Spring Data JPA 4.1.1 and the PostgreSQL driver 42.7.11.</p>
+<div class="tabs" data-tabs>
+  <div class="tablist" role="tablist" aria-label="Build file">
+    <button role="tab" id="tab-groovy" aria-controls="panel-groovy" aria-selected="true">Gradle (Groovy)</button>
+    <button role="tab" id="tab-kotlin" aria-controls="panel-kotlin" aria-selected="false" tabindex="-1">Gradle (Kotlin)</button>
+    <button role="tab" id="tab-maven" aria-controls="panel-maven" aria-selected="false" tabindex="-1">Maven</button>
+  </div>
+  <div class="tabpanel" role="tabpanel" id="panel-groovy" aria-labelledby="tab-groovy">
+    <div class="code"><div class="code-head"><span>settings.gradle</span><button type="button">Copy</button></div><pre><code>rootProject.name = &#x27;mar-db-client&#x27;</code></pre></div>
+    <div class="code"><div class="code-head"><span>build.gradle</span><button type="button">Copy</button></div><pre><code>plugins {
+    id &#x27;java&#x27;
+    id &#x27;org.springframework.boot&#x27; version &#x27;4.1.1&#x27;
+    id &#x27;io.spring.dependency-management&#x27; version &#x27;1.1.7&#x27;
+}
+
+group = &#x27;com.masterantique&#x27;
+version = &#x27;0.0.1-SNAPSHOT&#x27;
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // JPA (Hibernate) + JDBC + HikariCP connection pool
+    implementation &#x27;org.springframework.boot:spring-boot-starter-data-jpa&#x27;
+    // Password hashing for the first-login password change (no web security needed)
+    implementation &#x27;org.springframework.security:spring-security-crypto&#x27;
+    // PostgreSQL JDBC driver; the version comes from the Spring Boot BOM
+    runtimeOnly &#x27;org.postgresql:postgresql&#x27;
+}</code></pre></div>
+    <p>Gradle 8.14 or later is needed (tested with 9.4.1). Create the wrapper once with <code>gradle wrapper</code>, then use <code>./gradlew</code>.</p>
+  </div>
+  <div class="tabpanel" role="tabpanel" id="panel-kotlin" aria-labelledby="tab-kotlin" hidden>
+    <div class="code"><div class="code-head"><span>settings.gradle.kts</span><button type="button">Copy</button></div><pre><code>rootProject.name = &quot;mar-db-client&quot;</code></pre></div>
+    <div class="code"><div class="code-head"><span>build.gradle.kts</span><button type="button">Copy</button></div><pre><code>plugins {
+    java
+    id(&quot;org.springframework.boot&quot;) version &quot;4.1.1&quot;
+    id(&quot;io.spring.dependency-management&quot;) version &quot;1.1.7&quot;
+}
+
+group = &quot;com.masterantique&quot;
+version = &quot;0.0.1-SNAPSHOT&quot;
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation(&quot;org.springframework.boot:spring-boot-starter-data-jpa&quot;)
+    implementation(&quot;org.springframework.security:spring-security-crypto&quot;)
+    runtimeOnly(&quot;org.postgresql:postgresql&quot;)
+}</code></pre></div>
+    <p>Gradle 8.14 or later is needed (tested with 9.4.1). Create the wrapper once with <code>gradle wrapper</code>, then use <code>./gradlew</code>.</p>
+  </div>
+  <div class="tabpanel" role="tabpanel" id="panel-maven" aria-labelledby="tab-maven" hidden>
+    <div class="code"><div class="code-head"><span>pom.xml</span><button type="button">Copy</button></div><pre><code>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot;
+         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+         xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+
+    &lt;parent&gt;
+        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+        &lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt;
+        &lt;version&gt;4.1.1&lt;/version&gt;
+        &lt;relativePath/&gt;
+    &lt;/parent&gt;
+
+    &lt;groupId&gt;com.masterantique&lt;/groupId&gt;
+    &lt;artifactId&gt;mar-db-client&lt;/artifactId&gt;
+    &lt;version&gt;0.0.1-SNAPSHOT&lt;/version&gt;
+
+    &lt;properties&gt;
+        &lt;java.version&gt;21&lt;/java.version&gt;
+    &lt;/properties&gt;
+
+    &lt;dependencies&gt;
+        &lt;!-- JPA (Hibernate) + JDBC + HikariCP connection pool --&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-data-jpa&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+        &lt;!-- Password hashing for the first-login password change (no web security needed) --&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.security&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-security-crypto&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+        &lt;!-- PostgreSQL JDBC driver; the version comes from the Spring Boot BOM --&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.postgresql&lt;/groupId&gt;
+            &lt;artifactId&gt;postgresql&lt;/artifactId&gt;
+            &lt;scope&gt;runtime&lt;/scope&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+
+    &lt;build&gt;
+        &lt;plugins&gt;
+            &lt;plugin&gt;
+                &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+                &lt;artifactId&gt;spring-boot-maven-plugin&lt;/artifactId&gt;
+            &lt;/plugin&gt;
+        &lt;/plugins&gt;
+    &lt;/build&gt;
+&lt;/project&gt;</code></pre></div>
+    <p>Maven 3.6.3 or later (tested with 3.9.11).</p>
+  </div>
+</div>
+<p>What each dependency brings: <code>spring-boot-starter-data-jpa</code> is Hibernate, Spring Data JPA, JDBC (<code>JdbcTemplate</code>) and the HikariCP pool; <code>postgresql</code> is the JDBC driver (runtime only); <code>spring-security-crypto</code> is just the password hashing used in section 7, without the rest of Spring Security.</p>
+
+<h3 id="props">application.properties</h3>
+<div class="code"><div class="code-head"><span>src/main/resources/application.properties</span><button type="button">Copy</button></div><pre><code>spring.application.name=mar-db-client
+# A command-line client: no web server, quiet start-up.
+spring.main.web-application-type=none
+spring.main.banner-mode=off
+spring.main.log-startup-info=false
+
+# --- Connection. Host/port depend on the network route you chose (guide section 4):
+#   C (localhost proxy)  MAR_DB_HOST=localhost     MAR_DB_PORT=5433   (defaults below)
+#   A (container IP)     MAR_DB_HOST=172.17.0.x    MAR_DB_PORT=5432
+#   B (app in Docker)    MAR_DB_HOST=mar-postgres  MAR_DB_PORT=5432
+# The password is never written here: it must come from the MAR_DB_PASSWORD environment variable.
+spring.datasource.url=jdbc:postgresql://${MAR_DB_HOST:localhost}:${MAR_DB_PORT:5433}/${MAR_DB_NAME:masterantique}
+spring.datasource.username=${MAR_DB_USER:mar_app}
+spring.datasource.password=${MAR_DB_PASSWORD}
+
+# --- Connection pool (HikariCP)
+spring.datasource.hikari.pool-name=mar-pool
+spring.datasource.hikari.maximum-pool-size=5
+spring.datasource.hikari.connection-timeout=10000
+
+# --- JPA / Hibernate. The schema already exists (it was migrated): check it, never create or change it.
+spring.jpa.hibernate.ddl-auto=validate
+spring.jpa.open-in-view=false
+spring.sql.init.mode=never
+# Uncomment to see the SQL Hibernate sends:
+#logging.level.org.hibernate.SQL=debug
+
+logging.level.root=warn
+logging.level.com.masterantique=info</code></pre></div>
+<div class="table-wrap"><table>
+<thead><tr><th scope="col">Environment variable</th><th scope="col">Default</th><th scope="col">Set it to</th></tr></thead>
+<tbody>
+<tr><td><code>MAR_DB_PASSWORD</code></td><td>(none)</td><td>The <code>mar_app</code> password. Required.</td></tr>
+<tr><td><code>MAR_DB_HOST</code></td><td><code>localhost</code></td><td>Route A: the container address. Route B: <code>mar-postgres</code>. Route C: leave it.</td></tr>
+<tr><td><code>MAR_DB_PORT</code></td><td><code>5433</code></td><td>Routes A and B: <code>5432</code>. Route C: the proxy port.</td></tr>
+<tr><td><code>MAR_DB_USER</code></td><td><code>mar_app</code></td><td><code>mar_readonly</code> for a read-only tool.</td></tr>
+<tr><td><code>MAR_DB_NAME</code></td><td><code>masterantique</code></td><td>Leave it.</td></tr>
+</tbody></table></div>
+<div class="callout warn"><p><strong>Keep <code>ddl-auto=validate</code>.</strong> The schema was migrated and verified; Hibernate must only check it. <code>update</code> or <code>create</code> would change or drop the migrated tables. If validation fails, fix the entity, never the setting.</p></div>
+
+<h3 id="entities">Entities</h3>
+<p>One entity per table you use. Every column is named explicitly so the mapping reads like the schema. Points that matter for this database: ids are <code>GenerationType.IDENTITY</code> (the tables use <code>GENERATED BY DEFAULT AS IDENTITY</code>, and the sequences already continue after the migrated ids); <code>TIMESTAMP</code> columns are <code>LocalDateTime</code> (no time zone, stored exactly as the legacy system had them); <code>tickets.state</code> is the enum's position 0, 1, 2. <code>columnDefinition = "text"</code> is optional (validation passed without it) and only documents the column type.</p>
+<div class="code"><div class="code-head"><span>model/AppUser.java</span><button type="button">Copy</button></div><pre><code>package com.masterantique.dbclient.model;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import java.time.LocalDateTime;
+
+/**
+ * One row of {@code users}. The legacy table holds customers, employees and managers together (the
+ * {@code discriminator} column says which); here it is a plain column, so one entity reads all of them.
+ * Named AppUser because &quot;User&quot; clashes with many framework classes.
+ */
+@Entity
+@Table(name = &quot;users&quot;)
+public class AppUser {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)   // GENERATED BY DEFAULT AS IDENTITY
+    private Integer id;
+
+    @Column(name = &quot;name&quot;, nullable = false, length = 256)
+    private String name;                                  // stored as typed; unique ignoring case among active users
+
+    @Column(name = &quot;created_at&quot;, nullable = false)
+    private LocalDateTime createdAt;                      // TIMESTAMP without time zone
+
+    @Column(name = &quot;password_hash&quot;, columnDefinition = &quot;text&quot;)
+    private String passwordHash;                          // NULL for every migrated user (sanitized)
+
+    @Column(name = &quot;discriminator&quot;, nullable = false, length = 128)
+    private String discriminator;                         // Customer | Employee | Manager
+
+    @Column(name = &quot;deleted_at&quot;)
+    private LocalDateTime deletedAt;                      // soft delete: NULL = active
+
+    @Column(name = &quot;email&quot;, length = 256)
+    private String email;
+
+    @Column(name = &quot;email_confirmed&quot;, nullable = false)
+    private boolean emailConfirmed;
+
+    @Column(name = &quot;security_stamp&quot;, columnDefinition = &quot;text&quot;)
+    private String securityStamp;
+
+    @Column(name = &quot;phone_number&quot;, columnDefinition = &quot;text&quot;)
+    private String phoneNumber;
+
+    @Column(name = &quot;phone_number_confirmed&quot;, nullable = false)
+    private boolean phoneNumberConfirmed;
+
+    @Column(name = &quot;two_factor_enabled&quot;, nullable = false)
+    private boolean twoFactorEnabled;
+
+    @Column(name = &quot;lockout_end_date_utc&quot;)
+    private LocalDateTime lockoutEndDateUtc;
+
+    @Column(name = &quot;lockout_enabled&quot;, nullable = false)
+    private boolean lockoutEnabled;
+
+    @Column(name = &quot;access_failed_count&quot;, nullable = false)
+    private int accessFailedCount;
+
+    @Column(name = &quot;must_reset_password&quot;, nullable = false)
+    private boolean mustResetPassword;                    // true for every migrated user
+
+    protected AppUser() {
+    }
+
+    public Integer getId() { return id; }
+    public String getName() { return name; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public String getPasswordHash() { return passwordHash; }
+    public String getDiscriminator() { return discriminator; }
+    public LocalDateTime getDeletedAt() { return deletedAt; }
+    public String getEmail() { return email; }
+    public boolean isMustResetPassword() { return mustResetPassword; }
+    public int getAccessFailedCount() { return accessFailedCount; }
+
+    /** Called only after a successful first-login password change. */
+    public void setNewPassword(String hash, String newSecurityStamp) {
+        this.passwordHash = hash;
+        this.securityStamp = newSecurityStamp;
+        this.mustResetPassword = false;
+        this.accessFailedCount = 0;
+    }
+}</code></pre></div>
+<div class="code"><div class="code-head"><span>model/TicketState.java</span><button type="button">Copy</button></div><pre><code>package com.masterantique.dbclient.model;
+
+/** tickets.state holds the position of these values: 0, 1, 2 (the legacy workflow). Keep the order. */
+public enum TicketState {
+    SUBMITTED,   // 0
+    INPROGRESS,  // 1
+    COMPLETED    // 2
+}</code></pre></div>
+<div class="code"><div class="code-head"><span>model/Ticket.java</span><button type="button">Copy</button></div><pre><code>package com.masterantique.dbclient.model;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = &quot;tickets&quot;)
+public class Ticket {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+
+    @Enumerated(EnumType.ORDINAL)                          // INTEGER 0/1/2
+    @Column(name = &quot;state&quot;, nullable = false)
+    private TicketState state;
+
+    @Column(name = &quot;description&quot;, length = 2000)
+    private String description;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = &quot;user_id&quot;)                          // assigned employee; NULL while SUBMITTED
+    private AppUser assignee;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = &quot;customer_id&quot;)
+    private AppUser customer;
+
+    @Column(name = &quot;submitted_date&quot;)
+    private LocalDateTime submittedDate;
+
+    @Column(name = &quot;assigned_date&quot;)
+    private LocalDateTime assignedDate;
+
+    @Column(name = &quot;completed_date&quot;)
+    private LocalDateTime completedDate;
+
+    protected Ticket() {
+    }
+
+    public Integer getId() { return id; }
+    public TicketState getState() { return state; }
+    public String getDescription() { return description; }
+    public AppUser getAssignee() { return assignee; }
+    public AppUser getCustomer() { return customer; }
+    public LocalDateTime getSubmittedDate() { return submittedDate; }
+    public LocalDateTime getAssignedDate() { return assignedDate; }
+    public LocalDateTime getCompletedDate() { return completedDate; }
+}</code></pre></div>
+<div class="code"><div class="code-head"><span>model/Comment.java</span><button type="button">Copy</button></div><pre><code>package com.masterantique.dbclient.model;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = &quot;comments&quot;)
+public class Comment {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = &quot;user_id&quot;, nullable = false)
+    private AppUser author;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = &quot;ticket_id&quot;, nullable = false)
+    private Ticket ticket;
+
+    @Column(name = &quot;text&quot;, length = 2000)
+    private String text;
+
+    @Column(name = &quot;created_at&quot;, nullable = false)
+    private LocalDateTime createdAt;
+
+    protected Comment() {
+    }
+
+    public Integer getId() { return id; }
+    public AppUser getAuthor() { return author; }
+    public Ticket getTicket() { return ticket; }
+    public String getText() { return text; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+}</code></pre></div>
+<div class="code"><div class="code-head"><span>model/AuditLog.java</span><button type="button">Copy</button></div><pre><code>package com.masterantique.dbclient.model;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import java.time.LocalDateTime;
+
+/** Workflow audit trail: ids and timestamps only, never comment text or descriptions. */
+@Entity
+@Table(name = &quot;audit_logs&quot;)
+public class AuditLog {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+
+    @Column(name = &quot;timestamp&quot;, nullable = false)
+    private LocalDateTime timestamp;
+
+    @Column(name = &quot;user_id&quot;, nullable = false)
+    private Integer userId;
+
+    @Column(name = &quot;action&quot;, nullable = false)
+    private Integer action;          // numeric code from the legacy application
+
+    @Column(name = &quot;entity_type&quot;, nullable = false)
+    private Integer entityType;
+
+    @Column(name = &quot;entity_id&quot;, nullable = false)
+    private Integer entityId;
+
+    protected AuditLog() {
+    }
+
+    public Integer getId() { return id; }
+    public LocalDateTime getTimestamp() { return timestamp; }
+    public Integer getUserId() { return userId; }
+    public Integer getAction() { return action; }
+    public Integer getEntityType() { return entityType; }
+    public Integer getEntityId() { return entityId; }
+}</code></pre></div>
+
+<h3 id="repos">Repositories</h3>
+<p>The username lookup lowers both sides. Active usernames are unique regardless of case only through the index <code>ix_users_name_active ON users (lower(name)) WHERE deleted_at IS NULL</code>, so <code>lower(name) = lower(:name)</code> is both correct and fast; a plain <code>name = :name</code> would miss <code>Manager</code> for <code>manager</code>.</p>
+<div class="code"><div class="code-head"><span>repo/AppUserRepository.java</span><button type="button">Copy</button></div><pre><code>package com.masterantique.dbclient.repo;
+
+import com.masterantique.dbclient.model.AppUser;
+import java.util.Optional;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+public interface AppUserRepository extends JpaRepository&lt;AppUser, Integer&gt; {
+
+    /**
+     * Sign-in lookup. Usernames are unique ignoring case among active users, enforced by the index
+     * ix_users_name_active ON users (lower(name)) WHERE deleted_at IS NULL. Lowering both sides lets
+     * PostgreSQL use that index.
+     */
+    @Query(&quot;select u from AppUser u where lower(u.name) = lower(:name) and u.deletedAt is null&quot;)
+    Optional&lt;AppUser&gt; findActiveByName(@Param(&quot;name&quot;) String name);
+
+    long countByDiscriminator(String discriminator);
+
+    long countByMustResetPasswordTrue();
+}</code></pre></div>
+<div class="code"><div class="code-head"><span>repo/TicketRepository.java</span><button type="button">Copy</button></div><pre><code>package com.masterantique.dbclient.repo;
+
+import com.masterantique.dbclient.model.Ticket;
+import com.masterantique.dbclient.model.TicketState;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface TicketRepository extends JpaRepository&lt;Ticket, Integer&gt; {
+
+    long countByState(TicketState state);
+}</code></pre></div>
+<div class="code"><div class="code-head"><span>repo/CommentRepository.java</span><button type="button">Copy</button></div><pre><code>package com.masterantique.dbclient.repo;
+
+import com.masterantique.dbclient.model.Comment;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface CommentRepository extends JpaRepository&lt;Comment, Integer&gt; {
+}</code></pre></div>
+<div class="code"><div class="code-head"><span>repo/AuditLogRepository.java</span><button type="button">Copy</button></div><pre><code>package com.masterantique.dbclient.repo;
+
+import com.masterantique.dbclient.model.AuditLog;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface AuditLogRepository extends JpaRepository&lt;AuditLog, Integer&gt; {
+}</code></pre></div>
+
+<h3 id="check">Application and connection check</h3>
+<div class="code"><div class="code-head"><span>MarDbClientApplication.java</span><button type="button">Copy</button></div><pre><code>package com.masterantique.dbclient;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class MarDbClientApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(MarDbClientApplication.class, args);
+    }
+}</code></pre></div>
+<div class="code"><div class="code-head"><span>ConnectionCheck.java</span><button type="button">Copy</button></div><pre><code>package com.masterantique.dbclient;
+
+import com.masterantique.dbclient.model.TicketState;
+import com.masterantique.dbclient.repo.AppUserRepository;
+import com.masterantique.dbclient.repo.AuditLogRepository;
+import com.masterantique.dbclient.repo.CommentRepository;
+import com.masterantique.dbclient.repo.TicketRepository;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
+/** Runs at start-up (unless the first-login demo is running): proves the connection with JDBC and with JPA. */
+@Component
+@Profile(&quot;!first-login-demo&quot;)
+public class ConnectionCheck implements CommandLineRunner {
+
+    private final JdbcTemplate jdbc;
+    private final AppUserRepository users;
+    private final TicketRepository tickets;
+    private final CommentRepository comments;
+    private final AuditLogRepository auditLogs;
+
+    public ConnectionCheck(JdbcTemplate jdbc, AppUserRepository users, TicketRepository tickets,
+                           CommentRepository comments, AuditLogRepository auditLogs) {
+        this.jdbc = jdbc;
+        this.users = users;
+        this.tickets = tickets;
+        this.comments = comments;
+        this.auditLogs = auditLogs;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public void run(String... args) {
+        // 1. Plain SQL through Spring&#x27;s JdbcTemplate.
+        String who = jdbc.queryForObject(
+                &quot;select current_user || &#x27; @ &#x27; || current_database() || &#x27;, PostgreSQL &#x27; || current_setting(&#x27;server_version&#x27;)&quot;,
+                String.class);
+        System.out.println(&quot;Connected: &quot; + who);
+
+        // 2. The same database through JPA repositories.
+        System.out.printf(&quot;users=%d tickets=%d comments=%d audit_logs=%d%n&quot;,
+                users.count(), tickets.count(), comments.count(), auditLogs.count());
+        System.out.printf(&quot;customers=%d employees=%d managers=%d, must reset password=%d%n&quot;,
+                users.countByDiscriminator(&quot;Customer&quot;), users.countByDiscriminator(&quot;Employee&quot;),
+                users.countByDiscriminator(&quot;Manager&quot;), users.countByMustResetPasswordTrue());
+        for (TicketState s : TicketState.values()) {
+            System.out.printf(&quot;tickets %s=%d%n&quot;, s, tickets.countByState(s));
+        }
+
+        // 3. Case-insensitive username lookup, as sign-in must do it.
+        users.findActiveByName(&quot;MANAGER&quot;).ifPresent(u -&gt;
+                System.out.printf(&quot;findActiveByName(\&quot;MANAGER\&quot;) -&gt; id %d, name &#x27;%s&#x27;, %s%n&quot;,
+                        u.getId(), u.getName(), u.getDiscriminator()));
+    }
+}</code></pre></div>
+
+<h3 id="run">Build and run</h3>
+<div class="code"><div class="code-head"><span>bash</span><button type="button">Copy</button></div><pre><code>read -rsp &#x27;mar_app password: &#x27; MAR_DB_PASSWORD; echo; export MAR_DB_PASSWORD
+
+./gradlew bootRun                     # Gradle
+mvn spring-boot:run                   # or Maven
+
+./gradlew bootJar &amp;&amp; java -jar build/libs/mar-db-client-0.0.1-SNAPSHOT.jar      # or a runnable jar
+mvn package &amp;&amp; java -jar target/mar-db-client-0.0.1-SNAPSHOT.jar</code></pre></div>
+<div class="code out"><div class="code-head"><span>Output</span></div><pre><code>Connected: mar_app @ masterantique, PostgreSQL 16.1 (Debian 16.1-1.pgdg120+1)
+users=12 tickets=24 comments=26 audit_logs=78
+customers=8 employees=3 managers=1, must reset password=12
+tickets SUBMITTED=8
+tickets INPROGRESS=8
+tickets COMPLETED=8
+findActiveByName(&quot;MANAGER&quot;) -&gt; id 1, name &#x27;manager&#x27;, Manager</code></pre></div>
+<p>If it starts at all, the mapping is right: Hibernate checked every entity against the live schema first. For route A or B, set <code>MAR_DB_HOST</code> and <code>MAR_DB_PORT</code> as in the table above.</p>
+</section>
+
+<section aria-labelledby="firstlogin">
+<h2 id="firstlogin">First login: change password</h2>
+<p>The migration deliberately carried no passwords over: the legacy PBKDF2 hashes were removed and every account is marked <code>must_reset_password = true</code>. So the first thing any sign-in meets is &ldquo;you must change your password&rdquo;. This mock-up shows the whole flow against the real table.</p>
+<ol class="flow">
+  <li><span class="n">1</span><div><b>Sign in.</b> The username is looked up ignoring case among active users. The account has no password yet, so the answer is <span class="state">MUST_CHANGE_PASSWORD</span>, whatever was typed.</div></li>
+  <li><span class="n">2</span><div><b>Prove who you are.</b> With no old password to check, the user enters a one-time code (in a real system: issued by a manager, or a link sent to a verified email address). The demo accepts one fixed code.</div></li>
+  <li><span class="n">3</span><div><b>Choose a password.</b> Typed twice, at least 12 characters, must not contain the username.</div></li>
+  <li><span class="n">4</span><div><b>Saved.</b> The hash is stored as <code>{bcrypt}$2a$10$&hellip;</code>, <code>must_reset_password</code> becomes false, a new <code>security_stamp</code> is set and failed attempts reset. The event is logged; the password never is.</div></li>
+  <li><span class="n">5</span><div><b>Sign in normally.</b> Right password <span class="state">OK</span>; wrong password or unknown user <span class="state">INVALID</span> (the same answer for both, so usernames cannot be probed).</div></li>
+</ol>
+<div class="code"><div class="code-head"><span>login/LoginResult.java</span><button type="button">Copy</button></div><pre><code>package com.masterantique.dbclient.login;
+
+public enum LoginResult {
+    /** Username and password match; the user may continue. */
+    OK,
+    /** The account exists but has no usable password yet (every migrated user): send to &quot;change password&quot;. */
+    MUST_CHANGE_PASSWORD,
+    /** Unknown user or wrong password. Deliberately the same answer for both. */
+    INVALID
+}</code></pre></div>
+<div class="code"><div class="code-head"><span>login/IdentityCheck.java</span><button type="button">Copy</button></div><pre><code>package com.masterantique.dbclient.login;
+
+/**
+ * Proves the person setting the first password really owns the account. Migrated users have no old
+ * password to check, so a real system needs something else here: a one-time code issued by a manager,
+ * or a reset link sent to a verified email address.
+ */
+public interface IdentityCheck {
+
+    boolean verify(String username, String oneTimeCode);
+}</code></pre></div>
+<div class="code"><div class="code-head"><span>login/DemoIdentityCheck.java</span><button type="button">Copy</button></div><pre><code>package com.masterantique.dbclient.login;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+/**
+ * DEMO ONLY: accepts one fixed code from configuration (demo.issued-code, default DEMO-1234). Replace with a
+ * real one-time-code or email-link check before anything goes near production.
+ */
+@Component
+public class DemoIdentityCheck implements IdentityCheck {
+
+    private static final Logger log = LoggerFactory.getLogger(DemoIdentityCheck.class);
+
+    private final String expectedCode;
+
+    public DemoIdentityCheck(@Value(&quot;${demo.issued-code:DEMO-1234}&quot;) String expectedCode) {
+        this.expectedCode = expectedCode;
+    }
+
+    @Override
+    public boolean verify(String username, String oneTimeCode) {
+        log.warn(&quot;DEMO identity check used for &#x27;{}&#x27;: replace DemoIdentityCheck before production&quot;, username);
+        return expectedCode.equals(oneTimeCode);
+    }
+}</code></pre></div>
+<div class="code"><div class="code-head"><span>login/LoginService.java</span><button type="button">Copy</button></div><pre><code>package com.masterantique.dbclient.login;
+
+import com.masterantique.dbclient.model.AppUser;
+import com.masterantique.dbclient.repo.AppUserRepository;
+import java.util.Optional;
+import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+/**
+ * Sign-in against the migrated users table, including the forced password change every migrated user
+ * meets on first login (password_hash is NULL and must_reset_password is true after the migration).
+ */
+@Service
+public class LoginService {
+
+    private static final Logger log = LoggerFactory.getLogger(LoginService.class);
+    private static final int MIN_LENGTH = 12;
+
+    private final AppUserRepository users;
+    private final IdentityCheck identityCheck;
+    // Stores &quot;{bcrypt}$2a$10$...&quot; so the algorithm can be changed later without breaking old hashes.
+    private final PasswordEncoder encoder = PasswordEncoderFactories.createDelegatingPasswordEncoder();
+    // Compared against when the user is unknown, so both cases take about the same time.
+    private final String dummyHash = encoder.encode(&quot;not-a-real-password&quot;);
+
+    public LoginService(AppUserRepository users, IdentityCheck identityCheck) {
+        this.users = users;
+        this.identityCheck = identityCheck;
+    }
+
+    @Transactional(readOnly = true)
+    public LoginResult login(String username, String password) {
+        Optional&lt;AppUser&gt; found = users.findActiveByName(username);
+        if (found.isEmpty()) {
+            encoder.matches(password, dummyHash);
+            return LoginResult.INVALID;
+        }
+        AppUser user = found.get();
+        if (user.isMustResetPassword() || user.getPasswordHash() == null) {
+            return LoginResult.MUST_CHANGE_PASSWORD;
+        }
+        return encoder.matches(password, user.getPasswordHash()) ? LoginResult.OK : LoginResult.INVALID;
+    }
+
+    /**
+     * Sets the first password. Throws IllegalArgumentException with a message fit to show the user when the
+     * identity check or the password policy fails.
+     */
+    @Transactional
+    public void changePassword(String username, String oneTimeCode, String newPassword, String confirmPassword) {
+        AppUser user = users.findActiveByName(username)
+                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Unknown or inactive user.&quot;));
+        if (!identityCheck.verify(user.getName(), oneTimeCode)) {
+            throw new IllegalArgumentException(&quot;The one-time code is not valid.&quot;);
+        }
+        checkPolicy(user.getName(), newPassword, confirmPassword);
+        user.setNewPassword(encoder.encode(newPassword), UUID.randomUUID().toString());
+        // Saved on commit (the entity is managed). Record the event, never the password.
+        log.info(&quot;Password changed for user id {} ({}); must_reset_password cleared&quot;, user.getId(), user.getDiscriminator());
+    }
+
+    static void checkPolicy(String username, String password, String confirm) {
+        if (password == null || password.length() &lt; MIN_LENGTH) {
+            throw new IllegalArgumentException(&quot;The password must have at least &quot; + MIN_LENGTH + &quot; characters.&quot;);
+        }
+        if (!password.equals(confirm)) {
+            throw new IllegalArgumentException(&quot;The two passwords do not match.&quot;);
+        }
+        if (password.toLowerCase().contains(username.toLowerCase())) {
+            throw new IllegalArgumentException(&quot;The password must not contain the username.&quot;);
+        }
+    }
+}</code></pre></div>
+<div class="code"><div class="code-head"><span>login/FirstLoginDemo.java</span><button type="button">Copy</button></div><pre><code>package com.masterantique.dbclient.login;
+
+import java.io.Console;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
+import org.springframework.stereotype.Component;
+
+/**
+ * Console walk-through of a migrated user&#x27;s first login. Run with --spring.profiles.active=first-login-demo.
+ * Asks for the values it is not given (demo.username, demo.password, demo.one-time-code, demo.new-password),
+ * hiding passwords.
+ */
+@Component
+@Profile(&quot;first-login-demo&quot;)
+public class FirstLoginDemo implements CommandLineRunner {
+
+    private final LoginService login;
+    private final String username;
+    private final String firstPassword;
+    private final String oneTimeCode;
+    private final String newPassword;
+
+    public FirstLoginDemo(LoginService login,
+                          @Value(&quot;${demo.username:}&quot;) String username,
+                          @Value(&quot;${demo.password:}&quot;) String firstPassword,
+                          @Value(&quot;${demo.one-time-code:}&quot;) String oneTimeCode,
+                          @Value(&quot;${demo.new-password:}&quot;) String newPassword) {
+        this.login = login;
+        this.username = username;
+        this.firstPassword = firstPassword;
+        this.oneTimeCode = oneTimeCode;
+        this.newPassword = newPassword;
+    }
+
+    @Override
+    public void run(String... args) {
+        String user = orAsk(username, &quot;Username: &quot;, false);
+        String password = orAsk(firstPassword, &quot;Password: &quot;, true);   // migrated users have none yet
+
+        LoginResult first = login.login(user, password);
+        System.out.println(&quot;1. Sign in as &#x27;&quot; + user + &quot;&#x27; -&gt; &quot; + first);
+        if (first == LoginResult.OK) {
+            System.out.println(&quot;   Signed in. This account already has its own password.&quot;);
+            return;
+        }
+        if (first == LoginResult.INVALID) {
+            System.out.println(&quot;   Wrong username or password.&quot;);
+            return;
+        }
+
+        System.out.println(&quot;   You must change your password before you continue.&quot;);
+        String code = orAsk(oneTimeCode, &quot;   One-time code from your manager: &quot;, false);
+        String pw1 = orAsk(newPassword, &quot;   New password (12+ characters): &quot;, true);
+        String pw2 = orAsk(newPassword, &quot;   Repeat the new password: &quot;, true);
+        try {
+            login.changePassword(user, code, pw1, pw2);
+            System.out.println(&quot;2. Password changed.&quot;);
+        } catch (IllegalArgumentException e) {
+            System.out.println(&quot;2. Not changed: &quot; + e.getMessage());
+            return;
+        }
+
+        System.out.println(&quot;3. Sign in again with the new password -&gt; &quot; + login.login(user, pw1));
+        System.out.println(&quot;4. Sign in with a wrong password      -&gt; &quot; + login.login(user, pw1 + &quot;x&quot;));
+    }
+
+    private static String orAsk(String given, String prompt, boolean secret) {
+        if (given != null &amp;&amp; !given.isEmpty()) {
+            return given;
+        }
+        Console console = System.console();
+        if (console == null) {
+            throw new IllegalStateException(&quot;No console: pass --demo.username, --demo.one-time-code and --demo.new-password&quot;);
+        }
+        return secret ? new String(console.readPassword(prompt)) : console.readLine(prompt);
+    }
+}</code></pre></div>
+
+<h3>Try it</h3>
+<p>Interactively (it asks for everything and hides passwords):</p>
+<div class="code"><div class="code-head"><span>bash</span><button type="button">Copy</button></div><pre><code>java -jar build/libs/mar-db-client-0.0.1-SNAPSHOT.jar --spring.profiles.active=first-login-demo</code></pre></div>
+<p>Or non-interactively. This really changes the stored password of that user, so try it on a test copy, or be ready to rebuild with <code>ingest.sh load --recreate</code>:</p>
+<div class="code"><div class="code-head"><span>bash</span><button type="button">Copy</button></div><pre><code>java -jar build/libs/mar-db-client-0.0.1-SNAPSHOT.jar --spring.profiles.active=first-login-demo \
+  --demo.username=Customer1 --demo.password=anything \
+  --demo.one-time-code=DEMO-1234 --demo.new-password=Walnut-Armoire-1887</code></pre></div>
+<div class="code out"><div class="code-head"><span>Output (log lines shortened)</span></div><pre><code>1. Sign in as &#x27;Customer1&#x27; -&gt; MUST_CHANGE_PASSWORD
+   You must change your password before you continue.
+WARN  DemoIdentityCheck : DEMO identity check used for &#x27;customer1&#x27;: replace DemoIdentityCheck before production
+INFO  LoginService      : Password changed for user id 5 (Customer); must_reset_password cleared
+2. Password changed.
+3. Sign in again with the new password -&gt; OK
+4. Sign in with a wrong password      -&gt; INVALID</code></pre></div>
+<p>The refusals, as tested:</p>
+<div class="table-wrap"><table>
+<thead><tr><th scope="col">Input</th><th scope="col">Result</th></tr></thead>
+<tbody>
+<tr><td>Wrong one-time code</td><td><code>2. Not changed: The one-time code is not valid.</code></td></tr>
+<tr><td>New password <code>short</code></td><td><code>2. Not changed: The password must have at least 12 characters.</code></td></tr>
+<tr><td>New password <code>my-customer1-pass</code></td><td><code>2. Not changed: The password must not contain the username.</code></td></tr>
+<tr><td>Later sign-in, right password</td><td><code>1. Sign in as 'customer1' -> OK</code></td></tr>
+<tr><td>Wrong password, or user <code>nobody</code></td><td><code>1. Sign in as '...' -> INVALID</code> / <code>Wrong username or password.</code></td></tr>
+</tbody></table></div>
+<p>To undo a demo change on one user (as the owner login):</p>
+<div class="code"><div class="code-head"><span>bash</span><button type="button">Copy</button></div><pre><code>docker exec mar-postgres psql -U masterantique -d masterantique -c \
+  &quot;UPDATE users SET password_hash = NULL, security_stamp = NULL, must_reset_password = true WHERE lower(name) = &#x27;customer1&#x27;&quot;</code></pre></div>
+<div class="callout warn">
+<p><strong>Before this goes near production:</strong></p>
+<ul>
+<li>Replace <code>DemoIdentityCheck</code> with a real check: a single-use, expiring code a manager issues, or an emailed reset link. (Every <code>email</code> in the migrated data is NULL, so email resets need addresses collected first.)</li>
+<li>Write the password change to the audit trail as an event (user id, time, action), never the password, in the same style as the legacy <code>audit_logs</code>.</li>
+<li>Add lockout on repeated failures (<code>access_failed_count</code>, <code>lockout_end_date_utc</code> already exist) and rate limiting at the sign-in endpoint.</li>
+<li>In a web application, the same <code>LoginService</code> sits behind Spring Security's authentication; the forced change becomes a redirect to a change-password page until <code>must_reset_password</code> is false.</li>
+</ul>
+</div>
+</section>
+
+<section aria-labelledby="trouble">
+<h2 id="trouble">Troubleshooting</h2>
+<div class="table-wrap"><table>
+<thead><tr><th scope="col">You see</th><th scope="col">Cause and fix</th></tr></thead>
+<tbody>
+<tr><td><code>Connection to localhost:5433 refused</code></td><td>No route. Route C: is <code>mar-postgres-proxy</code> running (<code>docker ps</code>)? Is <code>MAR_DB_PORT</code> the proxy's port? Is <code>mar-postgres</code> running?</td></tr>
+<tr><td>Connection times out on <code>172.17.0.x</code></td><td>Route A works only with Docker Engine on Linux; on Docker Desktop (Mac, Windows) use route C. Or the address changed after a restart: run the <code>docker inspect</code> command again.</td></tr>
+<tr><td><code>password authentication failed for user "mar_app"</code></td><td>Wrong password, or <code>MAR_DB_PASSWORD</code> is not set in this shell (<code>echo ${MAR_DB_PASSWORD:+set}</code>). Or the container was rebuilt and the logins are gone: repeat section 3.</td></tr>
+<tr><td><code>permission denied for table ...</code></td><td>Writing as <code>mar_readonly</code>, or a table added after the grants without the default privileges. Re-run the <code>GRANT</code> lines for that login.</td></tr>
+<tr><td><code>Schema-validation: missing column [...] in table [...]</code></td><td>An entity field names a column the table does not have. Compare with <code>\d tablename</code> and fix the <code>@Column(name = ...)</code>. Never switch <code>ddl-auto</code> away from <code>validate</code>.</td></tr>
+<tr><td><code>ERROR: role "mar_app" already exists</code></td><td>The roles script has already run. Use <code>ALTER ROLE ... PASSWORD</code> to change the password.</td></tr>
+<tr><td><code>FATAL: database "..." does not exist</code></td><td>The database is <code>masterantique</code>; check <code>MAR_DB_NAME</code> and the JDBC URL.</td></tr>
+<tr><td>A username is not found although it exists</td><td>Compare with <code>lower(name) = lower(:input)</code> and <code>deleted_at IS NULL</code>; PostgreSQL compares text case-sensitively, unlike the legacy SQL Server.</td></tr>
+<tr><td>Times look shifted by some hours</td><td>Columns are <code>TIMESTAMP</code> without time zone, read as <code>LocalDateTime</code> with no conversion. Whether the legacy system stored UTC or local time is unknown; do not convert until that is decided.</td></tr>
+</tbody></table></div>
+</section>
+
+<section aria-labelledby="reference">
+<h2 id="reference">Reference</h2>
+<h3>Tables and columns</h3>
+<p>From the migration record. <b>Key</b>: PK primary key, id = identity column, FK references another table.</p>
+<div class="table-wrap"><table><thead><tr><th scope="col">Table</th><th scope="col">Column</th><th scope="col">Type</th><th scope="col">Null</th><th scope="col">Key</th></tr></thead><tbody><tr><td rowspan="2"><code>roles</code><br><small>3 rows</small></td><td><code>id</code></td><td>INTEGER</td><td>no</td><td>PK, id</td></tr><tr><td><code>name</code></td><td>VARCHAR(256)</td><td>no</td><td></td></tr><tr><td rowspan="16"><code>users</code><br><small>12 rows</small></td><td><code>id</code></td><td>INTEGER</td><td>no</td><td>PK, id</td></tr><tr><td><code>name</code></td><td>VARCHAR(256)</td><td>no</td><td></td></tr><tr><td><code>created_at</code></td><td>TIMESTAMP</td><td>no</td><td></td></tr><tr><td><code>password_hash</code></td><td>TEXT</td><td>yes</td><td></td></tr><tr><td><code>discriminator</code></td><td>VARCHAR(128)</td><td>no</td><td></td></tr><tr><td><code>deleted_at</code></td><td>TIMESTAMP</td><td>yes</td><td></td></tr><tr><td><code>email</code></td><td>VARCHAR(256)</td><td>yes</td><td></td></tr><tr><td><code>email_confirmed</code></td><td>BOOLEAN default false</td><td>no</td><td></td></tr><tr><td><code>security_stamp</code></td><td>TEXT</td><td>yes</td><td></td></tr><tr><td><code>phone_number</code></td><td>TEXT</td><td>yes</td><td></td></tr><tr><td><code>phone_number_confirmed</code></td><td>BOOLEAN default false</td><td>no</td><td></td></tr><tr><td><code>two_factor_enabled</code></td><td>BOOLEAN default false</td><td>no</td><td></td></tr><tr><td><code>lockout_end_date_utc</code></td><td>TIMESTAMP</td><td>yes</td><td></td></tr><tr><td><code>lockout_enabled</code></td><td>BOOLEAN default false</td><td>no</td><td></td></tr><tr><td><code>access_failed_count</code></td><td>INTEGER default 0</td><td>no</td><td></td></tr><tr><td><code>must_reset_password</code></td><td>BOOLEAN default false</td><td>no</td><td>added by migration</td></tr><tr><td rowspan="6"><code>audit_logs</code><br><small>78 rows</small></td><td><code>id</code></td><td>INTEGER</td><td>no</td><td>PK, id</td></tr><tr><td><code>timestamp</code></td><td>TIMESTAMP</td><td>no</td><td></td></tr><tr><td><code>user_id</code></td><td>INTEGER</td><td>no</td><td>FK &rarr; users</td></tr><tr><td><code>action</code></td><td>INTEGER</td><td>no</td><td></td></tr><tr><td><code>entity_type</code></td><td>INTEGER</td><td>no</td><td></td></tr><tr><td><code>entity_id</code></td><td>INTEGER</td><td>no</td><td></td></tr><tr><td rowspan="8"><code>tickets</code><br><small>24 rows</small></td><td><code>id</code></td><td>INTEGER</td><td>no</td><td>PK, id</td></tr><tr><td><code>state</code></td><td>INTEGER</td><td>no</td><td></td></tr><tr><td><code>description</code></td><td>VARCHAR(2000)</td><td>yes</td><td></td></tr><tr><td><code>user_id</code></td><td>INTEGER</td><td>yes</td><td>FK &rarr; users</td></tr><tr><td><code>customer_id</code></td><td>INTEGER</td><td>yes</td><td>FK &rarr; users</td></tr><tr><td><code>submitted_date</code></td><td>TIMESTAMP</td><td>yes</td><td></td></tr><tr><td><code>assigned_date</code></td><td>TIMESTAMP</td><td>yes</td><td></td></tr><tr><td><code>completed_date</code></td><td>TIMESTAMP</td><td>yes</td><td></td></tr><tr><td rowspan="5"><code>comments</code><br><small>26 rows</small></td><td><code>id</code></td><td>INTEGER</td><td>no</td><td>PK, id</td></tr><tr><td><code>user_id</code></td><td>INTEGER</td><td>no</td><td>FK &rarr; users</td></tr><tr><td><code>ticket_id</code></td><td>INTEGER</td><td>no</td><td>FK &rarr; tickets</td></tr><tr><td><code>text</code></td><td>VARCHAR(2000)</td><td>yes</td><td></td></tr><tr><td><code>created_at</code></td><td>TIMESTAMP</td><td>no</td><td></td></tr><tr><td rowspan="4"><code>user_claims</code><br><small>0 rows</small></td><td><code>id</code></td><td>INTEGER</td><td>no</td><td>PK, id</td></tr><tr><td><code>user_id</code></td><td>INTEGER</td><td>no</td><td>FK &rarr; users</td></tr><tr><td><code>claim_type</code></td><td>TEXT</td><td>yes</td><td></td></tr><tr><td><code>claim_value</code></td><td>TEXT</td><td>yes</td><td></td></tr><tr><td rowspan="3"><code>user_logins</code><br><small>0 rows</small></td><td><code>login_provider</code></td><td>VARCHAR(128)</td><td>no</td><td>PK</td></tr><tr><td><code>provider_key</code></td><td>VARCHAR(128)</td><td>no</td><td>PK</td></tr><tr><td><code>user_id</code></td><td>INTEGER</td><td>no</td><td>PK, FK &rarr; users</td></tr><tr><td rowspan="2"><code>user_roles</code><br><small>12 rows</small></td><td><code>user_id</code></td><td>INTEGER</td><td>no</td><td>PK, FK &rarr; users</td></tr><tr><td><code>role_id</code></td><td>INTEGER</td><td>no</td><td>PK, FK &rarr; roles</td></tr></tbody></table></div>
+<h3>Indexes worth knowing</h3>
+<ul>
+<li><code>ix_users_name_active</code>: unique on <code>lower(name)</code> where <code>deleted_at IS NULL</code>. Active usernames are unique ignoring case; a soft-deleted user's name can be reused.</li>
+<li><code>ix_roles_name</code>: unique, case-sensitive, on <code>roles.name</code> (<code>Customer</code>, <code>Employee</code>, <code>Manager</code>).</li>
+<li>One plain index on every foreign key column.</li>
+</ul>
+<h3>Connection strings</h3>
+<div class="table-wrap"><table>
+<thead><tr><th scope="col">Route</th><th scope="col">JDBC URL</th><th scope="col">psql from another container</th></tr></thead>
+<tbody>
+<tr><td>A</td><td><code>jdbc:postgresql://172.17.0.x:5432/masterantique</code></td><td><code>psql -h 172.17.0.x -U mar_app -d masterantique</code></td></tr>
+<tr><td>B</td><td><code>jdbc:postgresql://mar-postgres:5432/masterantique</code></td><td><code>psql -h mar-postgres -U mar_app -d masterantique</code></td></tr>
+<tr><td>C</td><td><code>jdbc:postgresql://localhost:5433/masterantique</code></td><td><code>psql -h localhost -p 5433 -U mar_app -d masterantique</code></td></tr>
+</tbody></table></div>
+<h3>Versions this guide was tested with</h3>
+<p>PostgreSQL 16.1 (<code>postgres:16.1</code>), Spring Boot 4.1.1, Hibernate 7.4.5, HikariCP 7.0.2, PostgreSQL JDBC 42.7.11, Java 21.0.11, Gradle 9.4.1, Maven 3.9.11, Docker Engine 29.7.2.</p>
+</section>
+
+<footer>
+<p>Part of the iteration 5 database migration (<code>docs/dbmigrate/iteration5/</code>): the plan is <code>ITERATION5_PLAN.md</code>, the record <code>ITERATION5.md</code>, the verification <code>MigrationVerificationReport5.html</code>. Tested on 2026-09-23 against a temporary copy of the database; the delivered <code>mar-postgres</code> was not changed.</p>
+</footer>
+</main>
+</div>
+
+<script>
+(function () {
+  document.querySelectorAll('.code:not(.out) .code-head button').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var code = btn.closest('.code').querySelector('pre code');
+      var text = code.textContent;
+      function done(label) { btn.textContent = label; setTimeout(function () { btn.textContent = 'Copy'; }, 1600); }
+      function selectIt() {
+        var r = document.createRange(); r.selectNodeContents(code);
+        var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); done('Selected');
+      }
+      try {
+        navigator.clipboard.writeText(text).then(function () { done('Copied'); }, selectIt);
+      } catch (e) { selectIt(); }
+    });
+  });
+  document.querySelectorAll('[data-tabs]').forEach(function (group) {
+    var tabs = Array.prototype.slice.call(group.querySelectorAll('[role="tab"]'));
+    function show(tab) {
+      tabs.forEach(function (t) {
+        var on = t === tab;
+        t.setAttribute('aria-selected', on ? 'true' : 'false');
+        t.tabIndex = on ? 0 : -1;
+        document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+      });
+    }
+    tabs.forEach(function (t, i) {
+      t.addEventListener('click', function () { show(t); });
+      t.addEventListener('keydown', function (e) {
+        var j = e.key === 'ArrowRight' ? i + 1 : e.key === 'ArrowLeft' ? i - 1 : null;
+        if (j === null) return;
+        var next = tabs[(j + tabs.length) % tabs.length]; show(next); next.focus(); e.preventDefault();
+      });
+    });
+  });
+})();
+</script>
+</html>
