@@ -3,7 +3,7 @@
 ## Introduction
 This repository is the collecion of experiments using Claude code to convert ASP.NET Framework 4.7.2, C#, WebForms projects into Java 21/Angular 21/ Spring Boot 4.0/PostgreSQL. The legacy ASP.NET project created for this experiment,  [Master Antique Repair](https://github.com/davidharrisnet/master-antique-repair) which is deployed on request at [fxbmuz.com](https://fxbmuz.com/) provides the key architectural [components](#components).
 
-This project, then is a collection of experiments scoped by these components - model, view, controller and security. Each of which has several iterations described in the documention and mirrored in the git branches. For instance converting the database, the model component, had six iterations, documented in docs/DATA_MIGRATION.md and with six code branches, model-iteration1 to model-iteration6.
+This project, then is a collection of experiments scoped by these components - model, view, controller and security. Each of which has several iterations described in the documention and mirrored in the git branches. For instance converting the database, the model component, had six iterations, documented in docs/phase1/dbmigrate/DATA_MIGRATION.md and with six code branches, model-iteration1 to model-iteration6.
 
 
 ## Requirements
