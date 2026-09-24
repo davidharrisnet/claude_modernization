@@ -123,3 +123,11 @@ Exit codes: 0 success, 1 verification or self-test differences, 2 configuration,
 ## 11. Conclusion
 
 The SQL Server database, exported on Windows by iteration 4, was loaded into PostgreSQL 16.1 in a Docker container on Linux by a repeatable script, with no errors. All 155 rows in all 8 tables are identical to the source (every table's full-content hash matches), the schema is as designed, the ten business summaries agree, no credentials were carried over, and the database rules behave as in the legacy system. The tooling proved it catches damage, tampering and corrupted input. Iteration 5 meets its plan.
+
+## 12. Regression after the move to `phase1/` (2026-09-23)
+
+The iteration's folders moved from `docs/dbmigrate/iteration5/` and `tools/dbmigrate/iteration5/` to `docs/phase1/dbmigrate/iteration5/` and `tools/phase1/dbmigrate/iteration5/`. `ingest.sh` and `guide/build-guide.py` find the repository root by counting folders up from their own location, so each gained one level (the generator's output path, built from separate folder names, was also fixed). The whole iteration was then re-run from the new location:
+
+- `ingest.sh all --recreate` (the delivered `mar-postgres` rebuilt from the input files): exit 0, both file hashes match, **VERIFICATION PASSED - 80 of 80 checks; 155 of 155 rows identical**, **SELFTEST PASSED - 7 of 7**, report written.
+- `selftest-results.json`: byte-identical to the committed version. `verification-results.json`: identical except the recorded run time and tool commit. The report differs only in those two values and the tool paths it shows.
+- `guide/build-guide.py` rebuilt `PostgreSQLDatabaseGuide.html`, differing only in the paths it shows; the shared copy was republished.

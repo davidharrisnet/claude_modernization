@@ -110,3 +110,11 @@ Expect `VERIFICATION PASSED - 44 of 44 checks passed; 155 of 155 rows verified i
 ## 10. Conclusion
 
 Iteration 3 meets the original goal (a Docker image built from the exported schema and data, ready to use the moment the container starts) and two additional bars raised during its own review: verification runs entirely on this Linux server without consulting any other iteration's output, and the delivered artifact carries no usable credential material, by deliberate design suited to a one-time bootstrap where a forced password reset is an acceptable trade-off. Every check that could be run without a live source passed (44 of 44), the tooling's own self-test passed (3 of 3), and a negative test during development confirmed the new sanitization check actually catches a real violation rather than trivially passing.
+
+## 11. Regression after the move to `phase1/` (2026-09-23)
+
+The iteration's folders moved from `docs/dbmigrate/iteration3/` and `tools/dbmigrate/iteration3/` to `docs/phase1/dbmigrate/iteration3/` and `tools/phase1/dbmigrate/iteration3/`. `report.py` and `verify.py` find the repository root by counting folders up from their own location, so each gained one level. The whole iteration was then re-run from the new location:
+
+- `./dbmigrate3.sh all --recreate` (image and container rebuilt, data re-sanitized from the local `02-data.sql`): exit 0, **VERIFICATION PASSED - 44 of 44 checks; 155 of 155 rows identical**, **SELF-TEST PASSED - 3 of 3**.
+- `02-data-sanitized.sql` and `selftest-results.json`: byte-identical to the committed versions. `verification-results.json`: identical except the recorded `GitCommit`.
+- `python3 report.py` (Anaconda Python; it needs `matplotlib`, which the system Python lacks) wrote `MigrationVerificationReport3.docx` into the new folder. Compared with the previous version, only the tool path, the recorded commit and the document's creation date differ; the text and all charts are unchanged.
