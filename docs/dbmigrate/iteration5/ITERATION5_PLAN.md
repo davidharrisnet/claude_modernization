@@ -1,153 +1,205 @@
 # Plan: Iteration 5 - Linux: load the iteration 4 export into a PostgreSQL database in a Docker container, and verify the data is the same
 
-**Status: planning. Nothing is built yet.** Decisions 5, 6, 7, 9, 10, 13 and 15 are settled; 16 (a database guide) is open. **The input is ready:** iteration 4 has been built and run (2026-09-23), and its three output files are already in `tools/dbmigrate/iteration5/input/` (byte-identical to `tools/dbmigrate/iteration4/`). Section 4 below describes the metadata exactly as iteration 4 built it. During iteration 4's build the generated SQL was loaded into PostgreSQL 16 and all 8 table counts and canonical hashes matched (see `ITERATION4.md`), so the contract in section 4 is proven, not just designed.
+**Status: EXECUTED (2026-09-23).** This is the plan as it was actually carried out, written so the work can be repeated, or rebuilt from scratch, by a person or a new Claude session with no memory of the original conversation. Result of the run: **verification 80 of 80 checks, 155 of 155 rows identical; self-test 7 of 7.** The record of the run, with real numbers, is [ITERATION5.md](ITERATION5.md). The original design version of this plan (before execution) is in git history at commit `60d6267`; §9 lists every place the execution departed from it.
 
-**This plan is written for a new Claude session on the Linux machine with no memory of the design conversation.** Read it top to bottom, then read `docs/dbmigrate/iteration4/ITERATION4_PLAN.md` (the Windows export that produced this iteration's input) and `docs/DATA_MIGRATION.md` §5 (security policy). Everything you need to build and run the tool is here. The tool, once built, is a command-line script that needs no AI to run.
+Read this file top to bottom. For background, also read [../iteration4/ITERATION4_PLAN.md](../iteration4/ITERATION4_PLAN.md) (the Windows export that produced this iteration's input) and [../../DATA_MIGRATION.md](../../DATA_MIGRATION.md) §8 (decision log for iterations 4 and 5).
 
-## 1. What you are to do (the task in one paragraph)
+## 1. Goal
 
-The Windows machine has already exported the legacy SQL Server database (iteration 4) into three files that are checked into git: `01-schema.sql`, `02-data-sanitized.sql` and `source-metadata.json`. Copies are in `tools/dbmigrate/iteration5/input/`. On this Linux machine, **read the schema and data files, create a fully populated PostgreSQL database inside a Docker container, and verify that the data in the new database is the same as the source it was exported from**, using `source-metadata.json` (you cannot reach SQL Server from here). Then write the verification report and record what happened.
+The Windows machine exported the legacy SQL Server database (iteration 4) into three files checked into git, with copies in `tools/dbmigrate/iteration5/input/`: `01-schema.sql`, `02-data-sanitized.sql` and `source-metadata.json`. On a Linux machine:
 
-- **Tool:** `tools/dbmigrate/iteration5/ingest.sh <load|verify|selftest|report|all> [--recreate]`, bash only, plus Docker.
-- **Host prerequisites:** Docker Engine (running), bash, `sha256sum`, `docker cp`/`docker exec` access for the current user, and internet access the first time (to pull the PostgreSQL image). **No `psql` on the host, no Python, no Java, no Microsoft tooling.** `psql` runs inside the container.
-- **Self-contained:** it reads only `tools/dbmigrate/iteration5/`. It never reads `tools/dbmigrate/iteration1|2|3|4/`.
-- Directories: `tools/dbmigrate/iteration5/` and `docs/dbmigrate/iteration5/`.
+1. Create a fully populated **PostgreSQL** database from the two SQL files, inside a **Docker container**.
+2. **Verify** that the database is the same as the SQL Server source, using `source-metadata.json` (the Linux machine cannot reach SQL Server).
+3. Prove the verification tooling itself can be trusted (self-test).
+4. Write an HTML verification report, and record what happened.
 
-**Non-goals:** exporting from SQL Server (iteration 4, Windows); a baked or published Docker image; Oracle; running on Windows.
+**Non-goals:** exporting from SQL Server (iteration 4, Windows); a baked or published Docker image (no Dockerfile); Oracle; running on Windows.
 
-## 2. Principles
+## 2. Repeating the run (the tool already exists)
 
-1. **The database lives only in the container.** It is never copied to the host. All interaction goes through `docker exec`. (The two SQL files and the metadata JSON are copied *into* the container with `docker cp`; they are inputs, not the database.)
-2. **No secrets in git.** The input is sanitized (credentials NULL, `must_reset_password` true). The container's own password is generated at start-up and never stored or printed.
-3. **Honest verification.** The tool verifies against `source-metadata.json`, not the live source. That is a real end-to-end check of the iteration 4 renderer and the load, because the metadata was produced by an independent code path. It guards against mistakes, not tampering: anyone with write access could edit both the metadata and the SQL.
-4. **Fail loudly and specifically.** Every failure names the table and column (or check) and sets a distinct exit code.
-5. **Repeatable.** From a fresh clone, one command reproduces the result; `--recreate` rebuilds it.
+On a Linux machine with Docker Engine running, bash and `sha256sum`, from the repository root:
 
-## 3. Decision log (iteration 5)
+```
+tools/dbmigrate/iteration5/ingest.sh all --recreate
+```
 
-Numbering follows the shared decision list (1-4, 2b, 8, 11, 12, 14 belong to the iteration 4 export).
+Expected output ends with `VERIFICATION PASSED - 80 of 80 checks; 155 of 155 rows verified identical`, `SELFTEST PASSED - 7 of 7`, `REPORT WRITTEN: ...` and exit code 0. It rewrites `tools/dbmigrate/iteration5/verification-results.json`, `selftest-results.json` and `docs/dbmigrate/iteration5/MigrationVerificationReport5.html`. If the input files are ever refreshed from iteration 4, copy all three into `input/` (never edit them by hand) and run the same command.
 
-| # | Decision | Status | Answer / default |
-|---|---|---|---|
-| 5 | Database and schema setup | **Settled** | The tool starts a PostgreSQL container, which creates the database at first start (`POSTGRES_DB`). The SQL files are environment-free (no database, owner or schema names). A small config file supplies container name, image, database, user and schema (default `public`). The password is generated at container creation, never stored. Nothing is published to the host (no `-p`). |
-| 6 | PostgreSQL version | **Settled** | **15 or later.** Default image `postgres:16` (Debian-based, UTF-8). The tool refuses an image whose server reports a version below 15 (exit 2). |
-| 7 | Tooling | **Settled** | **bash + Docker only.** `psql`, `createdb` and every PostgreSQL tool run inside the container. Verification is SQL run through `psql`. No Python, no Java, no host PostgreSQL client. |
-| 9 | How verification consumes `source-metadata.json` | **Settled** | **Chosen:** a static `verify.sql` reads the JSON with `jsonb`. The JSON holds only structure, counts, hashes and expected results, **no SQL text**. A static, checked-in `verify.sql` reads it with `psql` (`\set meta \`cat /tmp/source-metadata.json\`` inside the container, then `:'meta'::jsonb`) and builds every query itself in PL/pgSQL with `format('%I', ...)` from the metadata's table and column names, so nothing executable is read from a data file. The ten business-summary queries are static in `verify.sql`, keyed by name; the JSON holds their expected rows. **Rejected alternative:** iteration 4 generating a `verify.sql` with the expected values embedded (two generated artifacts to keep consistent, and the JSON would be only a report). |
-| 10 | Where the generated SQL is proven to load | **Settled** | In the Docker container on the Linux machine, as part of this iteration. That container **is** the deliverable; no separate throwaway PostgreSQL is needed. (Any rendering bug found here goes back to iteration 4.) |
-| 13 | The verification report | **Settled** | **`MigrationVerificationReport5.html`**, in `docs/dbmigrate/iteration5/`. Iteration 5 owns it (section 8). It is HTML, not Word: the earlier reports were built with PowerShell and `System.Drawing` on Windows, which is not available here, and no conversion tool (LibreOffice) is needed. Generated on Linux by `ingest.sh report` from `verification-results.json`, with bash and standard text tools; `psql -H` may render tables. |
-| 15 | Container details | **Settled** | **Image** `postgres:16` (must be 15 or later; the tool refuses an older server). **Names:** container `mar-postgres`, database and user `masterantique`. **Password:** generated at container creation, never stored or printed; inside the container `docker exec ... psql` connects over the local socket without one. **Network:** no published port, so nothing on the host or network can reach the database. **Storage:** the database lives in the container's own storage (as in iteration 2), with no named volume; `docker stop`/`start` keeps it, `docker rm -f -v` deletes it, and `--recreate` does exactly that. |
-| 16 | A PostgreSQL database guide (how to interact with the Dockerized database) | **Open** | Iterations 1-3 each produced a database guide. Iteration 5 has none yet. A guide covering `docker exec ... psql`, one-off queries, scripts, safe experiments, lifecycle and troubleshooting would fit. Decide whether to write one and in which format (HTML or Markdown). |
+The rest of this plan describes how the tool was built, so it can be rebuilt or changed.
 
-The hand-off of the three input files from iteration 4 is a manual copy (into `input/`, committed from Windows); automating it is out of scope for now.
+## 3. Principles
 
-## 4. The contract with iteration 4
+1. **The database lives only in the container.** It is never copied to the host and no port is published; all interaction is `docker exec ... psql`.
+2. **No secrets anywhere.** The input is sanitized (credentials NULL, `must_reset_password` true). The container's password is random, handed over as a file that is deleted after start-up, and never stored or printed.
+3. **Honest verification.** Checks are against `source-metadata.json`, which iteration 4 produced by a code path separate from the SQL rendering, so it is a real end-to-end check of the export and the load. It guards against mistakes, not tampering.
+4. **Nothing executable is read from a data file.** Every query is written in `verify.sql` and built with `format('%I', ...)` from names in the metadata.
+5. **Fail loudly and specifically.** Every check prints PASS or FAIL with the table or rule concerned; distinct exit codes.
+6. **The delivered database is never modified by testing.** Rule tests are rolled back; the self-test uses its own temporary container.
+7. **Repeatable.** One command from a fresh clone; `--recreate` rebuilds; outputs are deterministic apart from the run time.
 
-Iteration 5 depends on these files and fields. If iteration 4 changes them, this plan changes with it.
+## 4. Settled decisions (as executed)
 
-**Files** (copied into `tools/dbmigrate/iteration5/input/` on Windows at hand-off, then committed): `01-schema.sql`, `02-data-sanitized.sql`, `source-metadata.json`.
+| # | Decision | As executed |
+|---|---|---|
+| 5 | Database setup | The container creates the database at first start (`POSTGRES_DB`). The SQL files carry no environment details. A small non-secret settings file supplies names. |
+| 6 | PostgreSQL version | 15 or later; the tool refuses an older server (exit 2). |
+| 7 | Tooling | bash + Docker only. `psql` runs inside the container. No host `psql`, Python, Java or `jq`. |
+| 9 | Reading the metadata | A static `verify.sql` loads the JSON with `\set meta \`cat ...\`` into a temp table as `jsonb` and builds every query itself. |
+| 10 | Where the SQL is proven to load | In this container; a rendering bug is fixed in iteration 4's `postgres.ps1` and re-exported, never patched by hand here. |
+| 13 | Report | `docs/dbmigrate/iteration5/MigrationVerificationReport5.html`: one self-contained HTML file, built from the results JSON. |
+| 15 | Container | Image **`postgres:16.1`** (pinned; already on the machine, and the version iteration 4's load proof used). Container `mar-postgres`, database and user `masterantique`, schema `public`, no published port, no named volume (`docker rm -f -v` deletes the container with the image's anonymous data volume; `--recreate` does exactly that). |
+| 16 | A PostgreSQL database guide | **Settled: HTML**, `docs/dbmigrate/iteration5/PostgreSQLDatabaseGuide.html`. Covers psql from bash, application logins (`mar_app`, `mar_readonly`), three network routes (container address, shared Docker network, localhost-only proxy), and a Spring Boot 4.1.1 JPA/JDBC project (Gradle Groovy/Kotlin, Maven) with a first-login password-change mock-up. Every command and file in it was run against a temporary copy of the database. |
 
-**`source-metadata.json`:**
-- `schemaVersion` (1); `meta`: `iteration`, `source` (server, database, version), `minPostgresVersion` (15), `schemaFile`/`schemaSha256` and `dataFile`/`dataSha256` (SHA-256 of the two SQL files), `sanitizeCredentials`. The separate top-level `run` section (`runTimeUtc`, `toolGitCommit`) is the only non-deterministic part; ignore it when verifying.
-- `tables[]` in load order: `sourceName`, `targetName`, `rowCount`, `identityLast` (or null), `rowSha256`, `columns[]` in column order (`sourceName`, `sourceType`, `kind` in `int|bit|datetime|string|binary|guid`, `targetName`, `targetType`, `dataType` and `maxLength` as `information_schema` reports them, `nullable`, `default`, `identity`, `synthetic`), `primaryKey[]` (target names, in order), `foreignKeys[]` (`targetName`, `columns`, `refTable`, `refColumns`, `onDelete`), `indexes[]` (`targetName`, `unique`, `columns[]` with `column`, `expression` (e.g. `lower(name)`) and `descending`, and the partial `filter` such as `deleted_at IS NULL`).
-- `summaries[]`: `name`, `sourceSql` (SQL Server text, **documentation only, never execute it**) and `expectedRows` for the ten business summaries. `expectedRows` are sorted ordinally; cells are joined by `|`; **NULL is the empty string**; timestamps are `yyyy-MM-dd HH:mm:ss.fff`; booleans 1/0. Iteration 5 writes its own PostgreSQL query for each summary, keyed by `name`, and formats its output the same way.
-- `renameMap`, `excludedTables`, `knownDifferences` (for the report).
-- `expectations`: `totalRows` (155), `usersSanitized` (every `users` row has NULL `password_hash` and `security_stamp` and `must_reset_password` true), `usersCount` (12), `noDuplicateActiveUsernamesIgnoringCase`.
+## 5. The input contract with iteration 4
 
-**Canonical row form and hash** (defined independent of any database; computed on Windows from the sanitized in-memory rows and recomputed here in SQL):
-- **Rows sorted ascending by their own canonical text (ordinal, byte order), not by primary key**, joined by LF; cells joined by `|` in column order; a NULL cell is `~`; otherwise a one-letter prefix and a value: `i:<decimal>`, `b:1|0` (boolean), `t:yyyy-MM-dd HH:mm:ss.fff` (timestamp), `s:<lowercase hex of the UTF-8 bytes>` (string). The table hash is the lowercase hex SHA-256 of the UTF-8 text. An **empty table hashes the empty string** (`e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`).
-- PostgreSQL side: per cell `coalesce('i:'||col::text,'~')`, `coalesce('b:'||(case when col then '1' else '0' end),'~')`, `coalesce('t:'||to_char(col,'YYYY-MM-DD HH24:MI:SS.MS'),'~')`, `coalesce('s:'||encode(convert_to(col,'UTF8'),'hex'),'~')`; row = `concat_ws('|', cells)` (every cell is coalesced, so `concat_ws` never drops one); table = `encode(sha256(convert_to(coalesce(string_agg(row, E'\n' ORDER BY row COLLATE "C"), ''), 'UTF8')), 'hex')`. `sha256()` is built in. **Proven:** a dynamic PL/pgSQL `DO` block that loops over `tables[]`/`columns[]` in the JSON (loaded with `\set meta \`cat /tmp/source-metadata.json\`` and `CREATE TEMP TABLE meta AS SELECT :'meta'::jsonb AS j`), builds each query with `format('%I', targetName)` and a `CASE` on `kind`, and compares with `rowSha256`, matched all 8 tables on PostgreSQL 16 (so `verify.sql` needs no SQL text from the JSON).
+Iteration 5 depends on these files and fields. If iteration 4 changes them, this plan and `verify.sql` change with them.
 
-## 5. Layout
+- **Files:** `input/01-schema.sql` (8 tables, 11 indexes, one transaction), `input/02-data-sanitized.sql` (multi-row `INSERT`s and a `setval` per identity table, one transaction), `input/source-metadata.json`.
+- **`source-metadata.json`:** `schemaVersion` (1); `meta` (`source`, `minPostgresVersion` 15, `schemaFile`/`schemaSha256`, `dataFile`/`dataSha256`, `sanitizeCredentials`); `run` (`runTimeUtc`, `toolGitCommit` of the export; the only non-deterministic part); `tables[]` in load order (`sourceName`, `targetName`, `rowCount`, `identityLast`, `rowSha256`, `columns[]` with `sourceName`, `sourceType`, `kind` in `int|bit|datetime|string|binary|guid`, `targetName`, `targetType`, `dataType`, `maxLength`, `nullable`, `default`, `identity`, `synthetic`; `primaryKey[]`; `foreignKeys[]` with `targetName`, `columns`, `refTable`, `refColumns`, `onDelete`; `indexes[]` with `targetName`, `unique`, `columns[]` of `column`/`expression`/`descending`, `filter`); `summaries[]` (`name`, `sourceSql` for documentation only, `expectedRows`); `expectations` (`totalRows` 155, `usersSanitized`, `usersCount` 12, `noDuplicateActiveUsernamesIgnoringCase`); `renameMap`, `excludedTables`, `knownDifferences`.
+- **Canonical row form and hash** (independent of any database): per table, each row becomes cells joined by `|` in column order; a NULL cell is `~`; otherwise `i:<decimal>`, `b:1|0`, `t:yyyy-MM-dd HH:mm:ss.fff`, `s:<lowercase hex of the UTF-8 bytes>` (`x:` hex for binary, `g:` lowercase guid). Rows are sorted by their own text in byte order (`COLLATE "C"`), joined by LF, and the UTF-8 text is hashed with SHA-256 (lowercase hex). An empty table hashes the empty string (`e3b0c442...`).
+- **Summary rows:** cells joined by `|`, NULL as the empty string, timestamps `yyyy-MM-dd HH:mm:ss.fff`, booleans 1/0; compared as rows sorted in byte order.
+
+## 6. Layout
 
 ```
 tools/dbmigrate/iteration5/
-  README.md                how to run it (no Claude needed)
-  ingest.sh                load | verify | selftest | report | all
-  ingest.conf.example      non-secret settings; copy to ingest.conf (ingest.conf is gitignored)
-  verify.sql               static verification, reads source-metadata.json (decision 9)
-  input/                   01-schema.sql, 02-data-sanitized.sql, source-metadata.json (copied from iteration 4 at hand-off)
+  ingest.sh                   the tool: load | verify | selftest | report | all
+  verify.sql                  static verification, run by psql in the container
+  report.sql                  renders the HTML report from the results JSON
+  ingest.conf.example         non-secret settings (copy to ingest.conf to override)
+  README.md                   how to run it and how to reach the database
+  .gitattributes              *.sql *.json *.sh *.md ingest.conf.example: text eol=lf
+  .gitignore                  ingest.conf, *.log
+  input/                      01-schema.sql, 02-data-sanitized.sql, source-metadata.json (from iteration 4)
   verification-results.json   OUTPUT of verify (the report's source)
-  .gitattributes           *.sql, *.json, *.sh: text eol=lf
+  selftest-results.json       OUTPUT of selftest
 docs/dbmigrate/iteration5/
-  ITERATION5_PLAN.md (this file)   ITERATION5.md (written after the real run)
-  MigrationVerificationReport5.html   (this iteration's responsibility; decision 13)
+  ITERATION5_PLAN.md (this file)   ITERATION5.md (record of the run)
+  MigrationVerificationReport5.html   OUTPUT of report
+  PostgreSQLDatabaseGuide.html        how to connect: psql, logins, network routes, Spring Boot (decision 16)
 ```
 
-`ingest.conf` (bash `key=value`, sourced; non-secret): `CONTAINER=mar-postgres`, `PG_IMAGE=postgres:16`, `PG_DATABASE=masterantique`, `PG_USER=masterantique`, `PG_SCHEMA=public`, `INPUT_DIR=input`.
+## 7. Execution, step by step
 
-## 6. Commands and exit codes
+The work was done in six steps, each reviewed before the next. To rebuild, follow the same order.
 
-`ingest.sh load [--recreate]`, `verify`, `selftest`, `report`, `all [--recreate]` (load, verify, selftest, report). `--config <path>` overrides `ingest.conf`.
+### Step 1 - Scaffolding
 
-Exit codes (same convention as iterations 1-3): **0** ok, **1** verification differences, **2** configuration, tool or Docker error (Docker not running, image cannot be pulled, transfer-integrity failure, server older than 15), **3** refused (the container or its populated database already exists and `--recreate` was not given).
+- `.gitattributes` pins `*.sql`, `*.json`, `*.sh`, `*.md` and `ingest.conf.example` to LF: the metadata records hashes of the LF form, string literals may contain raw LF, and bash breaks on CRLF.
+- `.gitignore` (per-iteration, as in iteration 3) ignores `ingest.conf` and `*.log`.
+- `ingest.conf.example`, bash `key=value`, sourced by `ingest.sh`; without `ingest.conf` the same values are built-in defaults:
+  ```
+  CONTAINER=mar-postgres
+  PG_IMAGE=postgres:16.1
+  PG_DATABASE=masterantique
+  PG_USER=masterantique
+  PG_SCHEMA=public
+  INPUT_DIR=input        # relative to the script folder, or absolute
+  ```
 
-### 6.1 `load`
-1. Read the config. Confirm `docker` works (`docker info`); exit 2 with a clear message if not.
-2. **Transfer integrity:** `sha256sum` of `input/01-schema.sql` and `input/02-data-sanitized.sql` must equal `schemaSha256` and `dataSha256` in the metadata (exit 2 on mismatch). Read the expected values without `jq`: ask the database for them after the container is up (`select :'meta'::jsonb -> 'meta' ->> 'schemaSha256'`), so do this check after step 4 and before step 5.
-3. If the container exists: without `--recreate` exit 3; with `--recreate`, `docker rm -f -v $CONTAINER`.
-4. Start the container: `docker run -d --name $CONTAINER -e POSTGRES_DB=$PG_DATABASE -e POSTGRES_USER=$PG_USER -e POSTGRES_PASSWORD=<random, generated here, not stored> $PG_IMAGE`. No published port. Wait until `pg_isready` succeeds inside the container (bounded wait, then exit 2). Note: the official image restarts the server once during first-time initialisation, so poll until `psql -c 'select 1'` succeeds against the *database* twice in a row, not merely `pg_isready`.
-5. Check `SHOW server_version_num` >= 150000 and `SHOW server_encoding` = UTF8 (exit 2 otherwise).
-6. `docker cp` the three input files into the container's `/tmp`. If `PG_SCHEMA` is not `public`: `CREATE SCHEMA IF NOT EXISTS`. Set `PGOPTIONS="-c search_path=$PG_SCHEMA"` on every later `docker exec` (`-e PGOPTIONS=...`).
-7. `docker exec $CONTAINER psql -X -v ON_ERROR_STOP=1 -U $PG_USER -d $PG_DATABASE -f /tmp/01-schema.sql -f /tmp/02-data-sanitized.sql`. Stop at the first error and print it. Both files run their own `BEGIN`/`COMMIT`.
+### Step 2 - `ingest.sh load`
 
-Inside the container the official image trusts local socket connections, so `docker exec ... psql` needs no password.
+Commands: `load [--recreate]`, `verify [--db <name>] [--out <path>]`, `selftest`, `report`, `all [--recreate]`; `--config <path>` overrides the settings file. Exit codes: **0** ok, **1** verification or self-test differences, **2** configuration, tool or Docker error, **3** refused. Setting values are validated against `^[A-Za-z0-9_.:/-]+$`.
 
-### 6.2 `verify`
-Read-only against the database except for the rolled-back rule tests. Runs `docker exec ... psql -X -q -A -t -v ON_ERROR_STOP=1 -f /tmp/verify.sql` (copy `verify.sql` in with `docker cp`); `verify.sql` prints one line per check, `PASS<TAB>category<TAB>name<TAB>detail` or `FAIL<TAB>...`. `ingest.sh` counts the `FAIL` lines, prints a summary (`VERIFICATION PASSED - N of N checks; N of N rows verified identical`), records every check, count, hash and tool version in `tools/dbmigrate/iteration5/verification-results.json` (the report's source), and exits 1 if any failed. Checks:
+`load`, in order:
 
-1. **Environment:** `server_version_num` >= 150000; `server_encoding` = UTF8.
-2. **Row counts** per table against `rowCount`.
-3. **Content hashes:** per-table canonical hash (section 4) against `rowSha256`. A mismatch names the table; to name the column, also compute a per-column hash on mismatch against an optional `columnSha256` field (add it to the iteration 4 contract if wanted).
-4. **Schema:** from `information_schema` and `pg_catalog`, compare columns (name, type, nullability, default), primary keys, foreign keys with delete actions, indexes (unique, partial predicate, the `lower(name)` expression on `ix_users_name_active`, the plain unique `ix_roles_name`) and identity columns (`GENERATED BY DEFAULT`) with the metadata; no invalid indexes (`pg_index.indisvalid`).
-5. **Business summaries:** the ten queries (static in `verify.sql`, snake_case names) against `expectedRows`.
-6. **Sanitization:** every `users` row has NULL `password_hash` and `security_stamp` and `must_reset_password` true.
-7. **Rule tests**, each a PL/pgSQL `DO` block with `EXCEPTION` handling, all inside a transaction that is rolled back:
-   - inserting a second **active** user whose name differs only by case from an existing one raises `unique_violation`;
-   - a **soft-deleted** username can be reused (set `deleted_at` on the existing row, then the insert succeeds);
-   - an orphan foreign key (`comments` with a non-existent user and ticket) raises `foreign_key_violation`;
-   - each identity sequence state equals `identityLast` (read `pg_sequences.last_value`; **do not call `nextval`**, it is not rolled back and would burn an id). **Ordering matters (found during iteration 4's PostgreSQL check):** `nextval` is not rolled back even when the insert fails, so any rule-test insert that relies on the identity default advances the sequence permanently (a test run moved `users_id_seq` from 12 to 14 and `comments_id_seq` from 26 to 27). Therefore **check the sequence states first, before the rule tests, and give every test insert an explicit id well above the data (for example 1000001 and up)**, which `GENERATED BY DEFAULT` accepts without touching the sequence.
+1. `docker info` must work, else exit 2 ("Docker is not running or not reachable").
+2. **Transfer integrity, before anything starts:** `sha256sum` of both SQL files must equal `schemaSha256` and `dataSha256`, read from the metadata with `grep -o '"<key>": *"[0-9a-f]\{64\}"'`. A mismatch exits 2 and no container is created.
+3. If the container exists: without `--recreate` print `REFUSED` and exit 3; with it, `docker rm -f -v`.
+4. Pull the image only if it is not present.
+5. Generate a random password (`/dev/urandom` → base64 → alphanumerics) into a file in a `mktemp -d` folder (mode 700, file 644). `docker create` with `POSTGRES_DB`, `POSTGRES_USER` and `POSTGRES_PASSWORD_FILE=/tmp/.pgpw` and **no `-p`**; `docker cp` the file into the created container; delete the host copy; `docker start`. (The file, not `POSTGRES_PASSWORD`, keeps the password out of the container configuration and `docker inspect`.)
+6. **Wait for readiness** (up to 120 s, polling each second): the log must contain `PostgreSQL init process complete` (the image first runs a temporary server, then restarts) and `psql -c 'select 1'` must succeed twice in a row. Exit 2 if the container stops or time runs out. Then `docker exec ... rm -f /tmp/.pgpw`.
+7. `SHOW server_version_num` must be ≥ 150000 and `SHOW server_encoding` must be `UTF8`, else exit 2.
+8. If `PG_SCHEMA` is not `public`, `CREATE SCHEMA IF NOT EXISTS`. Every `psql` call passes `-e PGOPTIONS="-c search_path=$PG_SCHEMA"`.
+9. `docker cp` the three input files into the container's `/tmp`.
+10. `psql -X -q -v ON_ERROR_STOP=1 -U $PG_USER -d $PG_DATABASE -f /tmp/01-schema.sql -f /tmp/02-data-sanitized.sql`. On error exit 2 and leave the container for inspection (reload with `--recreate`).
+11. Print the row count per table and the total, then `LOAD COMPLETE`.
 
-### 6.3 `selftest`
-Proves the tooling, like iterations 1-3: (1) `load` twice from a clean state produces identical `verify` results (determinism); (2) in the same container, `CREATE DATABASE selftest TEMPLATE $PG_DATABASE`, change one comment and delete one ticket there, and run `verify` against `selftest`; it must exit 1 and name the table and column; then drop `selftest`. (`verify` therefore takes an optional `--db <name>`.)
+All `psql` calls are `docker exec -i ... psql -X -v ON_ERROR_STOP=1 -U $PG_USER -d <db>` over the local socket, which the official image trusts, so no password is needed.
 
-## 7. Git and repeatability
+### Step 3 - `verify.sql` and `ingest.sh verify`
 
-- Check in `ingest.sh`, `ingest.conf.example`, `verify.sql`, `README.md`, `input/*`, `.gitattributes`, and the results JSON and report once produced. Gitignore `ingest.conf` and local logs.
-- `.gitattributes` pins `*.sql`, `*.json`, `*.sh` to LF. The metadata records SHA-256 hashes of the LF form, string literals may contain raw LF, and bash scripts break with CRLF. Verify after a fresh clone on Linux.
-- A fresh clone plus `ingest.conf` and a running Docker Engine must be enough to reproduce the result. No other setup.
+`ingest.sh verify` copies `source-metadata.json` and `verify.sql` into the container and runs `psql -q -A -t` with variables `schema_sha`, `data_sha` (host `sha256sum` of the input files), `run_time` (UTC), `tool_commit` (`git rev-parse --short HEAD`, or `unknown`), `image`, `container` and `outfile=/tmp/verification-results.json`. It copies the JSON out (default `tools/dbmigrate/iteration5/verification-results.json`, or `--out`), prints each check as `PASS|FAIL  category  name -- detail`, then `VERIFICATION PASSED - N of N checks; R of R rows verified identical (database D)` (or `FAILED`) and exits 1 if any check failed, 2 if `verify.sql` itself failed. Before each run it deletes the old `/tmp/verification-results.json` in the container: Linux's `protected_regular` rule stops even root from overwriting a file in `/tmp` that another user owns, which broke `verify` after `report` until this was added.
 
-## 8. The verification report (`MigrationVerificationReport5.html`)
+`verify.sql` structure:
 
-Iteration 5 owns this file (decision 13). It follows the content pattern of `MigrationVerificationReport{N}.docx` in iterations 1-3 but is a single, self-contained HTML file (inline CSS, no external assets, viewable offline). Contents: an executive summary and PASS/FAIL banner ("N of N checks passed, N of N rows verified identical"), a scope and method section in plain English, per-table row counts and hashes, the schema comparison, the ten business summaries, the rule tests, known differences, and a reproducibility section (commands, input file hashes, tool versions, image tag, run time). Simple charts, if any, are inline SVG or CSS bars. Basic accessibility: real headings, table headers, and text alternatives. Its source is `verification-results.json` (section 6.2), which `verify.sql` can assemble as a `jsonb` document that `psql` prints (no `jq`). `ingest.sh report` builds the HTML from that JSON with bash and standard text tools; a rebuild from the same JSON is byte-identical except for the run-time section.
+- Load the metadata into a temp table `meta(j jsonb)` and the variables into `run_info`. Results go to temp tables `results(seq, status, category, name, detail)`, `table_results`, `summary_results` and `seq_snapshot`. Helper functions live in `pg_temp`: `chk(ok, category, name, detail)` (NULL counts as FAIL), `norm_default` (strip casts and quotes, lowercase), `norm_expr` (strip casts, parentheses, quotes, spaces, lowercase; so `lower(name::text)` equals `lower(name)`), `jdiff` (readable difference between two JSON arrays), `ts` (timestamp → `yyyy-MM-dd HH:mm:ss.fff` or empty).
+- Every group of checks is a `DO` block; errors inside are caught and recorded as FAIL, so a broken database produces failures, not a crash.
 
-## 9. Acceptance criteria (definition of done)
+Checks (80 on this data):
 
-On a Linux machine with only Docker Engine, bash and `sha256sum`, from a fresh clone:
+| # | Category | Checks |
+|---|---|---|
+| 1 | environment (3) | server version ≥ `minPostgresVersion`; encoding UTF8; metadata `schemaVersion` = 1 |
+| 2 | integrity (2) | host SHA-256 of each SQL file equals the metadata |
+| 3 | counts (9) and hashes (8) | per table, one query built from the column list: `SELECT count(*), encode(sha256(convert_to(coalesce(string_agg(r, E'\n' ORDER BY r COLLATE "C"), ''), 'UTF8')), 'hex') FROM (SELECT concat_ws('\|', <cells>) AS r FROM <table>) x`, with each cell `coalesce('<prefix>:' \|\| <value>, '~')` per `kind` (boolean: `CASE WHEN c THEN '1' WHEN NOT c THEN '0' END`, so NULL stays `~`); compare with `rowCount` and `rowSha256`; plus total rows = `expectations.totalRows` |
+| 4 | schema (34) | exactly the expected base tables; per table: columns in order (name, `information_schema` data type, max length, nullability, normalized default, identity `BY DEFAULT`), primary key columns in order (`pg_constraint`), foreign keys (name, columns, referenced table and columns, delete action from `confdeltype`), indexes other than the primary key (name, unique, normalized keys from `pg_get_indexdef`, descending from `indoption`, normalized `pg_get_expr(indpred)`); no invalid index |
+| 5 | summaries (10) | ten static PostgreSQL queries keyed by the metadata's summary names (users by type; active vs soft-deleted; users per role; tickets by state; assigned vs unassigned; audit events by action; comments per ticket distribution; comment and commented-ticket totals; ticket date ranges; account and audit date ranges), run with `EXECUTE`, rows sorted `COLLATE "C"` and compared with `expectedRows`; a metadata summary without a query, or a query without a metadata summary, fails |
+| 6 | sanitization (4) | `sanitizeCredentials` true; user count = `usersCount`; no user with a password hash or security stamp or without `must_reset_password`; no two active usernames equal ignoring case |
+| 7 | rules (10) | **first**, each identity sequence's `pg_sequences.last_value` equals `identityLast` (NULL = never used), without `nextval`, snapshotted; **then** three behaviour tests, each in a block that ends by raising a private error (SQLSTATE `P0999`) so everything it did is rolled back, with explicit ids ≥ 1000001 so no sequence moves: the upper-case form of an active username is rejected (`unique_violation`); after soft-deleting that user, the same name can be inserted; a comment with a non-existent user and ticket is rejected (`foreign_key_violation`); **last**, no test rows remain and no sequence moved |
 
-1. `ingest.sh all` exits 0 and prints `VERIFICATION PASSED`, with every check PASS: 155 of 155 rows, all eight table hashes, schema, ten summaries, sanitization, four rule tests; and `SELFTEST PASSED`.
-2. `ingest.sh load` run again without `--recreate` exits **3**.
-3. `ingest.sh all --recreate` rebuilds and passes again (repeatable).
-4. Negative tests: a changed byte in a copy of `input/02-data-sanitized.sql` exits **2** (transfer integrity); a changed hash in a copy of the metadata makes `verify` exit **1** naming the table; Docker stopped exits **2** with a clear message.
-5. The database exists only in the container: no PostgreSQL data files on the host, no published port.
-6. Nothing in the repository contains a password, and `verify` output contains no credential values.
-7. `ingest.sh report` writes `MigrationVerificationReport5.html`; it opens in a browser offline, its numbers match `verification-results.json`, and rebuilding it from the same JSON gives an identical file (apart from the run-time section).
+Output: the check lines, a `SUMMARY<TAB>passed<TAB>total<TAB>rowsVerified<TAB>rowsTotal` line, and (via `\o :outfile`) a `jsonb_pretty` document with `status`, `checksPassed`, `checksTotal`, `rowsVerified`, `rowsTotal`, `database`, `environment` (server version, encoding, image, container, schema), `run` (`runTimeUtc`, `toolGitCommit`), `source`, `sourceExport`, `inputs` (file, expected and actual SHA-256), `tables`, `summaries`, `checks`, `schemaModel` (from the metadata, for the report), `knownDifferences`, `excludedTables`.
 
-## 10. Build order for a fresh session
+### Step 4 - `ingest.sh selftest`
 
-1. Read this plan, `ITERATION4_PLAN.md` and `DATA_MIGRATION.md` §5. Confirm the three files are in `input/` and that their hashes match the metadata. All decisions are settled except 16 (database guide, section 3); confirm that one with the user, and do not reopen the others.
-2. Write `.gitattributes`, `ingest.conf.example`, and `ingest.sh load` (section 6.1); run it and inspect the database with `docker exec ... psql`.
-3. Write `verify.sql` and the `verify` path (section 6.2), starting with counts and hashes, then schema, summaries, sanitization, rule tests. Write `verification-results.json`.
-4. Write `selftest` (section 6.3) and run the acceptance criteria (section 9), including the negative tests.
-5. Write the report step (section 8); write the database guide if decision 16 says so; write `README.md`; write `docs/dbmigrate/iteration5/ITERATION5.md` (what actually happened, real numbers); update `docs/DATA_MIGRATION.md` (§3 roadmap, §8 and §9 document map) and the commands paragraph of `CLAUDE.md`.
-6. If a SQL rendering bug is found, fix it in iteration 4's `postgres.ps1` on the Windows machine, re-export, and re-copy the three files; do not patch the SQL by hand.
+Requires the delivered container to be running (it is compared against), but never modifies it. It uses a separate container `<CONTAINER>-selftest` via a temporary settings file, and removes it (`docker rm -f -v`) at the end. Tests:
 
-## 11. Risks and known limits
+1. **Repeatable load:** `load --recreate` + `verify` twice in the self-test container; both exit 0, check lines identical, results JSON identical apart from the `runTimeUtc` lines.
+2. **Delivered database matches a fresh load:** `verify` of the delivered container (to a temporary output) gives the same check lines.
+3. **Damaged copy detected:** `CREATE DATABASE ingest_selftest_damaged TEMPLATE masterantique` in the self-test container; edit one comment's text, delete the last ticket, drop `ix_users_name_active`; `verify --db` must exit 1 with FAIL lines for tickets (count, hash), comments (hash), the users indexes and the case rule, and no hash failure for untouched tables. Drop the database.
+4. **Tampered metadata detected:** copy the inputs, zero the first `rowSha256` (roles); `verify` must exit 1 with exactly one failure, naming roles.
+5. **Corrupted input refused:** copy the inputs, change one byte of the data file (`Customer` → `Customes`), point at an unused container name; `load` must exit 2 with "transfer integrity check failed" and create no container.
+6. **Existing database protected:** `load` without `--recreate` on the self-test container must exit 3.
+7. **Docker unavailable:** with `DOCKER_HOST=unix:///nonexistent/docker.sock`, the tool must exit 2 with "Docker is not running". (Simulated, so other containers on the machine are not stopped.)
 
-- Verification is against a manifest produced on Windows, not the live SQL Server database (principle 3).
-- `psql`'s `\set var \`cmd\`` runs a shell command inside the container; the tool only ever runs `cat` on a path it created. Keep it that way.
-- The canonical hash depends on iteration 4 and this tool agreeing on the form byte for byte (empty-table hash, timestamp truncation to 3 digits, hex of UTF-8). A mismatch on a single table with matching counts usually means a formatting disagreement; check the canonical form before suspecting the data.
-- PostgreSQL defaults are reported by `information_schema` in a different form from the SQL (for example `false` versus `'false'::boolean`); normalize before comparing.
-- Timestamps carry no time zone and the source zone (UTC or local) is unknown (iteration 4, decision 3); this tool makes no conversion.
-- Usernames are case-insensitive only through the `lower()` index; Phase 2 authentication must compare `lower(name) = lower(:input)`.
-- The first `docker run` needs internet access to pull the image; the official image restarts once during first-time initialisation (step 4 of `load` handles it).
+Writes `tools/dbmigrate/iteration5/selftest-results.json` (`status`, `passed`, `total`, `tests[]` of `name`, `status`, `detail`; no timestamps) and prints `SELFTEST PASSED - 7 of 7`. On failure it keeps its working folder and says where.
+
+### Step 5 - `ingest.sh report`
+
+Copies `verification-results.json` and `selftest-results.json` (or a `null` stub) into the container as `/tmp/report-results.json` and `/tmp/report-selftest.json`, plus `report.sql`, and runs `report.sql` with `psql` **in the default `postgres` database**: `psql` is only the template engine; the migrated data is not read. `report.sql` escapes every value for HTML (`pg_temp.h`) and writes `/tmp/report.html`, which is copied to `docs/dbmigrate/iteration5/MigrationVerificationReport5.html`.
+
+Page content: title and PASS/FAIL banner ("N of N checks passed · R of R rows verified identical · self-test S of S passed"); executive summary with four tiles; scope and method in plain English with a per-category table; tables with source and loaded counts and hashes; schema per table (source → PostgreSQL columns and types, keys, foreign keys, indexes) and the schema checks; the ten business summaries with CSS bar charts where every row is `label|count` (notes for ticket states 0/1/2 = SUBMITTED/INPROGRESS/COMPLETED and numeric audit actions); credential sanitization; rule tests; tooling self-test; known differences and "what this verification is and is not"; all checks; reproducibility (commands, run time, commit, server version, image, container, file hashes, source and export details). Self-contained (inline CSS, no external files), light and dark themes, `lang`, real headings, table headers with `scope`, wide tables scroll inside their own box at phone width. The same JSON always gives a byte-identical file.
+
+`all` runs load, verify, selftest (in a subshell), report; exit 2 if any step errored, 1 if verify or selftest found differences, else 0.
+
+### Step 6 - Documentation
+
+- `tools/dbmigrate/iteration5/README.md`: how to run it, commands, options, exit codes, settings, working with the database, files.
+- `docs/dbmigrate/iteration5/ITERATION5.md`: the record of the run with real numbers, differences from the original plan, things noticed, limitations.
+- `docs/DATA_MIGRATION.md`: §3 roadmap row 5, §8.7 and §8.8 status ("planning only" replaced), §9 document map.
+- `CLAUDE.md`: the iteration 5 commands bullet and the iterations summary.
+
+## 8. Acceptance criteria (all met on 2026-09-23)
+
+1. `ingest.sh all --recreate` exits 0 with `VERIFICATION PASSED - 80 of 80 checks; 155 of 155 rows verified identical`, `SELFTEST PASSED - 7 of 7` and the report written.
+2. `ingest.sh load` without `--recreate` on an existing container exits 3.
+3. Negative cases (automated in the self-test): a changed byte in the data file exits 2 before any container exists; a changed hash in the metadata makes `verify` exit 1 naming the table; a damaged database copy makes `verify` exit 1 naming the tables, the index and the rule; Docker unreachable exits 2 with a clear message.
+4. The database exists only in the container: no published port (`docker ps` shows `5432/tcp` without a host mapping), no data files on the host, no Docker volume left behind by the self-test.
+5. No password in the repository, the container configuration (`docker inspect`) or any output.
+6. The report opens offline, its numbers match `verification-results.json`, and a rebuild from the same JSON is byte-identical.
+
+Not yet tested: a fresh clone on Windows and Linux (line endings, §6 `.gitattributes`).
+
+## 9. Differences from the original design plan (commit `60d6267`)
+
+| Original plan | As executed | Why |
+|---|---|---|
+| Image `postgres:16` | `postgres:16.1` | Already on the machine, pinned for repeatability, and the version iteration 4's load proof used. |
+| Password in `POSTGRES_PASSWORD` | `POSTGRES_PASSWORD_FILE`, file deleted after start-up | An environment variable is stored in the container configuration and shown by `docker inspect`. |
+| Expected file hashes read through the database after the container is up | Read with `grep` on the host before anything starts | The only reason for the database route was "no `jq`"; now a corrupted file is refused before a container exists. |
+| A failing hash names the table and column (optional `columnSha256`) | Names the table only | The metadata has no per-column hashes; adding them is a change to iteration 4. |
+| Self-test reloads and damages the delivered container | Separate temporary container | Running the self-test can never damage or replace the delivered database. |
+| Negative tests were manual acceptance steps | Automated in `selftest` | Repeatable on every run. |
+| Report built with bash and text tools | Rendered by `psql` in the container (`report.sql`) | HTML from JSON in bash without `jq` is fragile; `psql` in the container is allowed tooling. |
+| Boolean cell `CASE WHEN c THEN '1' ELSE '0' END` | `CASE WHEN c THEN '1' WHEN NOT c THEN '0' END` | The original turns NULL into `0` instead of `~` (no nullable boolean exists here, so the result was unaffected). |
+| Four rule tests | Four, plus "the rule tests left the database unchanged" | Guards against the `nextval` problem found in iteration 4. |
+
+## 10. Risks and known limits
+
+- Verification is against a record made at export, not the live SQL Server database; it guards against mistakes, not tampering.
+- The canonical hash depends on iteration 4 and `verify.sql` agreeing byte for byte (empty-table hash, 3-digit timestamps, hex of UTF-8). A hash mismatch with matching counts usually means a formatting disagreement; check the canonical form before suspecting the data.
+- `psql`'s `\set var \`cmd\`` runs a shell command in the container; the tool only runs `cat` on files it copied there. Keep it that way.
+- Timestamps have no time zone and the source zone is unknown; no conversion is made.
+- Usernames are case-insensitive only through the `lower(name)` index; Phase 2 sign-in must compare `lower(name) = lower(:input)`.
 - The input files contain sanitized but real project data (usernames, timestamps, comment text).
+- A container `mar-postgres-iter4` from iteration 4's build proof is still running on the original machine; it is unrelated to this tool.

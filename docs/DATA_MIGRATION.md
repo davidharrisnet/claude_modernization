@@ -53,7 +53,7 @@ verification-results.json  →  MigrationVerificationReport{N}.docx
 | 3 | SQL Server (via iteration 2's export) → SQLite baked into a Docker image at build time; verification and tooling run **entirely on Linux**, with **no dependency on iteration 1/2's stored results** and **credentials sanitized before anything is built or committed** | Linux, end to end | Done | `docs/dbmigrate/iteration3/` |
 | — | MySQL in Docker | Windows | Extra work, not a numbered iteration | (results embedded in iteration 1/2 regression runs) |
 | 4 | SQL Server → sanitized **PostgreSQL** schema and data files (`01-schema.sql`, `02-data-sanitized.sql`) plus a `source-metadata.json`, checked into git, plus a Word export report. **Export only; no Docker; no target database.** Details: §8 (the earlier database-agnostic idea was considered and set aside: §7) | Windows | **Built and run 2026-09-23** (self-test 9 of 9; the generated SQL was loaded into PostgreSQL 16 during the build and all 8 table counts and hashes matched); record in `ITERATION4.md` | `docs/dbmigrate/iteration4/` |
-| 5 | The iteration 4 files → a fully populated **PostgreSQL** database in a **Docker container**, verified against `source-metadata.json`, with an HTML verification report. bash + Docker only (no Python, no Java, no host PostgreSQL client). Details: §8 | Linux | Planning (decision 16, a database guide, is open) | `docs/dbmigrate/iteration5/` |
+| 5 | The iteration 4 files → a fully populated **PostgreSQL** database in a **Docker container**, verified against `source-metadata.json`, with an HTML verification report. bash + Docker only (no Python, no Java, no host PostgreSQL client). Details: §8 | Linux | **Built and run 2026-09-23** (verification 80 of 80 checks, 155 of 155 rows identical; self-test 7 of 7); record in `ITERATION5.md`. Database guide written (decision 16): `PostgreSQLDatabaseGuide.html` | `docs/dbmigrate/iteration5/` |
 | 6+ | Oracle (the actual Phase 2 target) | TBD | Not started | — |
 
 Each iteration is self-contained under `tools/dbmigrate/iteration{N}/` — its own copy of whatever tooling and input files it needs — so an iteration's results can be reproduced without depending on a later iteration's state. Iteration 3 is the strictest example of this: it doesn't read anything from `tools/dbmigrate/iteration1/` or `iteration2/` at verification time, only at input-copy time (see §5.3).
@@ -223,13 +223,13 @@ Windows can prove that the export is deterministic (two exports byte-identical),
 
 ### 8.7 Open items
 
-- **Decision 16 (open):** whether iteration 5 gets a PostgreSQL database guide (how to interact with the Dockerized database), and in which format (HTML or Markdown). Every other decision is settled (§8.8).
+- **Decision 16 (settled 2026-09-23):** iteration 5 has a PostgreSQL database guide, in HTML: `docs/dbmigrate/iteration5/PostgreSQLDatabaseGuide.html` (psql from bash, application logins, network routes, and a tested Spring Boot 4.1.1 JPA/JDBC project with a first-login password change). All decisions are settled (§8.8).
 - Automating the hand-off copy from iteration 4 to iteration 5 is out of scope for now.
-- Both plans are written; `ITERATION4.md` and `ITERATION5.md` (what actually happened, with real numbers) are written after the real runs (§4 step 4), and the commands paragraph of `CLAUDE.md` is updated when the tools exist.
+- Both iterations are built and run (2026-09-23); `ITERATION4.md` and `ITERATION5.md` record what actually happened, with real numbers, including where the built tools differ from their plans.
 
 ### 8.8 Summary of the effort and decision points
 
-**Effort so far (planning only; nothing is built yet).** Iteration 4 started as "database-agnostic files loadable into SQLite, PostgreSQL or Oracle". Working through the actual schema showed that is not possible with SQL text (§7), so the goal became a PostgreSQL-specific export: a `postgres.ps1` dialect at the sanitize-first seam on Windows, three checked-in files (`01-schema.sql`, `02-data-sanitized.sql`, `source-metadata.json`), and (iteration 5) a Linux tool that loads the files into a PostgreSQL Docker container and verifies the database against the metadata JSON. The design was settled one decision at a time; every decision is settled below except decision 16.
+**Effort so far (both iterations built and run on 2026-09-23; see `ITERATION4.md` and `ITERATION5.md`).** Iteration 4 started as "database-agnostic files loadable into SQLite, PostgreSQL or Oracle". Working through the actual schema showed that is not possible with SQL text (§7), so the goal became a PostgreSQL-specific export: a `postgres.ps1` dialect at the sanitize-first seam on Windows, three checked-in files (`01-schema.sql`, `02-data-sanitized.sql`, `source-metadata.json`), and (iteration 5) a Linux tool that loads the files into a PostgreSQL Docker container and verifies the database against the metadata JSON. The design was settled one decision at a time; every decision is settled below. Both tools were then built and run: the export on Windows (self-test 9 of 9), and the load and verification on Linux (80 of 80 checks, all 155 rows identical, self-test 7 of 7). Iteration 5 pinned the image to `postgres:16.1` (decision 15 said `postgres:16`); the other differences from the plan are listed in `ITERATION5.md` §7.
 
 **Settled decisions**
 
@@ -252,7 +252,7 @@ Windows can prove that the export is deterministic (two exports byte-identical),
 | 14 | Metadata and export report (iteration 4) | **`source-metadata.json` is written at export; a Word export report `MigrationExportReport4.docx` is built from it on Windows** with the existing generator | The data about the source database is recorded at export, following the earlier reports' pattern. Iteration 4 verifies nothing against a target, so it produces an export report, not a verification report. |
 | 15 | Container details (iteration 5) | **`postgres:16`, container `mar-postgres`, database and user `masterantique`, generated password, no published port, database stored in the container's own storage (no named volume)** | The database lives only in the container; `docker rm -f -v` removes it, and `--recreate` does exactly that. |
 
-**Still open.** Decision 16: whether iteration 5 produces a PostgreSQL database guide, and in which format (HTML or Markdown).
+**Decision 16 (settled 2026-09-23): a PostgreSQL database guide, in HTML** (`docs/dbmigrate/iteration5/PostgreSQLDatabaseGuide.html`), tested against a copy of the database. Spring Boot 4.1.1 was confirmed with the user for its examples.
 
 ## 9. Document map
 
@@ -261,7 +261,7 @@ Windows can prove that the export is deterministic (two exports byte-identical),
 | 1 | `docs/dbmigrate/iteration1/ITERATION1_PLAN.md` | `ITERATION1.md` | `MigrationVerificationReport1.docx` | `SQLiteDatabaseGuide1.docx` |
 | 2 | `docs/dbmigrate/iteration2/ITERATION2_PLAN.md` | `ITERATION2.md` | `MigrationVerificationReport2.docx` | `SQLiteDatabaseGuide2.docx` |
 | 3 | `docs/dbmigrate/iteration3/ITERATION3_PLAN.md` | `ITERATION3.md` | `MigrationVerificationReport3.docx` | `SQLiteDatabaseGuide3.docx` |
-| 4 | `docs/dbmigrate/iteration4/ITERATION4_PLAN.md` | `ITERATION4.md` (after the run) | `MigrationExportReport4.docx` (an export report; no verification) | — |
-| 5 | `docs/dbmigrate/iteration5/ITERATION5_PLAN.md` | `ITERATION5.md` (after the run) | `MigrationVerificationReport5.html` | none yet (decision 16, open) |
+| 4 | `docs/dbmigrate/iteration4/ITERATION4_PLAN.md` | `ITERATION4.md` | `MigrationExportReport4.docx` (an export report; no verification) | — |
+| 5 | `docs/dbmigrate/iteration5/ITERATION5_PLAN.md` | `ITERATION5.md` | `MigrationVerificationReport5.html` | `PostgreSQLDatabaseGuide.html` |
 
 This document should be updated whenever a new iteration starts (add its row to §3 and §9) or whenever the security policy in §5 changes in a way that should apply retroactively to how future iterations are reviewed.
