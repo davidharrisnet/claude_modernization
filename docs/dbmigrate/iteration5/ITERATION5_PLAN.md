@@ -69,8 +69,10 @@ tools/dbmigrate/iteration5/
   ingest.conf.example         non-secret settings (copy to ingest.conf to override)
   README.md                   how to run it and how to reach the database
   .gitattributes              *.sql *.json *.sh *.md ingest.conf.example: text eol=lf
-  .gitignore                  ingest.conf, *.log
+  .gitignore                  ingest.conf, *.log, build output of guide/ samples
   input/                      01-schema.sql, 02-data-sanitized.sql, source-metadata.json (from iteration 4)
+  guide/                      sources of the database guide (step 7): template, build-guide.py, tested SQL and
+                              sample Spring Boot project (mar-db-client/, kts/), README
   verification-results.json   OUTPUT of verify (the report's source)
   selftest-results.json       OUTPUT of selftest
 docs/dbmigrate/iteration5/
@@ -169,6 +171,22 @@ Page content: title and PASS/FAIL banner ("N of N checks passed · R of R rows v
 - `docs/DATA_MIGRATION.md`: §3 roadmap row 5, §8.7 and §8.8 status ("planning only" replaced), §9 document map.
 - `CLAUDE.md`: the iteration 5 commands bullet and the iterations summary.
 
+### Step 7 - The database guide (decision 16)
+
+**Output:** `docs/dbmigrate/iteration5/PostgreSQLDatabaseGuide.html`, one self-contained page (light and dark themes, works at phone width), also published at https://claude.ai/artifact/Xhzati1QXvcqPcmt1aQkfD. **Audience:** anyone who has to connect to the database, from a first `psql` query to a Spring Boot application.
+
+**Facts that shape it:** the container publishes no port and its owner password was discarded (decision 15), so `docker exec ... psql` works immediately (the image's `pg_hba.conf` trusts the local socket), but an application outside the container needs two things: its own login with a password, and a network route. TCP logins use `scram-sha-256`.
+
+**Contents:** at a glance; connect from a terminal (interactive, one-off `-Atc`, SQL files over stdin, psql commands, sample queries, CSV with `\copy ... TO STDOUT`, experiments in `BEGIN ... ROLLBACK`, lifecycle); application logins `mar_app` (read/write) and `mar_readonly` (`mar-roles.sql`: passwords typed with `read -rsp`, passed with `docker exec -e APP_PW` and read inside psql with `\getenv`, so they never appear on a command line, in a file or in history; `ALTER ROLE` to change, `DROP OWNED BY` + `DROP ROLE` to remove; logins survive stop/start, not `--recreate`); three network routes (A: the container address, Linux Docker Engine only, found with `docker inspect -f '{{index .NetworkSettings.Networks "bridge" "IPAddress"}}'` because the shorter form concatenates addresses once a second network is attached; B: a shared Docker network `mar-net`, host name `mar-postgres`; C: an `alpine/socat` proxy on `127.0.0.1:5433` only, also on Docker Desktop, the default in the examples); a plain-JDBC test (`JdbcSmokeTest.java`, run from source); a Spring Boot **4.1.1** project (version confirmed with the user; resolved: Hibernate 7.4.5, HikariCP 7.0.2, PostgreSQL JDBC 42.7.11) with Gradle Groovy, Gradle Kotlin and Maven builds, `application.properties` (connection from `MAR_DB_*` environment variables, `ddl-auto=validate`), entities, repositories (`lower(name) = lower(:name)` for sign-in), a connection check; the first-login forced password change (`LoginService`, `IdentityCheck`, demo code `DEMO-1234` under a profile); troubleshooting with the real error messages; the table/column reference from the metadata.
+
+**How it was tested (all on a temporary copy; `mar-postgres` never changed):** `ingest.sh load --config` with container `mar-postgres-guide`; the roles script; wrong password and read-only write refused; all three routes; the JDBC test; Gradle Groovy, Gradle Kotlin and Maven builds, `bootRun`, `spring-boot:run` and the jar, with `ddl-auto=validate`; the app in a container (`eclipse-temurin:21-jre`) on the shared network; every first-login case (success with the username in capitals, wrong code, short password, password containing the username, later sign-in right and wrong, unknown user); the sample queries, CSV export, rollback and password change; the page in headless Chrome at desktop, phone and dark. Afterwards the copy, proxy and network were removed and `ingest.sh verify` still passed 80 of 80. How to repeat the tests: `guide/README.md`.
+
+**How it is built:** every code block comes from a tested file in `tools/dbmigrate/iteration5/guide/`; `python3 tools/dbmigrate/iteration5/guide/build-guide.py` expands the template's markers (`CODE`, `OUT`, `FILE`, `SCHEMA`) and writes the page; `--artifact <path>` writes the copy to republish. The build is deterministic: rebuilding without changes leaves `git status` clean (proved against the committed page and the published copy). To change the guide: change the file in `guide/`, test it again, rebuild; never edit the HTML by hand.
+
+**Bugs found while testing it:** the demo's expected code and the typed code shared one property (`demo.one-time-code`), so a wrong code was accepted; the expected code became `demo.issued-code`. A sample query sorted ticket states alphabetically (COMPLETED first); it now sorts by the state number. And `ingest.sh verify` after `report` failed (step 3).
+
+The Phase 2 backend was built from the guide's sample project: `docs/phase2/model/MODEL_PLAN.md`.
+
 ## 8. Acceptance criteria (all met on 2026-09-23)
 
 1. `ingest.sh all --recreate` exits 0 with `VERIFICATION PASSED - 80 of 80 checks; 155 of 155 rows verified identical`, `SELFTEST PASSED - 7 of 7` and the report written.
@@ -177,6 +195,7 @@ Page content: title and PASS/FAIL banner ("N of N checks passed · R of R rows v
 4. The database exists only in the container: no published port (`docker ps` shows `5432/tcp` without a host mapping), no data files on the host, no Docker volume left behind by the self-test.
 5. No password in the repository, the container configuration (`docker inspect`) or any output.
 6. The report opens offline, its numbers match `verification-results.json`, and a rebuild from the same JSON is byte-identical.
+7. The database guide rebuilds byte-identically from `guide/` (`build-guide.py`), and every command and code sample in it was run against a temporary copy of the database (step 7).
 
 Not yet tested: a fresh clone on Windows and Linux (line endings, §6 `.gitattributes`).
 
