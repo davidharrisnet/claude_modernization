@@ -1,0 +1,16 @@
+# import-oracle settings (bash key=value, read by ingest.sh once it is built). Non-secret: the database password is generated when
+# the container is created and is never stored or printed.
+# Copy to ingest.conf to change anything; without ingest.conf, ingest.sh uses exactly these defaults.
+# VERIFY the image name, tag and service name on the Linux machine before relying on them: they were written from memory.
+
+# Docker container that holds the database (the database lives only in this container).
+CONTAINER=mar-oracle
+# Oracle AI Database 26ai Free image. Candidates: container-registry.oracle.com/database/free:latest (official) or
+# gvenzl/oracle-free:latest-faststart (community; starts faster). Pin the tag that the load proof used.
+ORA_IMAGE=container-registry.oracle.com/database/free:latest
+# Pluggable database (service) the application schema lives in.
+ORA_PDB=FREEPDB1
+# Application schema user created by the tool (no DBA role). The password is generated, never stored.
+ORA_USER=masterantique
+# Folder with 01-schema.sql, 02-data-sanitized.sql and source-metadata.json (relative to this folder, or absolute).
+INPUT_DIR=input

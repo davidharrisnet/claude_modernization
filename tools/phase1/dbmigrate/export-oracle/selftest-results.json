@@ -1,0 +1,83 @@
+{
+    "Passed":  true,
+    "Tests":  [
+                  {
+                      "Category":  "Determinism",
+                      "Name":  "Schema export is byte-identical across runs",
+                      "Passed":  true,
+                      "Detail":  "sha256 1882e31d2963b5435dd99801193e70ed7eb408646ee8ba6ca3b899fd869e159a vs 1882e31d2963b5435dd99801193e70ed7eb408646ee8ba6ca3b899fd869e159a"
+                  },
+                  {
+                      "Category":  "Determinism",
+                      "Name":  "Data export is byte-identical across runs",
+                      "Passed":  true,
+                      "Detail":  "sha256 0c1504e711c113d91b40edfd20fd10429fe1d6a4a29378fb7df908964654d08e vs 0c1504e711c113d91b40edfd20fd10429fe1d6a4a29378fb7df908964654d08e"
+                  },
+                  {
+                      "Category":  "Determinism",
+                      "Name":  "Metadata is identical across runs (apart from the run time)",
+                      "Passed":  true,
+                      "Detail":  "80914 vs 80914 characters"
+                  },
+                  {
+                      "Category":  "Sanitization",
+                      "Name":  "No credential value read from the source appears in any output file (24 values checked in 6 files)",
+                      "Passed":  true,
+                      "Detail":  "0 occurrence(s)"
+                  },
+                  {
+                      "Category":  "Sanitization",
+                      "Name":  "Export refuses to run with sanitizeCredentials off (exit 2)",
+                      "Passed":  true,
+                      "Detail":  "refused=True exit=2"
+                  },
+                  {
+                      "Category":  "Counts",
+                      "Name":  "Row count of every table equals a live COUNT(*) of the source",
+                      "Passed":  true,
+                      "Detail":  "Roles=3/3, Users=12/12, AuditLogs=78/78, Tickets=24/24, Comments=26/26, UserClaims=0/0, UserLogins=0/0, UserRoles=12/12"
+                  },
+                  {
+                      "Category":  "Counts",
+                      "Name":  "Total rows equals the expectation recorded in the metadata",
+                      "Passed":  true,
+                      "Detail":  "155 rows"
+                  },
+                  {
+                      "Category":  "Sanitization",
+                      "Name":  "Metadata expectations hold: users sanitized, no case-insensitive duplicate active usernames",
+                      "Passed":  true,
+                      "Detail":  "usersSanitized=True"
+                  },
+                  {
+                      "Category":  "Oracle",
+                      "Name":  "No line in the SQL files is longer than 2000 characters (SQL*Plus stops at about 2,499)",
+                      "Passed":  true,
+                      "Detail":  "0 line(s)"
+                  },
+                  {
+                      "Category":  "Oracle",
+                      "Name":  "The SQL files are pure ASCII (control characters as CHR, other characters as UNISTR)",
+                      "Passed":  true,
+                      "Detail":  "0 byte(s) above 127"
+                  },
+                  {
+                      "Category":  "Oracle",
+                      "Name":  "Every identifier is lowercase snake_case, at most 128 bytes and not an Oracle reserved word",
+                      "Passed":  true,
+                      "Detail":  ""
+                  },
+                  {
+                      "Category":  "Oracle",
+                      "Name":  "No source string value is empty (Oracle would store NULL instead)",
+                      "Passed":  true,
+                      "Detail":  "0 empty value(s)"
+                  },
+                  {
+                      "Category":  "Determinism",
+                      "Name":  "The export report rebuilds byte-identically from the same metadata",
+                      "Passed":  true,
+                      "Detail":  "sha256 20f349a1b5245740b8483910743aa150d0b98362603f97555511839946bd73f1 vs 20f349a1b5245740b8483910743aa150d0b98362603f97555511839946bd73f1"
+                  }
+              ]
+}

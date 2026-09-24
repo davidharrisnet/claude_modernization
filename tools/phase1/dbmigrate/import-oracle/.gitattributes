@@ -1,0 +1,7 @@
+# The metadata records SHA-256 hashes of the LF form of the SQL files and bash breaks with CRLF: keep line endings exactly as
+# committed, on every platform.
+*.sql text eol=lf
+*.json text eol=lf
+*.sh text eol=lf
+*.md text eol=lf
+ingest.conf.example text eol=lf

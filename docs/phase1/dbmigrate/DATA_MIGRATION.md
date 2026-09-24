@@ -2,16 +2,18 @@
 
 > **Location.** Since 2026-09-23 this document and the two tool folders live in `docs/phase1/dbmigrate/`, and the tooling in `tools/phase1/dbmigrate/` (previously `docs/DATA_MIGRATION.md`, `docs/dbmigrate/`, `tools/dbmigrate/`). Older commits and the generated reports show the old paths and the earlier numbered-iteration names.
 
-This is the parent document for the database migration: `tools/phase1/dbmigrate/` and `docs/phase1/dbmigrate/`. The migration is two tools, each with two documents for two readers — a `README.md` for people in `docs/phase1/dbmigrate/<tool>/` (what the tool does and its latest results) and a `CLAUDE.md` with the instructions for Claude Code in `tools/phase1/dbmigrate/<tool>/` — plus the generated report (and, for `import-postgresql`, the database guide). Both documents describe the current state only; git holds the history. This document sits above them: it's the strategy, the decisions, and the security policy both tools follow. Read this first; go to a tool's docs for the detailed proof that it worked.
+This is the parent document for the database migration: `tools/phase1/dbmigrate/` and `docs/phase1/dbmigrate/`. The migration is two tools for PostgreSQL and, since 2026-09-24, two more for an Oracle proof of concept, each with two documents for two readers — a `README.md` for people in `docs/phase1/dbmigrate/<tool>/` (what the tool does and its latest results) and a `CLAUDE.md` with the instructions for Claude Code in `tools/phase1/dbmigrate/<tool>/` — plus the generated report (and, for `import-postgresql`, the database guide). Both documents describe the current state only; git holds the history. This document sits above them: it's the strategy, the decisions, and the security policy both tools follow. Read this first; go to a tool's docs for the detailed proof that it worked.
 
 | Tool | What it does | Runs on | Run it by typing |
 |---|---|---|---|
 | `export-postgresql` | SQL Server LocalDB → sanitized PostgreSQL files | Windows | `Run export-postgresql` |
 | `import-postgresql` | those files → a verified PostgreSQL database in Docker | Linux | `Run import-postgresql` |
+| `export-oracle` | SQL Server LocalDB → sanitized Oracle files (proof of concept, §10) | Windows | `Run export-oracle` |
+| `import-oracle` | those files → a verified Oracle AI Database 26ai Free in Docker (skeleton, built on first run) | Linux | `Run import-oracle` |
 
 ## 1. Purpose and scope
 
-This project's Phase 2 target is Angular / Spring Boot / **PostgreSQL**. The exercise brief (`README.md`) names Oracle; on 2026-09-23 the user decided on PostgreSQL only, and Oracle is not pursued. Before application code exists, the data layer is proven out on its own, against the real Phase 1 database (`MasterAntiqueRepair`, SQL Server LocalDB). The migration follows a four-step discipline so results are comparable and auditable:
+This project's Phase 2 target is Angular / Spring Boot / **PostgreSQL**. The exercise brief (`README.md`) names Oracle; on 2026-09-23 the user decided that Phase 2 uses PostgreSQL, and on 2026-09-24 added an Oracle proof of concept alongside it (§10) that does not change the Phase 2 database. Before application code exists, the data layer is proven out on its own, against the real Phase 1 database (`MasterAntiqueRepair`, SQL Server LocalDB). The migration follows a four-step discipline so results are comparable and auditable:
 
 1. **Export** the data from the source database into portable, plain-text SQL.
 2. **Populate** a new, independent target database from that export.
@@ -57,7 +59,10 @@ verification-results.json  →  MigrationVerificationReport.html
 |---|---|---|
 | `export-postgresql` | **Built and run 2026-09-23** (self-test 9 of 9; the generated SQL was loaded into PostgreSQL 16 during the build and all 8 table counts and hashes matched); re-run 2026-09-24: self-test 9 of 9, SQL files unchanged | `docs/phase1/dbmigrate/export-postgresql/` |
 | `import-postgresql` | **Built and run 2026-09-23** (verification 80 of 80 checks, 155 of 155 rows identical; self-test 7 of 7); database guide written (decision 16) | `docs/phase1/dbmigrate/import-postgresql/` |
-| Oracle | **Not pursued** (user decision, 2026-09-23): Phase 2 uses PostgreSQL, so `import-postgresql` is the migration to the final database | — |
+| `export-oracle` | **Built and run 2026-09-24** (self-test 13 of 13; every table's row fingerprint, row count and business summary equals the PostgreSQL export's). The Oracle SQL is not yet proven to load | `docs/phase1/dbmigrate/export-oracle/` |
+| `import-oracle` | **Skeleton only** (input files, configuration example and build directions in its `CLAUDE.md`); built and run on the first `Run import-oracle` on the Linux machine | `docs/phase1/dbmigrate/import-oracle/` |
+
+`import-postgresql` is the migration to the final Phase 2 database; the Oracle pair is a proof of concept (§10).
 
 Each tool is self-contained under `tools/phase1/dbmigrate/<tool>/` — its own copy of whatever tooling and input files it needs — so its results can be reproduced without depending on the other tool's state; the only coupling is the three-file hand-off (§8.1).
 
@@ -116,7 +121,7 @@ A verification step that only checks "does this match what a previous run alread
 ## 6. What's not built yet
 
 - **Config-driven sensitive-column declarations** (§5.2.5) — today, sanitization is a bespoke, hardcoded transform (`Users.PasswordHash`/`SecurityStamp` → `MustResetPassword`); it should become a `migration.config.json`-declared policy the export pipeline enforces generically, for any table/column, not just this one.
-- ~~**Oracle dialect**~~ — **not pursued** (2026-09-23): Phase 2 uses PostgreSQL, migrated and verified by the two tools (§8).
+- **A verified Oracle load** — `export-oracle` renders Oracle SQL, but no Oracle database has loaded it yet; `import-oracle` is a skeleton (§10).
 - **A formal data-classification step before export** — right now, sensitive columns are identified by inspection (a human, or Claude, reading the schema). A real engagement should start with an explicit classification pass (PII/PCI/PHI/credential/none) per column, signed off by the data owner, before any export tooling runs.
 
 ## 7. Database-agnostic exports: what is and isn't possible
@@ -146,7 +151,7 @@ The two properties cannot both hold: files fed straight to a database must be SQ
 
 **Why the sanitize-first seam is the right place.** `Invoke-Export` already holds the schema model and the rows in memory before any dialect renders SQL, and credentials are sanitized there (§5.2). A neutral export would be one more output at the same point, so everything it writes would be credential-free by construction.
 
-**Decision:** neither route was taken. The export is PostgreSQL-specific (§8). An Oracle target would have been another dialect at the same seam, not a reuse of the PostgreSQL files; Oracle has since been dropped (§3).
+**Decision:** neither route was taken. The export is PostgreSQL-specific (§8). An Oracle target is another dialect at the same seam, not a reuse of the PostgreSQL files: §10 builds it as a proof of concept, and its metadata matches PostgreSQL's row fingerprints because the canonical form is database-independent.
 
 ## 8. PostgreSQL: the two tools
 
@@ -262,5 +267,48 @@ Windows can prove that the export is deterministic (two exports byte-identical),
 |---|---|---|---|---|
 | `export-postgresql` | `docs/phase1/dbmigrate/export-postgresql/README.md` | `tools/phase1/dbmigrate/export-postgresql/CLAUDE.md` | `MigrationExportReport.docx` (an export report; no verification) | — |
 | `import-postgresql` | `docs/phase1/dbmigrate/import-postgresql/README.md` | `tools/phase1/dbmigrate/import-postgresql/CLAUDE.md` | `MigrationVerificationReport.html` | `PostgreSQLDatabaseGuide.html` |
+| `export-oracle` | `docs/phase1/dbmigrate/export-oracle/README.md` | `tools/phase1/dbmigrate/export-oracle/CLAUDE.md` | `MigrationExportReport.docx` (an export report; no verification) | — |
+| `import-oracle` | `docs/phase1/dbmigrate/import-oracle/README.md` | `tools/phase1/dbmigrate/import-oracle/CLAUDE.md` (build directions) | not yet | not yet |
+
+## 10. Oracle: a proof of concept alongside PostgreSQL
+
+**Goal.** Show the same migration reasoned through for Oracle, the database the exercise brief names, using what the PostgreSQL pair taught. Phase 2 stays on PostgreSQL (decision 17). Two tools, as for PostgreSQL:
+
+- **`export-oracle` (Windows, export only; built 2026-09-24):** a self-contained copy of `export-postgresql`'s tooling with one different dialect file, `oracle.ps1`. Description: `docs/phase1/dbmigrate/export-oracle/README.md`; instructions: `tools/phase1/dbmigrate/export-oracle/CLAUDE.md`.
+- **`import-oracle` (Linux, Docker; skeleton):** loads the three files into an **Oracle AI Database 26ai Free** container and verifies them against the metadata. Its `CLAUDE.md` is the set of build directions for the Linux Claude session, which builds the tool on the first `Run import-oracle`. Description: `docs/phase1/dbmigrate/import-oracle/README.md`.
+
+The pipeline (§2), the hand-off (three files copied into `import-oracle/input/`), the security policy (§5: sanitize in memory, refuse unsanitized, verify against an independently made record) and the design of both tools are the PostgreSQL ones. What changes is the dialect and the load and verify mechanics.
+
+### 10.1 What Oracle changes (the dialect rules)
+
+| Topic | Oracle rule | Why |
+|---|---|---|
+| Identifiers | Unquoted lowercase snake_case from the same explicit rename map; Oracle stores them in upper case. Every identifier is checked against the reserved-word list, a pattern and 128 bytes, and the export stops on a problem | Quoting lowercase names would be needed everywhere for ever; a future column could be a reserved word |
+| Integers, identity | `NUMBER(10)` (`NUMBER(19)`, `NUMBER(5)`); `GENERATED BY DEFAULT AS IDENTITY` with a named primary key; after the load `ALTER TABLE ... MODIFY (id GENERATED BY DEFAULT AS IDENTITY (RESTART START WITH last+1))` | Accepts the explicit ids in the data; the equivalent of PostgreSQL's `setval` |
+| Booleans | Native `BOOLEAN` (23ai and later) | 26ai is the target (decision 18) |
+| Timestamps | `TIMESTAMP(3)`, no time zone; literal `TIMESTAMP '...'` | Same reasoning as decision 3 |
+| Text | `VARCHAR2(n CHAR)`; `nvarchar(max)` becomes `CLOB` | Source lengths are in characters; a `VARCHAR2` is also limited to 4000 bytes unless `MAX_STRING_SIZE=EXTENDED` (checked on load) |
+| Soft-delete unique rule | Function-based unique index on `CASE WHEN deleted_at IS NULL THEN LOWER(name) END` | Oracle has no partial index; a B-tree index stores no all-NULL key, so filtered-out rows never collide (decision 2 still holds for case) |
+| Foreign keys | `ON DELETE CASCADE` kept; `NO ACTION` written by leaving the clause out | Oracle rejects the words; its default is no action |
+| Empty string | The export **refuses** a source that contains one | Oracle stores `''` as NULL, which would silently change the data and break "NULL stays distinct from the empty string"; the current data has none |
+| String literals | Pure ASCII: control characters `CHR(n)`, other characters `UNISTR('\XXXX')`, plain runs `'...'`, joined with `\|\|` and spread over lines when long | The SQL*Plus client reads through `NLS_LANG`, splits input at lines and blank lines and rejects lines of about 2,499 characters; none of that can touch the data |
+| Transactions | No `BEGIN`/`COMMIT` around DDL; data in one `COMMIT`; scripts start with `WHENEVER SQLERROR EXIT FAILURE` and `SET DEFINE OFF` | DDL commits by itself; `&` must not prompt |
+| Inserts | Multi-row `INSERT ... VALUES` (23ai and later), 100 rows per statement | As decision 12 |
+| Metadata | Same canonical row form and hashes; `minOracleVersion` 23; Oracle data-dictionary types with `precision` and `scale`; the index key expression in full | The hashes are database-independent: every table's fingerprint, row count and summary equals the PostgreSQL export's (verified 2026-09-24) |
+
+### 10.2 Decisions
+
+| # | Decision | Answer | Reasoning |
+|---|---|---|---|
+| 17 | Oracle and PostgreSQL | **Oracle is an additional proof of concept; Phase 2 stays on PostgreSQL** (user, 2026-09-24) | The brief names Oracle; the PostgreSQL decision (2026-09-23) stands for the application |
+| 18 | Oracle version | **Oracle AI Database 26ai Free** (the 23ai code line renamed), in Docker on the Linux machine; 26ai features (`BOOLEAN`, multi-row `INSERT`) are allowed | Free, runs in a container like PostgreSQL (limits: about 2 CPU threads, 2 GB RAM, 12 GB data, far above this data). Caveat: many real systems run 19c, where those two features do not exist; switching is a small change in `oracle.ps1` (`NUMBER(1)` with a `CHECK`, single-row inserts) |
+| 19 | Identifier style | **Unquoted lowercase snake_case** from the rename map (assumed by default, not separately confirmed) | Nothing needs quoting; same names as PostgreSQL |
+| 20 | Where Oracle runs | **Linux machine, in Docker**; export on Windows as before | The user's environment; keeps "bash and Docker only" for the import |
+| 21 | Empty strings | **Refuse them** in the export | Silent NULL conversion is worse than a stopped export |
+| 22 | Build order | **Export built and run now; import is a skeleton** whose `CLAUDE.md` directs the Linux session to build and verify it | Windows cannot prove the SQL loads; the unverified facts are listed in `export-oracle/CLAUDE.md` for the first Linux run to confirm or correct |
+
+### 10.3 Status and what is unverified
+
+`export-oracle` passes its 13 self-tests and its cross-check against PostgreSQL. Everything Oracle-specific in the rendered SQL was written from documentation and memory, without an Oracle database: the identity `RESTART START WITH` syntax, `BOOLEAN` and multi-row `INSERT` on 26ai Free, the SQL*Plus line and blank-line behaviour, `TO_CLOB`/`UNISTR` inside `VALUES`, unquoted `timestamp`/`action` column names, and the default `MAX_STRING_SIZE`. The first `Run import-oracle` on Linux tests each and reports confirmed or corrected; corrections go into `oracle.ps1` and the export is re-run (as decision 10 for PostgreSQL). The image name and tag, the service name (`FREEPDB1`), and how to keep the password out of `docker inspect` are also unverified.
 
 This document should be updated whenever a tool is added or the security policy in §5 changes in a way that should apply retroactively to how future migrations are reviewed.

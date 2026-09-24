@@ -4,10 +4,14 @@
 #### Report
 Simplified the database migration to the PostgreSQL path only. Iterations 1-3 (SQLite and MySQL) were removed from the working tree; they remain in git history and the `model-iteration*` branches. Iteration 4 is now `export-postgresql` and iteration 5 is `import-postgresql`, and the prompts to run them are `Run export-postgresql` (Windows) and `Run import-postgresql` (Linux). The documentation was rewritten for the two tools: see [docs/phase1/dbmigrate/DATA_MIGRATION.md](docs/phase1/dbmigrate/DATA_MIGRATION.md).
 
+Then added an Oracle proof of concept alongside PostgreSQL (Phase 2 stays on PostgreSQL). `export-oracle` is built and passes its self-test (13 of 13): it produces sanitized Oracle AI Database 26ai files whose row fingerprints equal the PostgreSQL export's. `import-oracle` is a skeleton: input files plus a `CLAUDE.md` with the build directions for the Linux session. The Oracle SQL has not been loaded into an Oracle database yet; several Oracle details are unverified (listed in `tools/phase1/dbmigrate/export-oracle/CLAUDE.md`). See [DATA_MIGRATION.md](docs/phase1/dbmigrate/DATA_MIGRATION.md) section 10.
+
 #### To do
 1. **On the Linux machine:** pull, then type `Run import-postgresql.` It regenerates the verification report, the database guide and the results files, which were last generated under the old names (they carry the metadata key rename `iteration` to `tool`, and the report and guide titles).
-2. **Review:** check `git status` lists only the expected changes (deleted `iteration1-3` folders, renamed `export-postgresql` and `import-postgresql` folders).
-3. **Commit and push.** Claude Code will not commit; that is always my step.
+2. **Then, on the same machine, type `Run import-oracle.`** This is a build run: Claude Code follows `tools/phase1/dbmigrate/import-oracle/CLAUDE.md` to install Oracle AI Database 26ai Free in Docker, build the import tool, load the files and verify them. It will report which Oracle details were confirmed and which need a correction in `export-oracle` (then run `Run export-oracle` on Windows again and hand off the files).
+3. **Review:** check `git status` lists only the expected changes (deleted `iteration1-3` folders, renamed `export-postgresql` and `import-postgresql` folders).
+4. **Commit and push.** Claude Code will not commit; that is always my step.
+
 ### September 23, 2026
 #### Report
 Successfully converted the Windows SQL Server database to sanitized schema and data files, which were then ported to a Dockerized PostgreSQL database. 

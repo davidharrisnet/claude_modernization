@@ -1,0 +1,7 @@
+# The metadata records SHA-256 hashes of the LF form of the SQL files, string literals may contain raw LF, and scripts break with
+# CRLF: keep line endings exactly as generated, on every platform.
+*.sql text eol=lf
+*.json text eol=lf
+*.ps1 text eol=lf
+*.md text eol=lf
+*.cmd text eol=crlf

@@ -62,10 +62,15 @@ Non-functional requirements:
 ```
 Run export-postgresql.
 Run import-postgresql.
+Run export-oracle.
+Run import-oracle.
 ```
 
 The first runs on the Windows machine (SQL Server LocalDB, sanitized PostgreSQL files out); the second on the Linux
-machine (those files loaded into PostgreSQL in Docker and verified). Claude Code reads the tool's own instructions,
+machine (those files loaded into PostgreSQL in Docker and verified). The last two are an Oracle proof of concept
+alongside PostgreSQL: `export-oracle` produces sanitized Oracle files (Oracle AI Database 26ai), and the first
+`Run import-oracle` on the Linux machine builds the import tool from the directions in its `CLAUDE.md` and loads the
+files into an Oracle container. Claude Code reads the tool's own instructions,
 `tools/phase1/dbmigrate/<tool>/CLAUDE.md`, and follows them: the command, the expected results, the checks, and the
 rules (such as never testing on the delivered database). Each tool's human description is
 `docs/phase1/dbmigrate/<tool>/README.md`.
