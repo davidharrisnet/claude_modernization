@@ -14,12 +14,12 @@ Several Iteration lead to the current state
 Current State (main)
 **The database migration is done, for two targets.**
 
-| Tool | Runs on | Result |
-|---|---|---|
-| `export-postgresql` | Windows | Sanitized PostgreSQL schema and data from SQL Server |
-| `import-postgresql` | Linux | 80 of 80 checks, 155 of 155 rows identical, self-test 7 of 7 |
-| `export-oracle` | Windows | Sanitized Oracle files, self-test 13 of 13, row fingerprints equal to the PostgreSQL export's |
-| `import-oracle` | Linux | 86 of 86 checks, 155 of 155 rows identical, self-test 7 of 7 |
+| Tool | Description | Runs on | Result |
+|---|--|---|---|
+| `export-postgresql`| Exports SQL Server database to sanitized data and postgre sql  | Windows | Sanitized PostgreSQL schema and data from SQL Server |
+| `import-postgresql` | imports the data and schema from export-postgresql to build and verify a postgrsql database| Linux | 80 of 80 checks, 155 of 155 rows identical, self-test 7 of 7 |
+| `export-oracle` |Exports SQL Server database to sanitized data and oracle sql| Windows | Sanitized Oracle files, self-test 13 of 13, row fingerprints equal to the PostgreSQL export's |
+| `import-oracle` | imports the data and schema from export-oracle to build and verify an oracle database| Linux | 86 of 86 checks, 155 of 155 rows identical, self-test 7 of 7 |
 
 #### Phase 2
 **The Phase 2 model has started.** In [master-antique-repair-modern](https://github.com/davidharrisnet/master-antique-repair-modern)
