@@ -16,9 +16,9 @@ Current State (main)
 
 | Tool | Description | Runs on | Result |
 |---|--|---|---|
-| `export-postgresql`| Exports SQL Server database to sanitized data and postgre sql  | Windows | Sanitized PostgreSQL schema and data from SQL Server |
+| `export-postgresql`| Exports SQL Server database to sanitized data and postgre sql files | Windows | Sanitized PostgreSQL schema and data from SQL Server |
 | `import-postgresql` | imports the data and schema from export-postgresql to build and verify a postgrsql database| Linux | 80 of 80 checks, 155 of 155 rows identical, self-test 7 of 7 |
-| `export-oracle` |Exports SQL Server database to sanitized data and oracle sql| Windows | Sanitized Oracle files, self-test 13 of 13, row fingerprints equal to the PostgreSQL export's |
+| `export-oracle` |Exports SQL Server database to sanitized data and oracle sql files| Windows | Sanitized Oracle files, self-test 13 of 13, row fingerprints equal to the PostgreSQL export's |
 | `import-oracle` | imports the data and schema from export-oracle to build and verify an oracle database| Linux | 86 of 86 checks, 155 of 155 rows identical, self-test 7 of 7 |
 
 #### Phase 2
