@@ -1,16 +1,42 @@
 # Project Status
 
+### September 25, 2026
+#### Weekly Report
+Several Iteration lead to the current state
+* **Iteration 1 (21 Sep), SQLite on Windows.** The first end-to-end migration: export from SQL Server LocalDB, build a SQLite database, verify it is identical to the source, and write a report.
+* **Iteration 2 (21 Sep), SQLite in Docker on Linux.** The same migration, with the new database created and checked inside a Linux container. Dockerizing the database was the decision that made everything after it repeatable: a disposable, verifiable target that needs nothing installed but Docker.
+* **Iteration 3 (22 Sep), an independently verified image built entirely on Linux.** Review caught two real problems: the verifier trusted results inherited from earlier iterations, and real password hashes had been committed to git. The fix was to sanitize first: the export now nulls `PasswordHash` and `SecurityStamp` and sets `MustResetPassword`, so every migrated user resets their password on first login. This became a rule for every later tool.
+* **Iteration 4 (23 Sep), export for PostgreSQL.** The upgrade from SQLite to a database that could be the real target. It became `export-postgresql`.
+* **Iteration 5 (23 Sep), PostgreSQL in Docker.** It became `import-postgresql`. Its database guide (how to connect, including from Spring Boot) seeded the plan for the Phase 2 model.
+* **Oracle (24 Sep).** Phase 2 explicitly lists Oracle, so the same pair was built for it: `export-oracle` and `import-oracle`, targeting Oracle AI Database 26ai Free. Every Oracle detail that could not be tested on Windows was confirmed on Linux without changing the export.
+
+#### Phase 1
+Current State (main)
+**The database migration is done, for two targets.**
+
+| Tool | Runs on | Result |
+|---|---|---|
+| `export-postgresql` | Windows | Sanitized PostgreSQL schema and data from SQL Server |
+| `import-postgresql` | Linux | 80 of 80 checks, 155 of 155 rows identical, self-test 7 of 7 |
+| `export-oracle` | Windows | Sanitized Oracle files, self-test 13 of 13, row fingerprints equal to the PostgreSQL export's |
+| `import-oracle` | Linux | 86 of 86 checks, 155 of 155 rows identical, self-test 7 of 7 |
+
+#### Phase 2
+**The Phase 2 model has started.** In [master-antique-repair-modern](https://github.com/davidharrisnet/master-antique-repair-modern)
+
+* 'Run model-oracle' and 'Run model-postresql' 
+The claude commands build out the spring-boot architecture that demostrates a user login into the database and changing their password. 
+
 ### September 24, 2026
 #### Report
 Simplified the database migration to the PostgreSQL path only. Iterations 1-3 (SQLite and MySQL) were removed from the working tree; they remain in git history and the `model-iteration*` branches. Iteration 4 is now `export-postgresql` and iteration 5 is `import-postgresql`, and the prompts to run them are `Run export-postgresql` (Windows) and `Run import-postgresql` (Linux). The documentation was rewritten for the two tools: see [docs/phase1/dbmigrate/DATA_MIGRATION.md](docs/phase1/dbmigrate/DATA_MIGRATION.md).
 
 Then added an Oracle proof of concept alongside PostgreSQL (Phase 2 stays on PostgreSQL). `export-oracle` is built and passes its self-test (13 of 13): it produces sanitized Oracle AI Database 26ai files whose row fingerprints equal the PostgreSQL export's. `import-oracle` was then built on the Linux machine: it loads those files unchanged into Oracle AI Database 26ai Free in Docker and verifies them, 86 of 86 checks and 155 of 155 rows identical, self-test 7 of 7 ([MigrationVerificationReport.html](docs/phase1/dbmigrate/import-oracle/MigrationVerificationReport.html)). Every Oracle detail export-oracle could not test on Windows was confirmed; no correction to `export-oracle` was needed. See [DATA_MIGRATION.md](docs/phase1/dbmigrate/DATA_MIGRATION.md) section 10.
 
-#### To do
-1. **On the Linux machine:** pull, then type `Run import-postgresql.` It regenerates the verification report, the database guide and the results files, which were last generated under the old names (they carry the metadata key rename `iteration` to `tool`, and the report and guide titles).
-2. ~~**Then, on the same machine, type `Run import-oracle.`**~~ Done: the tool is built and passes (see above); no correction to `export-oracle` was needed. Review the new files under `tools/phase1/dbmigrate/import-oracle/` and `docs/phase1/dbmigrate/import-oracle/`.
-3. **Review:** check `git status` lists only the expected changes (deleted `iteration1-3` folders, renamed `export-postgresql` and `import-postgresql` folders).
-4. **Commit and push.** Claude Code will not commit; that is always my step.
+#### What's Next
+
+1. Generalize the database export. This worked for the AntiqueRepair demo, but can it work for another database? 
+1. Controller -- move on to creating REST access points
 
 ### September 23, 2026
 #### Report
