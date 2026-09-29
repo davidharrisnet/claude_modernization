@@ -1,4 +1,25 @@
 # Project Status
+### Week 9/28 
+#### Regression Testing is the most important part of this project. Claude will create code easily, so its imperative that tests validate the new project is working correctly. 
+
+* Monday and Tuesday 
+Refreshed [JUnit User Guide](https://docs.junit.org/6.1.3/overview.html)
+
+* Focusing on [Agents and Subagents](https://academy.claude.com/courses/introduction-to-subagents)
+
+* Created the /brainstorm and /brainstorm-done skills.
+    * /brainstorm confines claude to iteratively discussing ideas and developing an action plan. This ends with a human readable plan. This is a further constriction of Plan mode because claude is not predisposed to crearting a plan, but discusses definitions. This is helpful for fine tuning 
+
+* Tuesday
+Created the 'run controller-oracle' plan.
+
+
+* Review [Sring Boot Regression Testing](https://docs.spring.io/spring-framework/reference/testing/introduction.html)
+
+* Review Angular Regression Testing
+1. Unit Testing
+1. Integration Testing
+
 
 ### September 25, 2026
 #### Weekly Report
