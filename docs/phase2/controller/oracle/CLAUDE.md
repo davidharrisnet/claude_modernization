@@ -21,7 +21,7 @@ before building. Where this plan and the contract disagree, the contract wins.
 | This plan | `~/dev/claude_work/claude_modernization/docs/phase2/controller/oracle/CLAUDE.md` |
 | The contract | `~/dev/claude_work/claude_modernization/docs/phase2/controller/CONTROLLER.md` |
 | The code | `model/oracle/` in the Phase 2 repository (`master-antique-repair-modern`, formerly `-claude`; use the clone's actual path, called `$APP` below) |
-| Database tool | `~/dev/claude_work/claude_modernization/tools/phase1/dbmigrate/import-oracle/ingest.sh` (`$MOD/...`) |
+| Database tool | `~/dev/claude_work/claude_modernization/tools/phase2/dbmigrate/import-oracle/ingest.sh` (`$MOD/...`) |
 
 ## 1. Decisions
 
@@ -157,7 +157,7 @@ stays read-only for Claude; the user commits.
 ## 6. `Run controller-oracle` (Linux)
 
 Stop at the first failure and report; the database copy and proxy are meant to stay up afterwards.
-1. **Prerequisites**: `java -version` 21, `docker info`, `$MOD/tools/phase1/dbmigrate/import-oracle/ingest.sh` exists,
+1. **Prerequisites**: `java -version` 21, `docker info`, `$MOD/tools/phase2/dbmigrate/import-oracle/ingest.sh` exists,
    and `CONTROLLER.md` says `Status: approved`.
 2. **Build and unit tests**: `cd $APP/model/oracle && ./gradlew build && ./gradlew test --rerun` -> BUILD SUCCESSFUL,
    `LoginServiceTest` 6 + the new service tests, 0 failures.
@@ -185,7 +185,7 @@ Stop at the first failure and report; the database copy and proxy are meant to s
    - invalid input: blank description 400, 2,001-character description 400, each with a ProblemDetail body.
    Stop the app (`kill`), `unset APP_PW RO_PW MAR_DB_PASSWORD`.
 6. **Prove the delivered database untouched** (if `mar-oracle` exists):
-   `$MOD/tools/phase1/dbmigrate/import-oracle/ingest.sh verify --out "$(mktemp)"` -> `VERIFICATION PASSED - 86 of 86`.
+   `$MOD/tools/phase2/dbmigrate/import-oracle/ingest.sh verify --out "$(mktemp)"` -> `VERIFICATION PASSED - 86 of 86`.
 7. **Report** the numbers, and tell the person how to use Swagger themselves: set their own `mar_app` password
    (`read -rsp` + `ALTER USER mar_app IDENTIFIED BY ...` through `docker exec -i ... sqlplus / as sysdba`), export
    `MAR_DB_PORT=1524` and `MAR_DB_PASSWORD`, `./gradlew bootRun`, open `http://127.0.0.1:8080/swagger-ui.html`.

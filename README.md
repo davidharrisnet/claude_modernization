@@ -3,7 +3,7 @@
 ## Introduction
 This repository is the collecion of experiments using Claude code to convert ASP.NET Framework 4.7.2, C#, WebForms projects into Java 21/Angular 21/ Spring Boot 4.0/PostgreSQL. The legacy ASP.NET project created for this experiment,  [Master Antique Repair](https://github.com/davidharrisnet/master-antique-repair) which is deployed on request at [fxbmuz.com](https://fxbmuz.com/) provides the key architectural [components](#components).
 
-This project, then is a collection of experiments scoped by these components - model, view, controller and security. Each of which has several iterations described in the documention and mirrored in the git branches. For instance converting the database, the model component, had six iterations and six code branches, model-iteration1 to model-iteration6. The working tree keeps only the final PostgreSQL path, two tools called export-postgresql and import-postgresql, documented in docs/phase1/dbmigrate/DATA_MIGRATION.md; the earlier iterations remain in git history and those branches.
+This project, then is a collection of experiments scoped by these components - model, view, controller and security. Each of which has several iterations described in the documention and mirrored in the git branches. For instance converting the database, the model component, had six iterations and six code branches, model-iteration1 to model-iteration6. The working tree keeps only the final PostgreSQL path, two tools called export-postgresql and import-postgresql, documented in docs/phase2/dbmigrate/DATA_MIGRATION.md; the earlier iterations remain in git history and those branches.
 
 
 ## Requirements
@@ -70,9 +70,9 @@ The first runs on the Windows machine (SQL Server LocalDB, sanitized PostgreSQL 
 machine (those files loaded into PostgreSQL in Docker and verified). The last two are an Oracle proof of concept
 alongside PostgreSQL: `export-oracle` produces sanitized Oracle files (Oracle AI Database 26ai), and
 `Run import-oracle` on the Linux machine loads them into an Oracle container and verifies them. Claude Code reads the tool's own instructions,
-`tools/phase1/dbmigrate/<tool>/CLAUDE.md`, and follows them: the command, the expected results, the checks, and the
+`tools/phase2/dbmigrate/<tool>/CLAUDE.md`, and follows them: the command, the expected results, the checks, and the
 rules (such as never testing on the delivered database). Each tool's human description is
-`docs/phase1/dbmigrate/<tool>/README.md`.
+`docs/phase2/dbmigrate/<tool>/README.md`.
 
 **The model (Phase 2).** "Run import-postgresql" rebuilds and verifies the database only. The Spring Boot
 model that uses it lives in the separate repository `master-antique-repair-claude` (`model/postgresql/`). With this
@@ -129,7 +129,7 @@ On 24 Sep the working tree was reduced to the four final tools. Iterations 1–3
 | `export-postgresql` | Windows | Sanitized PostgreSQL schema and data from SQL Server |
 | `import-postgresql` | Linux | 80 of 80 checks, 155 of 155 rows identical, self-test 7 of 7 |
 | `export-oracle` | Windows | Sanitized Oracle files, self-test 13 of 13, row fingerprints equal to the PostgreSQL export's |
-| `import-oracle` | Linux | 86 of 86 checks, 155 of 155 rows identical, self-test 7 of 7 |
+| `import-oracle` | Linux | 86 of 86 checks, 156 of 156 rows identical, self-test 7 of 7 |
 
 **The Phase 2 model has started.** In `master-antique-repair-claude`, `model/postgresql/` is a Spring Boot 4.1.1 (Java 21) model layer on the migrated PostgreSQL database: JPA entities for the migrated tables, repositories, and a `LoginService` that enforces the password change on first login, with unit tests. Hibernate runs with `ddl-auto=validate` so the schema belongs to the migration. `model/oracle/` is the same layer on the Oracle database, self-contained and independent of the PostgreSQL one. Each was seeded by its import tool's database guide.
 

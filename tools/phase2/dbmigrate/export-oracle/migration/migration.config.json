@@ -1,0 +1,19 @@
+{
+  "source": {
+    "server": "(localdb)\\MSSQLLocalDB",
+    "database": "aspnet-MasterAntiqueRepair-e93a6129-7f74-4486-97e8-8d4ab1a709b4"
+  },
+  "outputDir": "tools/phase2/dbmigrate",
+  "targets": {
+    "oracle": {
+      "dialect": "oracle",
+      "outputSubdir": "export-oracle",
+      "reportDir": "docs/phase2/dbmigrate/export-oracle",
+      "reportFile": "MigrationExportReport.docx",
+      "sanitizeCredentials": true,
+      "caseInsensitiveUniqueIndexes": [
+        { "table": "Users", "column": "Name" }
+      ]
+    }
+  }
+}

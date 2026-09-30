@@ -16,7 +16,7 @@ You start with no memory, so read these first, every time:
    `Run model-oracle` steps, settings, layout, how the Oracle mapping works, gotchas. Follow it exactly.
 2. `~/dev/claude_work/master-antique-repair-claude/model/oracle/README.md` - the description for people; keep it
    current when you change what the model does.
-3. For schema questions: `~/dev/claude_work/claude_modernization/tools/phase1/dbmigrate/import-oracle/input/01-schema.sql`,
+3. For schema questions: `~/dev/claude_work/claude_modernization/tools/phase2/dbmigrate/import-oracle/input/01-schema.sql`,
    the migrated schema the entities must match.
 4. For rebuilding the project, or how it was built:
    `~/dev/claude_work/claude_modernization/docs/phase2/model/oracle/CLAUDE.md`.

@@ -16,7 +16,7 @@ the tool's files (not running it) is allowed on any OS.
 
 The instructions for this tool live with the tool, not here. Before running or changing anything:
 
-1. Read `tools/phase1/dbmigrate/export-oracle/CLAUDE.md` in full and follow it. It is the single source of truth (rules,
+1. Read `tools/phase2/dbmigrate/export-oracle/CLAUDE.md` in full and follow it. It is the single source of truth (rules,
    commands, exit codes, input contracts, the hand-off to import-oracle); if it and this file ever disagree, it wins.
 2. Beyond Windows, export-oracle needs a live SQL Server LocalDB and Windows PowerShell 5.1. If either is missing, stop
    and say so; do not try to emulate the export.

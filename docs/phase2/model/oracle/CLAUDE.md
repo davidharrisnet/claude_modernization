@@ -8,8 +8,8 @@
 |---|---|
 | This plan | `claude_modernization/docs/phase2/model/oracle/CLAUDE.md` |
 | The code | `~/dev/claude_work/master-antique-repair-claude/model/oracle/` (origin `github.com/davidharrisnet/master-antique-repair-claude`, branch `main`); its `README.md` is for people |
-| The database it connects to | import-oracle's `mar-oracle` container: [docs/phase1/dbmigrate/import-oracle/README.md](../../../phase1/dbmigrate/import-oracle/README.md) (built with `Run import-oracle`) |
-| How to reach that database (logins, network routes), and the tested source of this code | [OracleDatabaseGuide.html](../../../phase1/dbmigrate/import-oracle/OracleDatabaseGuide.html); its sources in `tools/phase1/dbmigrate/import-oracle/guide/` |
+| The database it connects to | import-oracle's `mar-oracle` container: [docs/phase2/dbmigrate/import-oracle/README.md](../../../phase2/dbmigrate/import-oracle/README.md) (built with `Run import-oracle`) |
+| How to reach that database (logins, network routes), and the tested source of this code | [OracleDatabaseGuide.html](../../../phase2/dbmigrate/import-oracle/OracleDatabaseGuide.html); its sources in `tools/phase2/dbmigrate/import-oracle/guide/` |
 
 ## 1. Goal and scope
 
@@ -21,14 +21,14 @@
 
 **The operating instructions now live with the code:** `master-antique-repair-claude/model/oracle/CLAUDE.md` (read automatically by a Claude session opened in that repository; its section "Run model-oracle" runs the whole demonstration on a temporary copy, with `model/oracle/db/mar-roles.sql`). The steps below are the same demonstration done by hand against the delivered `mar-oracle`.
 
-Prerequisites: Java 21, Docker Engine, the `mar-oracle` container (if `docker ps -a` does not show it, run `Run import-oracle` in `claude_modernization` first: `tools/phase1/dbmigrate/import-oracle/ingest.sh load`), and a clone of `master-antique-repair-claude`.
+Prerequisites: Java 21, Docker Engine, the `mar-oracle` container (if `docker ps -a` does not show it, run `Run import-oracle` in `claude_modernization` first: `tools/phase2/dbmigrate/import-oracle/ingest.sh load`), and a clone of `master-antique-repair-claude`.
 
 1. **Create the application logins** (once; the guide, section 3). This makes `mar_app` (read/write) and `mar_readonly` with passwords you choose, as Oracle users with schema privileges on `masterantique`; the passwords reach SQL*Plus on standard input and are never written anywhere:
    ```
    cd ~/dev/claude_work/claude_modernization
    read -rsp 'New password for mar_app: ' APP_PW; echo
    read -rsp 'New password for mar_readonly: ' RO_PW; echo
-   { printf 'DEFINE app_pw = "%s"\nDEFINE ro_pw = "%s"\n' "$APP_PW" "$RO_PW"; cat tools/phase1/dbmigrate/import-oracle/guide/mar-roles.sql; } |
+   { printf 'DEFINE app_pw = "%s"\nDEFINE ro_pw = "%s"\n' "$APP_PW" "$RO_PW"; cat tools/phase2/dbmigrate/import-oracle/guide/mar-roles.sql; } |
      docker exec -i mar-oracle sqlplus -S / as sysdba
    unset APP_PW RO_PW
    ```
@@ -81,7 +81,7 @@ To take the route down again: `docker rm -f mar-oracle-proxy; docker network dis
 | Decision | Choice | Why |
 |---|---|---|
 | Where the code goes | `model/oracle/` of `master-antique-repair-claude`, a Gradle project of its own | One folder per database; it must build and run with every other folder removed (user, 2026-09-24) |
-| Source of the code | The Oracle database guide's sample project (`tools/phase1/dbmigrate/import-oracle/guide/mar-db-client/`), package renamed | Every Oracle-specific line in it was run against a copy of the migrated database |
+| Source of the code | The Oracle database guide's sample project (`tools/phase2/dbmigrate/import-oracle/guide/mar-db-client/`), package renamed | Every Oracle-specific line in it was run against a copy of the migrated database |
 | Build tool | Gradle with the Kotlin DSL (`build.gradle.kts`), Gradle 9.4.1 wrapper | Type-checked, Gradle's default for new builds; the wrapper means nobody installs Gradle |
 | Spring Boot version | 4.1.1 on Java 21 | The project's chosen stack for Phase 2 |
 | Package / artifact | `com.masterantique`; project `model-oracle` → `model-oracle-0.0.1-SNAPSHOT.jar` | |
@@ -118,7 +118,7 @@ The repository's root `.gitignore` already keeps `gradle-wrapper.jar` and ignore
 
 ## 5. How to rebuild it from scratch
 
-Sources: `claude_modernization/tools/phase1/dbmigrate/import-oracle/guide/mar-db-client/` (call it `SRC`; its Java package is `com.masterantique.dbclient`).
+Sources: `claude_modernization/tools/phase2/dbmigrate/import-oracle/guide/mar-db-client/` (call it `SRC`; its Java package is `com.masterantique.dbclient`).
 
 1. In `master-antique-repair-claude`, create `model/oracle/` with `settings.gradle.kts`, `build.gradle.kts`, both properties files, `ModelApplication.java` and `README.md` as described in section 4. Copy `gradlew`, `gradlew.bat` and `gradle/wrapper/` from `SRC`.
 2. Copy from `SRC/src/main/java/com/masterantique/dbclient/` into `model/oracle/src/main/java/com/masterantique/`, changing `com.masterantique.dbclient` to `com.masterantique`: `model/*`, `repo/*`, `login/LoginResult`, `login/IdentityCheck`, `login/LoginService`. Do not copy `ConnectionCheck` or `MarDbClientApplication` (replaced by `DatabaseCheck` and `ModelApplication`), nor `JdbcSmokeTest.java`, `build.gradle`, `pom.xml` or the sample's `application.properties`.
@@ -130,7 +130,7 @@ Sources: `claude_modernization/tools/phase1/dbmigrate/import-oracle/guide/mar-db
 
 - `./gradlew build`: compiles; `./gradlew test`: **6 of 6 passed**.
 - **Independence:** a copy of `model/oracle/` alone (no other folder beside it) was built, tested (6 of 6) and run against the database.
-- Against a **temporary copy** of the database, never `mar-oracle`: `tools/phase1/dbmigrate/import-oracle/ingest.sh load --config` with container `mar-oracle-guide` (settings: `ingest.conf.example` with `CONTAINER=mar-oracle-guide`), the logins from `mar-roles.sql` with throwaway passwords, a network `mar-net-guide` and an `alpine/socat` proxy on `127.0.0.1:1523` (`MAR_DB_PORT=1523`):
+- Against a **temporary copy** of the database, never `mar-oracle`: `tools/phase2/dbmigrate/import-oracle/ingest.sh load --config` with container `mar-oracle-guide` (settings: `ingest.conf.example` with `CONTAINER=mar-oracle-guide`), the logins from `mar-roles.sql` with throwaway passwords, a network `mar-net-guide` and an `alpine/socat` proxy on `127.0.0.1:1523` (`MAR_DB_PORT=1523`):
   - normal mode (`java -jar` and `./gradlew bootRun`): connected as `MAR_APP` to `FREEPDB1`, schema `MASTERANTIQUE`, Oracle 23.26.3.0.0; schema validation passed; the counts in section 2;
   - demo mode: `Customer1` (typed in capitals) went `MUST_CHANGE_PASSWORD` → changed → `OK`, wrong password `INVALID`; a wrong one-time code was refused; a later sign-in with the new password was `OK`.
   The temporary container, proxy and network were removed afterwards.
