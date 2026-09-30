@@ -6,12 +6,20 @@ argument-hint: "[load|verify|selftest|report|all] [--recreate]"
 
 # /import-oracle
 
+## OS check - first, before anything else
+
+Run `uname -s` with the Bash tool. `Linux` means continue. Anything else (`MINGW*`, `MSYS*`, `CYGWIN*` = Windows,
+`Darwin` = macOS) means stop: say "import-oracle runs only on Linux; this machine reports `<output>`" and run nothing.
+Changing the tool's files (not running it) is allowed on any OS.
+
+## Then
+
 The instructions for this tool live with the tool, not here. Before running or changing anything:
 
 1. Read `tools/phase1/dbmigrate/import-oracle/CLAUDE.md` in full and follow it. It is the single source of truth (rules,
    commands, exit codes, input contract, gotchas); if it and this file ever disagree, it wins.
-2. Check the machine first: import-oracle needs Linux with Docker (`ingest.sh`, `sqlplus` inside the container). On Windows,
-   stop and say so.
+2. Beyond Linux, import-oracle needs Docker (`ingest.sh`, `sqlplus` inside the container). If `docker info` fails, stop
+   and say so.
 3. If arguments were given (`load`, `verify`, `selftest`, `report` or `all`, optionally `--recreate`), run that; otherwise do
    what the tool's CLAUDE.md says a plain `Run import-oracle` means.
 

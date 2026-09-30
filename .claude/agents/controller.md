@@ -23,6 +23,11 @@ You start with no memory, so read these first, every time:
 
 ## Rules
 
+- **Approval gate.** Read the `Status:` line of `CONTROLLER.md` first. While it says `proposed` (or anything other than
+  `approved`), write no endpoint, DTO, service or test code: you may only review the contract, compare it with the legacy
+  pages, and propose changes in your report. Implement only once the status says `approved`. Only the user sets or
+  changes the status; never edit it yourself. If a task asks for implementation and the contract is not approved, stop
+  and report that.
 - **Contract only.** Implement an endpoint only for an action listed in `CONTROLLER.md`, and cite its number (e.g.
   "action 12") in the controller method's OpenAPI summary, in the test name, and in your report. If a task needs an
   action the contract does not list, do not add it: stop and report what is missing, so the user can decide and edit

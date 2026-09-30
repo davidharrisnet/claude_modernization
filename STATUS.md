@@ -1,30 +1,32 @@
 # Project Status
+
+
 ### Week 9/28 
-#### Regression Testing is an important part of this project. Claude will create code easily, so its imperative that tests validate the new project is working correctly. 
+Regression Testing is an important part of this project. Claude will create code easily, so its imperative that tests validate the new project is working correctly. 
 
-#### Monday and Tuesday 
-Refreshed [JUnit User Guide](https://docs.junit.org/6.1.3/overview.html)
-
-
-* Review [Sring Boot Regression Testing](https://docs.spring.io/spring-framework/reference/testing/introduction.html)
-
-* Review Angular Regression Testing
-1. Unit Testing
-1. Integration Testing
+Continuing with claude academy 
 
 * Focusing on [Agents and Subagents](https://academy.claude.com/courses/introduction-to-subagents)
+#### Monday and Tuesday 
+
+* Reading [JUnit User Guide](https://docs.junit.org/6.1.3/overview.html)
+
+* Review [Sring Boot Regression Testing](https://docs.spring.io/spring-framework/reference/testing/introduction.html)
 
 * Created the /brainstorm and /brainstorm-done skills.
     * /brainstorm confines claude to iteratively discussing ideas and developing an action plan. This ends with a human readable plan. This is a further constriction of Plan mode because claude is not predisposed to crearting a plan, but discusses definitions. This is helpful for fine tuning 
 
 #### Tuesday
+##### Controller
 * Created the 'run controller-oracle' plan.
 
-*  Using lessons for claud-academy agents to make 'model-oracle' and 'controller-oracle' agents. This keeps CLAUDE.md from getting too big, and provides a separaion of concern.s
+*  Using lessons for claud-academy agents to make 'model-oracle' and 'controller-oracle' skills. This keeps CLAUDE.md from getting too big, and provides a separaion of concern.s
 
 * the controller-oracle agent has a preliminary task of gleaning the REST actions from reading the page markup to discover which actions the applicaction uses. Upon reading the markup, it creates the CONTROLLER.md file with an indexed list of all the CRUD operations it will create. The CONTROLLER.md file then serves as the contract for the swagger REST operations it will create.  NOTE: These REST operations will become test methods used by the testing agent.
 
-
+#### Wednesday
+* Refactoring the Run oracle commands to be skills.
+* Removing all references to postgredsql
 
 
 
