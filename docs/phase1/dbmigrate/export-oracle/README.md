@@ -1,6 +1,6 @@
 # export-oracle: exporting the database from SQL Server to sanitized Oracle files, on Windows
 
-export-oracle takes the MasterAntiqueRepair database from **SQL Server (LocalDB)** and exports it as **Oracle** files (Oracle AI Database 26ai) that are checked into git, so that a Linux machine can build an Oracle database from them ([import-oracle](../import-oracle/README.md)). It is a proof of concept alongside the PostgreSQL path: Phase 2 stays on PostgreSQL. It is self-contained and needs nothing from the PostgreSQL tools. It is **export only**: there is no Docker and no target database, so it does not verify a database; it proves that the export is repeatable, that no password leaves SQL Server, that the row counts match the live source, and that the SQL follows Oracle's rules. Passwords are removed on purpose before anything is written.
+export-oracle takes the MasterAntiqueRepair database from **SQL Server (LocalDB)** and exports it as **Oracle** files (Oracle AI Database 26ai) that are checked into git, so that a Linux machine can build an Oracle database from them ([import-oracle](../import-oracle/README.md)). It is self-contained. It is **export only**: there is no Docker and no target database, so it does not verify a database; it proves that the export is repeatable, that no password leaves SQL Server, that the row counts match the live source, and that the SQL follows Oracle's rules. Passwords are removed on purpose before anything is written.
 
 ## What it does
 
@@ -28,8 +28,7 @@ All in `tools/phase1/dbmigrate/export-oracle/`, checked in; credentials are remo
 
 Last run: 2026-09-24, `export-oracle.cmd all --target oracle`, SQL Server 2025 (RC1) LocalDB.
 
-**Self-test 13 of 13 passed; 155 rows in 8 tables exported.** Every table's fingerprint, row count and business summary equals the PostgreSQL export's, because the fingerprint is computed in a database-independent form from the same source.
-
+**Self-test 13 of 13 passed; 155 rows in 8 tables exported.**
 | Area | Tests | Result |
 |---|---|---|
 | Repeatable export | 3 | Schema, data and record of the source identical across two runs (apart from the run time) |

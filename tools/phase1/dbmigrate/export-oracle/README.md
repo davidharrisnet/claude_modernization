@@ -1,7 +1,6 @@
 # export-oracle: SQL Server -> sanitized Oracle export (Windows)
 
-Exports the MasterAntiqueRepair SQL Server LocalDB database into Oracle-specific files (Oracle AI Database 26ai). **Export only**: no Docker, no Oracle, no target database. Credentials are sanitized in memory before anything is written, and the tool refuses to export unsanitized data. It is a proof of concept alongside the PostgreSQL path.
-
+Exports the MasterAntiqueRepair SQL Server LocalDB database into Oracle-specific files (Oracle AI Database 26ai). **Export only**: no Docker, no Oracle, no target database. Credentials are sanitized in memory before anything is written, and the tool refuses to export unsanitized data.
 - Description and latest results: `docs/phase1/dbmigrate/export-oracle/README.md`. Instructions for Claude Code: `CLAUDE.md` in this folder.
 - The Linux side that loads and verifies these files is import-oracle: `docs/phase1/dbmigrate/import-oracle/README.md`.
 

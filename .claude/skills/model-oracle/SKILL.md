@@ -1,6 +1,6 @@
 ---
 name: model-oracle
-description: Runs the Oracle model demonstration (Phase 2 model layer on the migrated Oracle database, model/oracle/ in master-antique-repair-claude, Linux only). Use when the user types /model-oracle or says "Run model-oracle". Not for PostgreSQL.
+description: Runs the Oracle model demonstration (Phase 2 model layer on the migrated Oracle database, model/oracle/ in master-antique-repair-claude, Linux only). Use when the user types /model-oracle or says "Run model-oracle".
 ---
 
 # /model-oracle
@@ -12,5 +12,3 @@ The instructions for this demonstration live in the application repo, not here. 
    `docs/phase2/model/oracle/CLAUDE.md` in this repo.
 2. Check the machine first: it runs on the Linux machine and needs import-oracle's `mar-oracle` container. If that repo path
    does not exist here (for example on Windows), stop and say so.
-3. It is self-contained: never read from or rely on any PostgreSQL folder (`model/postgresql/`, import-postgresql,
-   `mar-postgres`).

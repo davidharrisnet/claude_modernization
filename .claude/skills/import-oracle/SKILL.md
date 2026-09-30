@@ -1,6 +1,6 @@
 ---
 name: import-oracle
-description: Runs or changes the import-oracle tool (Oracle proof of concept, Linux + Docker only) - loads export-oracle's three files into the mar-oracle container, verifies them against source-metadata.json, runs the self-test and writes the verification report. Use when the user types /import-oracle or says "Run import-oracle", or asks to change that tool. Not for PostgreSQL.
+description: Runs or changes the import-oracle tool (Linux + Docker only) - loads export-oracle's three files into the mar-oracle container, verifies them against source-metadata.json, runs the self-test and writes the verification report. Use when the user types /import-oracle or says "Run import-oracle", or asks to change that tool.
 argument-hint: "[load|verify|selftest|report|all] [--recreate]"
 ---
 
@@ -9,11 +9,11 @@ argument-hint: "[load|verify|selftest|report|all] [--recreate]"
 The instructions for this tool live with the tool, not here. Before running or changing anything:
 
 1. Read `tools/phase1/dbmigrate/import-oracle/CLAUDE.md` in full and follow it. It is the single source of truth (rules,
-   commands, input contract, gotchas); if it and this file ever disagree, it wins.
+   commands, exit codes, input contract, gotchas); if it and this file ever disagree, it wins.
 2. Check the machine first: import-oracle needs Linux with Docker (`ingest.sh`, `sqlplus` inside the container). On Windows,
    stop and say so.
 3. If arguments were given (`load`, `verify`, `selftest`, `report` or `all`, optionally `--recreate`), run that; otherwise do
    what the tool's CLAUDE.md says a plain `Run import-oracle` means.
 
-Report the exit code as the tool defines it (0 ok, 1 verify differences, 2 error, 3 refused). Never edit `input/` by hand and
+Report the exit code with the meaning the tool's CLAUDE.md gives it. Never edit `input/` by hand and
 never fix export-side SQL here: a load or hash failure caused by the export is named and sent back to export-oracle.

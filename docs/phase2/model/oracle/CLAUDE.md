@@ -2,7 +2,7 @@
 
 **Status: EXECUTED (2026-09-24).** This is the plan as it was carried out, written so the work can be repeated, or rebuilt from scratch, by a person or a new Claude session with no memory of the original conversation. It runs when the user says **`Run model-oracle`** (section 2), or asks to rebuild the Oracle model (section 5). Result: the model builds, its 6 unit tests pass, and it connects to the migrated Oracle database, validates every entity against the live schema, and demonstrates the first-login password change.
 
-**Self-contained by design.** Everything here comes from the Oracle side: the import-oracle database and the Oracle database guide's tested sample project. Nothing reads from, copies or needs any PostgreSQL folder (`model/postgresql/`, `tools/phase1/dbmigrate/*-postgresql/`, `docs/phase2/model/postgresql/`); deleting all of them leaves this plan and `model/oracle/` working (checked: `model/oracle/` was built and run from a copy with no other folder beside it). Phase 2 as a whole runs on PostgreSQL; this model is the Oracle proof of concept for the model layer.
+**Self-contained by design.** Everything here comes from the import-oracle database and the Oracle database guide's tested sample project (checked: `model/oracle/` was built and run from a copy with no other folder beside it).
 
 | What | Where |
 |---|---|
@@ -81,7 +81,7 @@ To take the route down again: `docker rm -f mar-oracle-proxy; docker network dis
 | Decision | Choice | Why |
 |---|---|---|
 | Where the code goes | `model/oracle/` of `master-antique-repair-claude`, a Gradle project of its own | One folder per database; it must build and run with every other folder removed (user, 2026-09-24) |
-| Source of the code | The Oracle database guide's sample project (`tools/phase1/dbmigrate/import-oracle/guide/mar-db-client/`), package renamed | Every Oracle-specific line in it was run against a copy of the migrated database; nothing is taken from any PostgreSQL folder |
+| Source of the code | The Oracle database guide's sample project (`tools/phase1/dbmigrate/import-oracle/guide/mar-db-client/`), package renamed | Every Oracle-specific line in it was run against a copy of the migrated database |
 | Build tool | Gradle with the Kotlin DSL (`build.gradle.kts`), Gradle 9.4.1 wrapper | Type-checked, Gradle's default for new builds; the wrapper means nobody installs Gradle |
 | Spring Boot version | 4.1.1 on Java 21 | The project's chosen stack for Phase 2 |
 | Package / artifact | `com.masterantique`; project `model-oracle` → `model-oracle-0.0.1-SNAPSHOT.jar` | |
@@ -129,7 +129,7 @@ Sources: `claude_modernization/tools/phase1/dbmigrate/import-oracle/guide/mar-db
 ## 6. How it was verified (2026-09-24)
 
 - `./gradlew build`: compiles; `./gradlew test`: **6 of 6 passed**.
-- **Independence:** a copy of `model/oracle/` alone (no other folder beside it) was built, tested (6 of 6) and run against the database; nothing in it names PostgreSQL.
+- **Independence:** a copy of `model/oracle/` alone (no other folder beside it) was built, tested (6 of 6) and run against the database.
 - Against a **temporary copy** of the database, never `mar-oracle`: `tools/phase1/dbmigrate/import-oracle/ingest.sh load --config` with container `mar-oracle-guide` (settings: `ingest.conf.example` with `CONTAINER=mar-oracle-guide`), the logins from `mar-roles.sql` with throwaway passwords, a network `mar-net-guide` and an `alpine/socat` proxy on `127.0.0.1:1523` (`MAR_DB_PORT=1523`):
   - normal mode (`java -jar` and `./gradlew bootRun`): connected as `MAR_APP` to `FREEPDB1`, schema `MASTERANTIQUE`, Oracle 23.26.3.0.0; schema validation passed; the counts in section 2;
   - demo mode: `Customer1` (typed in capitals) went `MUST_CHANGE_PASSWORD` → changed → `OK`, wrong password `INVALID`; a wrong one-time code was refused; a later sign-in with the new password was `OK`.

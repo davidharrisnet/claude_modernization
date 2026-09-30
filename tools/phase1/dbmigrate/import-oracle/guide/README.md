@@ -2,7 +2,7 @@
 
 `docs/phase1/dbmigrate/import-oracle/OracleDatabaseGuide.html` is generated from this folder. **Every code block in the guide
 is copied from a file here that was run against the database**, so the page cannot drift from what was tested. To
-change the guide: change the file here, test it again, rebuild the page. Self-contained: it needs nothing from the PostgreSQL tools.
+change the guide: change the file here, test it again, rebuild the page. Self-contained.
 
 | File | What it is |
 |---|---|
