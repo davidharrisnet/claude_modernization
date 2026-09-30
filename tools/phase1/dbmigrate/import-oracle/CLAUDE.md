@@ -2,11 +2,10 @@
 
 This folder is the import-oracle tool: it loads the Oracle export written by export-oracle into an Oracle AI Database 26ai Free
 container on Linux and verifies it against the export's record of the source. It runs when the user says **`Run import-oracle`**.
-It is a proof of concept alongside PostgreSQL (Phase 2 stays on PostgreSQL). The human description is
+The human description is
 `docs/phase1/dbmigrate/import-oracle/README.md`; the strategy and security policy is `docs/phase1/dbmigrate/DATA_MIGRATION.md` (§5
 security, §10 the Oracle decisions). The Windows side that writes the input files is `tools/phase1/dbmigrate/export-oracle/CLAUDE.md`.
-The tool is self-contained: it needs no PostgreSQL folder. It has a PostgreSQL counterpart, import-postgresql, with the same design
-(commands, exit codes, check categories, self-test); if that folder is present, keep the two alike when changing either.
+The tool is self-contained.
 
 ## Rules
 
@@ -212,8 +211,7 @@ tools/phase1/dbmigrate/import-oracle/ingest.sh verify --config /tmp/test.conf --
 docker rm -f -v mar-oracle-test
 ```
 
-Free is limited to about 2 GB of memory per database; three running Oracle containers are too many for this 12 GB machine alongside
-the PostgreSQL ones. Before finishing a change: `ingest.sh all --recreate` passes with the numbers above and `selftest-results.json`
+Free is limited to about 2 GB of memory per database; three running Oracle containers are too many for this 12 GB machine. Before finishing a change: `ingest.sh all --recreate` passes with the numbers above and `selftest-results.json`
 is unchanged.
 
 ## Known limits

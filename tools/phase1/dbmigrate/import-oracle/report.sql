@@ -266,7 +266,7 @@ footer { color:var(--muted); font-size:.85rem; margin-top:3rem; border-top:1px s
       || ' and compared with the record made at export. '
       || CASE WHEN pass THEN 'Every row count and every table''s full-content fingerprint matches the source, the schema is as designed, the ten business summaries give the same answers, every user''s credentials are removed, and the database rules (case-insensitive unique usernames through a function-based index, reuse of soft-deleted names, foreign keys, BOOLEAN values, identity columns, multi-byte text) behave as expected.'
               ELSE 'Some checks failed; they are listed below with the table or rule concerned.' END
-      || ' This is a proof of concept alongside PostgreSQL, which remains the Phase 2 database.</p>' || CHR(10));
+      || '</p>' || CHR(10));
     w('<div class="tiles">'
       || '<div class="tile"><p class="k">Checks passed</p><p class="v">' || jtxt(r, 'checksPassed') || ' / ' || jtxt(r, 'checksTotal') || '</p></div>'
       || '<div class="tile"><p class="k">Rows verified identical</p><p class="v">' || jtxt(r, 'rowsVerified') || ' / ' || jtxt(r, 'rowsTotal') || '</p></div>'
@@ -281,7 +281,7 @@ footer { color:var(--muted); font-size:.85rem; margin-top:3rem; border-top:1px s
   BEGIN
     w('<section aria-labelledby="method"><h2 id="method">Scope and method</h2>
 <p>The Linux machine cannot reach the SQL Server database, so the comparison is made against <code>source-metadata.json</code>: a record written on Windows at export time from the source catalog and the same in-memory rows the SQL files were generated from, by a separate code path. The tool starts an Oracle container with no published network port, checks the files are the ones the record describes, creates a schema-only account (no password; nobody can log in as it), runs the schema and data scripts in it with SQL*Plus (stopping at the first error), and runs the checks below in PL/SQL inside the container as SYS through operating-system authentication. No data leaves the container and no password is kept.</p>
-<p>Row content is compared with a fingerprint: every row of a table is written in one fixed text form (integers in decimal, true/false as 1/0, timestamps to the millisecond, text as the hex of its UTF-8 bytes, NULL distinct from empty text), the rows are sorted, and the whole table is hashed with SHA-256. A single changed character anywhere in a table changes its hash. The form is database-independent, so the fingerprints recorded at export equal those of the PostgreSQL export of the same data.</p>
+<p>Row content is compared with a fingerprint: every row of a table is written in one fixed text form (integers in decimal, true/false as 1/0, timestamps to the millisecond, text as the hex of its UTF-8 bytes, NULL distinct from empty text), the rows are sorted, and the whole table is hashed with SHA-256. A single changed character anywhere in a table changes its hash. The form is database-independent.</p>
 <div class="scroll"><table><thead><tr><th scope="col">Category</th><th scope="col">What is checked</th><th scope="col" class="num">Passed</th><th scope="col">Result</th></tr></thead><tbody>' || CHR(10));
     FOR i IN 0 .. checks.get_size - 1 LOOP
       known := FALSE;

@@ -1,6 +1,6 @@
 # import-oracle: the migrated database in Oracle, in Docker
 
-import-oracle takes the MasterAntiqueRepair database, exported from SQL Server by [export-oracle](../export-oracle/README.md), loads it into an **Oracle AI Database 26ai Free** database running in a **Docker container** on Linux, and **proves that nothing changed on the way**: every table, every row and every rule matches the original. It is a proof of concept alongside the PostgreSQL path; Phase 2 uses PostgreSQL. It is self-contained: the Oracle tools, database, guide and model need nothing from the PostgreSQL ones.
+import-oracle takes the MasterAntiqueRepair database, exported from SQL Server by [export-oracle](../export-oracle/README.md), loads it into an **Oracle AI Database 26ai Free** database running in a **Docker container** on Linux, and **proves that nothing changed on the way**: every table, every row and every rule matches the original. It is self-contained.
 
 ## What it does
 
