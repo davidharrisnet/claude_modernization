@@ -36,7 +36,7 @@ From the repository root, on Linux with Docker Engine running:
 tools/phase1/dbmigrate/import-oracle/ingest.sh all --recreate
 ```
 
-Expected (about 6 minutes, three database starts): exit 0, `VERIFICATION PASSED - 86 of 86 checks; 155 of 155 rows verified
+Expected (about 6 minutes, three database starts): exit 0, `VERIFICATION PASSED - 86 of 86 checks; 156 of 156 rows verified
 identical`, `SELFTEST PASSED - 7 of 7`, `REPORT WRITTEN: ...`. Commands: `load [--recreate]`, `verify [--schema <name>] [--out
 <path>]`, `selftest`, `report`, `all [--recreate]`; `--config <path>` replaces the settings. Exit codes: 0 ok, 1 differences,
 2 configuration/tool/Docker error, 3 refused (container exists, no `--recreate`). After a successful run, update the "Latest results"

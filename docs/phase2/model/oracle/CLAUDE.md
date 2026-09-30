@@ -49,7 +49,7 @@ Prerequisites: Java 21, Docker Engine, the `mar-oracle` container (if `docker ps
    Expected (from `DatabaseCheck`, among the start-up log lines):
    ```
    Connected: MAR_APP @ FREEPDB1, schema MASTERANTIQUE, Oracle 23.26.3.0.0
-   users=12 tickets=24 comments=26 audit_logs=78
+   users=12 tickets=24 comments=26 audit_logs=79
    customers=8 employees=3 managers=1, must reset password=12
    tickets SUBMITTED=8 INPROGRESS=8 COMPLETED=8
    ```

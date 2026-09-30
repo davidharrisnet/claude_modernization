@@ -12,7 +12,7 @@
                  "schemaFile":  "01-schema.sql",
                  "schemaSha256":  "1882e31d2963b5435dd99801193e70ed7eb408646ee8ba6ca3b899fd869e159a",
                  "dataFile":  "02-data-sanitized.sql",
-                 "dataSha256":  "0c1504e711c113d91b40edfd20fd10429fe1d6a4a29378fb7df908964654d08e",
+                 "dataSha256":  "64602aebd2351b79889890b0ae4f9c429bc2018ac4c04654e2349ff1e6d62578",
                  "sanitizeCredentials":  true
              },
     "canonicalForm":  {
@@ -362,9 +362,9 @@
                    {
                        "sourceName":  "AuditLogs",
                        "targetName":  "audit_logs",
-                       "rowCount":  78,
-                       "identityLast":  78,
-                       "rowSha256":  "c6e4f24be7acad70339ca42dc69160f675b3f42f0fab54f4c4be0be53c118e4d",
+                       "rowCount":  79,
+                       "identityLast":  79,
+                       "rowSha256":  "812ce44474626ebe36093b66246f941072c87b0dbdcf7d4d4325be32a0fc4423",
                        "columns":  [
                                        {
                                            "sourceName":  "Id",
@@ -1152,7 +1152,7 @@
                           "sourceSql":  "SELECT \"Action\", COUNT(*) FROM \"AuditLogs\" GROUP BY \"Action\"",
                           "expectedRows":  [
                                                "0|11",
-                                               "1|1",
+                                               "1|2",
                                                "2|24",
                                                "3|16",
                                                "4|8",
@@ -1185,12 +1185,12 @@
                           "name":  "Account and audit date ranges",
                           "sourceSql":  "SELECT (SELECT MIN(\"CreatedAt\") FROM \"Users\"), (SELECT MAX(\"CreatedAt\") FROM \"Users\"), (SELECT MIN(\"Timestamp\") FROM \"AuditLogs\"), (SELECT MAX(\"Timestamp\") FROM \"AuditLogs\")",
                           "expectedRows":  [
-                                               "2026-09-10 14:41:58.910|2026-09-11 16:41:58.910|2026-09-07 08:20:34.000|2026-09-17 14:43:56.643"
+                                               "2026-09-10 14:41:58.910|2026-09-11 16:41:58.910|2026-09-07 08:20:34.000|2026-09-30 03:07:32.400"
                                            ]
                       }
                   ],
     "expectations":  {
-                         "totalRows":  155,
+                         "totalRows":  156,
                          "usersSanitized":  true,
                          "usersCount":  12,
                          "noDuplicateActiveUsernamesIgnoringCase":  true
@@ -1298,7 +1298,7 @@
                              "Index names that were duplicated across tables in SQL Server (for example IX_UserId) were prefixed with the table name, then renamed to snake_case."
                          ],
     "run":  {
-                "runTimeUtc":  "2026-09-24 13:50:17",
-                "toolGitCommit":  "e044682"
+                "runTimeUtc":  "2026-09-30 08:36:58",
+                "toolGitCommit":  "7b2b1fa"
             }
 }

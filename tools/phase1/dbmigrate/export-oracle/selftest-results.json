@@ -11,7 +11,7 @@
                       "Category":  "Determinism",
                       "Name":  "Data export is byte-identical across runs",
                       "Passed":  true,
-                      "Detail":  "sha256 0c1504e711c113d91b40edfd20fd10429fe1d6a4a29378fb7df908964654d08e vs 0c1504e711c113d91b40edfd20fd10429fe1d6a4a29378fb7df908964654d08e"
+                      "Detail":  "sha256 64602aebd2351b79889890b0ae4f9c429bc2018ac4c04654e2349ff1e6d62578 vs 64602aebd2351b79889890b0ae4f9c429bc2018ac4c04654e2349ff1e6d62578"
                   },
                   {
                       "Category":  "Determinism",
@@ -35,13 +35,13 @@
                       "Category":  "Counts",
                       "Name":  "Row count of every table equals a live COUNT(*) of the source",
                       "Passed":  true,
-                      "Detail":  "Roles=3/3, Users=12/12, AuditLogs=78/78, Tickets=24/24, Comments=26/26, UserClaims=0/0, UserLogins=0/0, UserRoles=12/12"
+                      "Detail":  "Roles=3/3, Users=12/12, AuditLogs=79/79, Tickets=24/24, Comments=26/26, UserClaims=0/0, UserLogins=0/0, UserRoles=12/12"
                   },
                   {
                       "Category":  "Counts",
                       "Name":  "Total rows equals the expectation recorded in the metadata",
                       "Passed":  true,
-                      "Detail":  "155 rows"
+                      "Detail":  "156 rows"
                   },
                   {
                       "Category":  "Sanitization",
@@ -77,7 +77,7 @@
                       "Category":  "Determinism",
                       "Name":  "The export report rebuilds byte-identically from the same metadata",
                       "Passed":  true,
-                      "Detail":  "sha256 20f349a1b5245740b8483910743aa150d0b98362603f97555511839946bd73f1 vs 20f349a1b5245740b8483910743aa150d0b98362603f97555511839946bd73f1"
+                      "Detail":  "sha256 462da5f56be6e49e3e49f2340f3f71a176fc16b8440972bb55f6ad9f0d82ba2d vs 462da5f56be6e49e3e49f2340f3f71a176fc16b8440972bb55f6ad9f0d82ba2d"
                   }
               ]
 }

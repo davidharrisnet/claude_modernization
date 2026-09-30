@@ -19,25 +19,25 @@ All in `tools/phase1/dbmigrate/export-oracle/`, checked in; credentials are remo
 | Output | What it is |
 |---|---|
 | [01-schema.sql](../../../../tools/phase1/dbmigrate/export-oracle/01-schema.sql) | Oracle schema for SQL*Plus: 8 tables, named keys and foreign keys with their delete rules, 11 indexes, defaults. Nothing needs quoting |
-| [02-data-sanitized.sql](../../../../tools/phase1/dbmigrate/export-oracle/02-data-sanitized.sql) | 155 rows as `INSERT`s in pure ASCII, then an identity restart per auto-numbered table. Every user's `password_hash` and `security_stamp` is empty and `must_reset_password` is true |
+| [02-data-sanitized.sql](../../../../tools/phase1/dbmigrate/export-oracle/02-data-sanitized.sql) | 156 rows as `INSERT`s in pure ASCII, then an identity restart per auto-numbered table. Every user's `password_hash` and `security_stamp` is empty and `must_reset_password` is true |
 | [source-metadata.json](../../../../tools/phase1/dbmigrate/export-oracle/source-metadata.json) | The record of the source at export: structure, row counts, a SHA-256 fingerprint per table, ten business summaries, expectations, and the hashes of the two SQL files. No credentials, no SQL to execute |
 | [selftest-results.json](../../../../tools/phase1/dbmigrate/export-oracle/selftest-results.json) | Self-test results |
 | [MigrationExportReport.docx](MigrationExportReport.docx) | The export report: what was exported, the schema with source-to-target names, summaries, sanitizing, differences, reproducibility |
 
 ## Latest results
 
-Last run: 2026-09-24, `export-oracle.cmd all --target oracle`, SQL Server 2025 (RC1) LocalDB.
+Last run: 2026-09-30, `export-oracle.cmd all --target oracle`, SQL Server 2025 (RC1) LocalDB.
 
-**Self-test 13 of 13 passed; 155 rows in 8 tables exported.**
+**Self-test 13 of 13 passed; 156 rows in 8 tables exported.**
 | Area | Tests | Result |
 |---|---|---|
 | Repeatable export | 3 | Schema, data and record of the source identical across two runs (apart from the run time) |
 | No credentials | 3 | No credential value read from the source (24 values) appears in any output file; the tool refuses to run with sanitizing off (exit 2); users are all sanitized and no two active usernames differ only by case |
-| Row counts | 2 | Every table's count equals a live `COUNT(*)` of the source; the total equals the recorded 155 |
+| Row counts | 2 | Every table's count equals a live `COUNT(*)` of the source; the total equals the recorded 156 |
 | Oracle rules | 4 | No SQL line over 2,000 characters; both SQL files pure ASCII; every identifier valid and not reserved; no empty string in the source |
 | Report | 1 | The report rebuilds byte-identically from the same record |
 
-The data: 12 users (1 manager, 3 employees, 8 customers), 24 repair tickets (8 submitted, 8 in progress, 8 completed), 26 comments, 78 audit log entries, 3 roles.
+The data: 12 users (1 manager, 3 employees, 8 customers), 24 repair tickets (8 submitted, 8 in progress, 8 completed), 26 comments, 79 audit log entries, 3 roles.
 
 ## Run it
 

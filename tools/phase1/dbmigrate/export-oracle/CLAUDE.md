@@ -47,7 +47,7 @@ From the repository root, in a command prompt, with the legacy application's Loc
 tools\phase1\dbmigrate\export-oracle\export-oracle.cmd all --target oracle
 ```
 
-Expected: `Exported 8 tables (credentials sanitized)` with 155 rows, thirteen `PASS` self-test lines, `SELF-TEST PASSED`, then the report
+Expected: `Exported 8 tables (credentials sanitized)` with 156 rows, thirteen `PASS` self-test lines, `SELF-TEST PASSED`, then the report
 path (`MigrationExportReport.docx`, about 55 KB); exit 0. Commands: `export`, `selftest`, `report [--out <file>]`, `all` (export,
 self-test, report). `--config <path>` replaces the settings file. Exit codes: 0 ok, 1 self-test differences, 2 configuration, tool or
 connection error (including the refusal to export unsanitized data), 3 refused. After a successful run, update the "Latest results"
@@ -184,7 +184,7 @@ full row hashes. It carries no verification PASS/FAIL against a target.
   written). Otherwise: `meta` (`source`, `schemaFile`/`schemaSha256`, `dataFile`/`dataSha256` — SHA-256 of the LF files,
   `sanitizeCredentials`); `canonicalForm`; `tables[]` in load order (`sourceName`, `targetName`, `rowCount`, `identityLast`, `rowSha256`,
   `columns[]`, `primaryKey[]`, `foreignKeys[]`, `indexes[]`); `summaries[]` (`name`, `sourceSql` — documentation only, never executed —
-  `expectedRows`); `expectations` (`totalRows` 155, `usersSanitized`, `usersCount` 12, `noDuplicateActiveUsernamesIgnoringCase`);
+  `expectedRows`); `expectations` (`totalRows` 156, `usersSanitized`, `usersCount` 12, `noDuplicateActiveUsernamesIgnoringCase`);
   `renameMap`; `excludedTables`; `knownDifferences`; `run` (`runTimeUtc`, `toolGitCommit`: the only non-deterministic part). It contains no
   credentials, personal data, raw comment text or executable SQL.
 - **Canonical row form (database-independent; must match import-oracle's `verify.sql` byte for byte):** cells
@@ -241,7 +241,7 @@ longest data line is 306 characters); the stress test in "Testing changes", load
 - **Stress test with awkward data** after a change to rendering, reading or hashing: temporarily add rows to the source with line breaks,
   tabs, backslashes, quotes, emoji, Chinese and Japanese text, NULLs, a date in the year 9999 and a soft-deleted user with an accented name
   (**not** an empty text: the export refuses it); run `all` and load the result with import-oracle on Linux, requiring every row identical;
-  then delete the rows and restore the auto-number counters (`DBCC CHECKIDENT`) so the source is back to 155 rows.
+  then delete the rows and restore the auto-number counters (`DBCC CHECKIDENT`) so the source is back to 156 rows.
 - **Negative test for a new self-test check:** damage a copy of an output and confirm the check fails and names it.
 
 ## Known limits

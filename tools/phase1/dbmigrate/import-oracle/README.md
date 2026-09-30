@@ -13,7 +13,7 @@ On Linux with Docker Engine running, from the repository root (nothing else is n
 tools/phase1/dbmigrate/import-oracle/ingest.sh all --recreate
 ```
 
-About 6 minutes (the first run also downloads the 1.7 GB image). Expected: `VERIFICATION PASSED - 86 of 86 checks; 155 of 155 rows verified identical`, `SELFTEST PASSED - 7 of 7`, the report written to `docs/phase1/dbmigrate/import-oracle/MigrationVerificationReport.html`, exit 0.
+About 6 minutes (the first run also downloads the 1.7 GB image). Expected: `VERIFICATION PASSED - 86 of 86 checks; 156 of 156 rows verified identical`, `SELFTEST PASSED - 7 of 7`, the report written to `docs/phase1/dbmigrate/import-oracle/MigrationVerificationReport.html`, exit 0.
 
 | Command | What it does |
 |---|---|

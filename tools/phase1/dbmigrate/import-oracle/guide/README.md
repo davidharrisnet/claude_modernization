@@ -54,7 +54,7 @@ docker run -d --name mar-guide-proxy --network mar-net-guide -p 127.0.0.1:1523:1
   alpine/socat tcp-listen:1521,fork,reuseaddr tcp-connect:mar-oracle-guide:1521
 
 cd tools/phase1/dbmigrate/import-oracle/guide/mar-db-client
-MAR_DB_PORT=1523 MAR_DB_PASSWORD=$APP_PW ./gradlew bootRun          # expect users=12 tickets=24 comments=26 audit_logs=78
+MAR_DB_PORT=1523 MAR_DB_PASSWORD=$APP_PW ./gradlew bootRun          # expect users=12 tickets=24 comments=26 audit_logs=79
 MAR_DB_PORT=1523 MAR_DB_PASSWORD=$APP_PW mvn -q spring-boot:run      # the same with Maven
 ```
 

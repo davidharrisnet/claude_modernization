@@ -140,7 +140,7 @@ Stop at the first failure and report; the database copy and proxy are meant to s
 2. **Build and unit tests**: `cd $APP/model/oracle && ./gradlew build && ./gradlew test --rerun` -> BUILD SUCCESSFUL,
    `LoginServiceTest` 6 + the new service tests, 0 failures.
 3. **Fresh copy**: write `/tmp/mar-oracle-controller.conf` (CONTAINER=mar-oracle-controller, INPUT_DIR=import-oracle
-   input) with `sed` from `ingest.conf.example`, then `ingest.sh load --recreate --config` it -> LOAD COMPLETE, 155 rows.
+   input) with `sed` from `ingest.conf.example`, then `ingest.sh load --recreate --config` it -> LOAD COMPLETE, 156 rows.
 4. **Route**: create `mar-net-controller` (skip if exists), connect the container, run `mar-oracle-controller-proxy`
    (`-p 127.0.0.1:1524:1521`, alpine/socat).
 5. **In one shell**: generate `APP_PW`/`RO_PW`, pipe them with `db/mar-roles.sql` into
@@ -148,12 +148,12 @@ Stop at the first failure and report; the database copy and proxy are meant to s
    MAR_DB_PASSWORD=$APP_PW`; start `java -jar build/libs/model-oracle-0.0.1-SNAPSHOT.jar` in the background, wait for
    `curl -sf 127.0.0.1:8080/v3/api-docs`; then the smoke test with `curl` (acting user: the Manager's id):
    - `GET /swagger-ui.html` 200 (after redirect) and `/v3/api-docs` lists 8 resource tags;
-   - GET list on each resource: users 12, tickets 24, comments 26, audit-logs 78, roles 3, user-roles 12, claims 0, logins 0;
+   - GET list on each resource: users 12, tickets 24, comments 26, audit-logs 79, roles 3, user-roles 12, claims 0, logins 0;
    - roles: create, read, rename, delete; users: create (must reset, no password fields in JSON), edit, soft delete,
      then re-create the same name (allowed), duplicate active name 409;
    - tickets: create for a Customer -> SUBMITTED, assign to an Employee -> INPROGRESS, complete -> COMPLETED,
      complete again 409, PUT description; comments: add, edit, delete; claims, user-roles, logins: create, read, delete;
-   - audit-logs now 78 + the rows the smoke test wrote, with the expected action codes and no text;
+   - audit-logs now 79 + the rows the smoke test wrote, with the expected action codes and no text;
    - invalid input (blank name, 2,001-character description) 400 with a ProblemDetail body.
    Stop the app (`kill`), `unset APP_PW RO_PW MAR_DB_PASSWORD`.
 6. **Prove the delivered database untouched** (if `mar-oracle` exists):
