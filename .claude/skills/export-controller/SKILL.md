@@ -24,9 +24,12 @@ Read, in this fixed order so numbering is stable between runs:
 
 1. `MasterAntiqueRepair/MasterAntiqueRepair/Account/*.aspx` and their `.aspx.cs`, alphabetically.
 2. `MasterAntiqueRepair/MasterAntiqueRepair/*.aspx` and their `.aspx.cs`, alphabetically.
-3. `MasterAntiqueRepair/MasterAntiqueRepair/App_Code/` (`RepairAuthHelper.RequireRole` sets which role may open a page;
-   `AuthService`) and `MasterAntiqueRepair/MasterAntiqueRepairData/App_Code/` including `Repositories/` (the domain
-   rules; `AuditLog.cs` holds the audit `ActionType` and `EntityKind` codes).
+3. `MasterAntiqueRepair/MasterAntiqueRepair/Site.master` (+ `.cs`): the menu per role and log off.
+4. `MasterAntiqueRepair/MasterAntiqueRepair/App_Code/` (`RepairAuthHelper.RequireRole` sets which role may open a page;
+   `AuthService` for sign-up, login and password reset; `IpThrottle`; `IdentityModels.cs` for the reset-token provider)
+   and `MasterAntiqueRepair/MasterAntiqueRepairData/App_Code/`: the domain classes, `Services/` (most rules and audit
+   calls live here - read every service a page calls), `Repositories/` (filters and ordering), `IdentityConfig.cs`
+   (password, username and lockout rules) and `AuditLog.cs` (the audit `ActionType` and `EntityKind` codes).
 
 An action is something a page lets a user do or see: a button or command that changes data, or a list or lookup it
 shows. Base every action and rule on code you read; never invent one. Where the code is unclear, say so in the file.
