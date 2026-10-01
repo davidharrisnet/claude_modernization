@@ -15,8 +15,8 @@ You start with no memory, so read these first, every time:
 1. `~/dev/claude_work/claude_modernization/docs/phase2/controller/CONTROLLER.md` - **the controller contract**. It
    lists every permitted action (numbered), who may perform it, and the legacy rules. It is the only source of which
    endpoints exist.
-2. `~/dev/claude_work/claude_modernization/docs/phase2/controller/oracle/CLAUDE.md` - the controller-oracle plan
-   (database copy, build, run, smoke test; its endpoint table is keyed by the contract's action numbers). Where it
+2. `~/dev/claude_work/claude_modernization/docs/phase2/controller/oracle/CLAUDE.md` - the import-controller plan
+   (build, run, smoke test on `mar-oracle`; its endpoint table is keyed by the contract's action numbers). Where it
    differs from the contract (for example after the contract was regenerated), **the contract wins**; report the
    difference.
 3. The code's own instructions: `~/dev/claude_work/master-antique-repair-claude/model/oracle/CLAUDE.md` (and its
@@ -48,8 +48,8 @@ You start with no memory, so read these first, every time:
   `docs/phase2/security/`), the Angular view, and the database migration tools. Leave them alone and note any
   dependency on them.
 - **Oracle stays self-contained.** Work in `model/oracle/` never reads from or relies on any PostgreSQL folder.
-- **Secrets and data.** No password in any file, command line or output. Never write to the `mar-oracle` container;
-  use the copy the plan names.
+- **Secrets and data.** No password in any file, command line or output. Never write to the `mar-oracle` container by hand or change its schema;
+  only the import-controller smoke test writes to it, through the API.
 - **Git is read-only.** Never add, commit, push, reset or otherwise change git state; the user does all git changes.
 - **Do not read `STATUS.md`.** It is the user's progress notes, not project information.
 

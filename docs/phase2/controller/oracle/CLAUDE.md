@@ -1,14 +1,14 @@
 # Plan: Phase 2 controller layer on Oracle - a REST API with Swagger UI over the migrated Oracle database
 
 **Status: PLANNED (2026-09-30), not yet executed.** Written on Windows, to be run on the Linux machine by a person or a
-new Claude session with no memory of the planning conversation. It runs when the user says **`Run controller-oracle`**
-(section 6). Target home of this plan: `claude_modernization/docs/phase2/controller/oracle/CLAUDE.md`.
+new Claude session with no memory of the planning conversation. It runs when the user says **`Run import-controller`**
+or `/import-controller` (section 6). Target home of this plan: `claude_modernization/docs/phase2/controller/oracle/CLAUDE.md`.
 
 ## Context
 
 `model/oracle/` (Spring Boot 4.1.1, Java 21) maps five of the eight migrated Oracle tables with JPA and has
-`LoginService`, but no web layer. This plan adds a REST API, browsable through a Swagger page, over a copy of the
-migrated Oracle database. The API offers **only the actions in the controller contract**
+`LoginService`, but no web layer. This plan adds a REST API, browsable through a Swagger page, on the migrated Oracle
+database `mar-oracle`. The API offers **only the actions in the controller contract**
 `docs/phase2/controller/CONTROLLER.md` (29 numbered actions, written by `/export-controller` from the legacy pages),
 not CRUD on every table. Planning happened on Windows, where Oracle cannot run; everything below is executed on Linux.
 
@@ -25,10 +25,11 @@ before building. Where this plan and the contract disagree, the contract wins.
 
 ## 1. Decisions
 
-1. **Own database copy `mar-oracle-controller`**, long-lived, loaded by import-oracle's `ingest.sh load --recreate
-   --config /tmp/mar-oracle-controller.conf`. `mar-oracle` stays read-only (verified untouched at the end);
-   `mar-oracle-demo` stays `Run model-oracle`'s temporary copy. Route: network `mar-net-controller`, proxy
-   `mar-oracle-controller-proxy` on `127.0.0.1:1524`.
+1. **One database: `mar-oracle`**, as built and verified by `/import-oracle`; no copy. The run starts only on a fresh
+   `mar-oracle` (verify 86 of 86, so the smoke test's fixed counts hold) and its smoke test writes to it, so afterwards
+   verify fails (counts, hashes, identity sequences) until `/import-oracle all --recreate` restores it. Route: the
+   delivered database's own network `mar-net` and proxy `mar-oracle-proxy` on `127.0.0.1:1522` (created if missing,
+   as in the database guide).
 2. **Code lives in `model/oracle/`** (one self-contained Oracle project; its rules 1-6 still hold, especially
    `ddl-auto=validate`: fix entities, never the schema).
 3. **Security actions are out of scope** (the security component, `docs/phase2/security/`): contract actions 1-5
@@ -77,7 +78,7 @@ plain records so this does not matter.
 
 **`application.properties`**: `server.address=127.0.0.1`, `server.port=${MAR_API_PORT:8080}`,
 `springdoc.swagger-ui.path=/swagger-ui.html`, `springdoc.api-docs.path=/v3/api-docs`,
-`spring.mvc.problemdetails.enabled=true`. The DB defaults stay; the run sets `MAR_DB_PORT=1524`.
+`spring.mvc.problemdetails.enabled=true`. The DB defaults stay; the run sets `MAR_DB_PORT=1522`.
 
 **Packages** (layering: controller -> service -> repository; no logic in controllers):
 ```
@@ -134,40 +135,43 @@ named with its action number: workflow transitions and their 409s, comment rules
 role checks (403), soft delete and username reuse, duplicate active username 409, audit rows written with the right codes
 and actor and never with text, password fields never mapped. Optionally one `@WebMvcTest` for `ApiExceptionHandler`.
 
-**Docs**: `model/oracle/README.md` and `model/oracle/CLAUDE.md` (layout, settings, a "Run controller-oracle" section
+**Docs**: `model/oracle/README.md` and `model/oracle/CLAUDE.md` (layout, settings, a "Run import-controller" section
 copied from section 6 here); Phase 2 repo root `README.md`/`CLAUDE.md` (the controller exists for Oracle). Fix stale
 `master-antique-repair-claude` paths only where these files are touched anyway.
 
 ## 4. Reuse
 
-- `ingest.sh load --recreate --config` and `ingest.conf.example` (as `Run model-oracle` step 3) to build the copy.
+- `ingest.sh verify` to confirm `mar-oracle` is fresh before the smoke test (`/import-oracle all --recreate` rebuilds it).
 - `model/oracle/db/mar-roles.sql` for the `mar_app` / `mar_readonly` logins (schema privileges already cover all
   eight tables, including INSERT/UPDATE/DELETE).
 - `AppUserRepository.findActiveByName` and its CASE-expression pattern (index-friendly) for duplicate checks.
 - `LoginService` unchanged; `DatabaseCheck` still logs counts at start-up (keeps proving `validate`).
-- The alpine/socat proxy pattern from `Run model-oracle` step 4.
+- The alpine/socat proxy `mar-oracle-proxy` from the database guide ("Using the delivered database" in
+  `model/oracle/CLAUDE.md`).
 
 ## 5. Security and data rules
 
-No password in any file, command line or output (generated in the shell, used, unset). `mar-oracle` is never written.
+No password in any file, command line or output (generated in the shell, used, unset). `mar-oracle` is written only by
+the smoke test, through the API as `mar_app`; never by hand, and never its schema.
 The API listens on 127.0.0.1 only and trusts the `X-Acting-User-Id` header: a local demonstration, not deployable.
 Responses and logs never carry password hashes, security stamps, or (in audit rows) comment/description text. Git
 stays read-only for Claude; the user commits.
 
-## 6. `Run controller-oracle` (Linux)
+## 6. `Run import-controller` (Linux)
 
-Stop at the first failure and report; the database copy and proxy are meant to stay up afterwards.
+Stop at the first failure and report; `mar-oracle` and its proxy stay up afterwards.
 1. **Prerequisites**: `java -version` 21, `docker info`, `$MOD/tools/phase2/dbmigrate/import-oracle/ingest.sh` exists,
-   and `CONTROLLER.md` says `Status: approved`.
+   `mar-oracle` is running, and `CONTROLLER.md` says `Status: approved`.
 2. **Build and unit tests**: `cd $APP/model/oracle && ./gradlew build && ./gradlew test --rerun` -> BUILD SUCCESSFUL,
    `LoginServiceTest` 6 + the new service tests, 0 failures.
-3. **Fresh copy**: write `/tmp/mar-oracle-controller.conf` (CONTAINER=mar-oracle-controller, INPUT_DIR=import-oracle
-   input) with `sed` from `ingest.conf.example`, then `ingest.sh load --recreate --config` it -> LOAD COMPLETE, 156 rows.
-4. **Route**: create `mar-net-controller` (skip if exists), connect the container, run `mar-oracle-controller-proxy`
-   (`-p 127.0.0.1:1524:1521`, alpine/socat).
+3. **Fresh database**: `$MOD/tools/phase2/dbmigrate/import-oracle/ingest.sh verify --out "$(mktemp)"` ->
+   `VERIFICATION PASSED - 86 of 86`. If it fails (usually an earlier smoke test's rows), stop and ask the person to run
+   `/import-oracle all --recreate`; never recreate it without asking.
+4. **Route**: create `mar-net` (skip if exists), connect `mar-oracle` (skip if connected), run `mar-oracle-proxy`
+   (`-p 127.0.0.1:1522:1521`, alpine/socat; skip if running).
 5. **In one shell**: generate `APP_PW`/`RO_PW`, pipe them with `db/mar-roles.sql` into
-   `docker exec -i mar-oracle-controller sqlplus -S / as sysdba` (expect 2 x "User created"); `export MAR_DB_PORT=1524
-   MAR_DB_PASSWORD=$APP_PW`; start `java -jar build/libs/model-oracle-0.0.1-SNAPSHOT.jar` in the background, wait for
+   `docker exec -i mar-oracle sqlplus -S / as sysdba` (expect 2 x "User created"; if the logins already exist, set the
+   new passwords with `ALTER USER ... IDENTIFIED BY` the same way); `export MAR_DB_PORT=1522 MAR_DB_PASSWORD=$APP_PW`; start `java -jar build/libs/model-oracle-0.0.1-SNAPSHOT.jar` in the background, wait for
    `curl -sf 127.0.0.1:8080/v3/api-docs`; look up one active Manager, Employee and Customer id (`GET /api/employees`,
    `GET /api/customers` as the Manager; the Manager's id from the database); then the smoke test with `curl`:
    - `GET /swagger-ui.html` 200 (after redirect); `/v3/api-docs` has no path for roles, user roles, claims, logins,
@@ -184,21 +188,19 @@ Stop at the first failure and report; the database copy and proxy are meant to s
      AssignTicket, CompleteTicket, AddComment), with those codes and no text;
    - invalid input: blank description 400, 2,001-character description 400, each with a ProblemDetail body.
    Stop the app (`kill`), `unset APP_PW RO_PW MAR_DB_PASSWORD`.
-6. **Prove the delivered database untouched** (if `mar-oracle` exists):
-   `$MOD/tools/phase2/dbmigrate/import-oracle/ingest.sh verify --out "$(mktemp)"` -> `VERIFICATION PASSED - 86 of 86`.
-7. **Report** the numbers, and tell the person how to use Swagger themselves: set their own `mar_app` password
-   (`read -rsp` + `ALTER USER mar_app IDENTIFIED BY ...` through `docker exec -i ... sqlplus / as sysdba`), export
-   `MAR_DB_PORT=1524` and `MAR_DB_PASSWORD`, `./gradlew bootRun`, open `http://127.0.0.1:8080/swagger-ui.html`.
-   Remove everything with `docker rm -f mar-oracle-controller-proxy; docker rm -f -v mar-oracle-controller;
-   docker network rm mar-net-controller; rm -f /tmp/mar-oracle-controller.conf`.
+6. **Report** the numbers; say that `mar-oracle` now holds the smoke test's rows (verify will fail until
+   `/import-oracle all --recreate`), and tell the person how to use Swagger themselves: set their own `mar_app`
+   password (`read -rsp` + `ALTER USER mar_app IDENTIFIED BY ...` through `docker exec -i mar-oracle sqlplus / as
+   sysdba`), export `MAR_DB_PORT=1522` and `MAR_DB_PASSWORD`, `./gradlew bootRun`, open
+   `http://127.0.0.1:8080/swagger-ui.html`. The proxy stays; remove it with `docker rm -f mar-oracle-proxy`.
 
 ## 7. Verification (definition of done)
 
 - Build green; all unit tests pass; Hibernate `validate` passes with the new `Role` and `UserRole` entities.
 - Swagger UI loads and documents one endpoint per non-security contract action, the `X-Acting-User-Id` header and the
   error format; every summary names its action number.
-- Every smoke-test step in 6.5 returns the expected status and counts; audit rows written match the legacy codes.
-- `mar-oracle` verification still 86 of 86.
+- `mar-oracle` verified 86 of 86 before the smoke test; every smoke-test step in 6.5 returns the expected status and
+  counts; audit rows written match the legacy codes.
 
 ## 8. Known gaps to note (parity and risk)
 

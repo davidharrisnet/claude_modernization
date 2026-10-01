@@ -54,6 +54,6 @@ Plain markdown, no endpoint URLs or Java: the Linux side decides those.
 - Report how many actions per role, and what changed against the previous file (run `git diff --stat` and
   `git diff docs/phase2/controller/CONTROLLER.md`, read-only), especially renumbered or removed actions.
 - Tell the user to review the diff, set `Status: approved` themselves, commit, and then build on Linux (the `controller`
-  agent implements only an approved contract; `/controller-oracle` runs the result).
+  agent implements only an approved contract; `/import-controller` runs the result).
 - Never change the legacy repo, never set the status to approved, no git command that changes anything, and ignore
   `STATUS.md`.
