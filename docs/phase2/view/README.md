@@ -27,6 +27,12 @@ Two skills, one per machine:
   them. It refuses to run unless `VIEW.md` is approved, the model and controller build and pass their tests, and the
   API is running.
 
+**Only `/export-view` reads the legacy application.** `/import-view` builds from `VIEW.md`, `STYLE.md`, the decisions
+report, `CONTROLLER.md` and the running API alone, and never reads `master-antique-repair`, even though a copy exists
+on the Linux machine. That is the point of the hand-off: the two files must be enough. When something in them is
+unclear, the Linux run makes a recorded decision and reports what `VIEW.md` should say, and the fix is made by
+re-running `/export-view` on Windows.
+
 ## Run order
 
 On Windows:
