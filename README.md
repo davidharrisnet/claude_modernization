@@ -87,6 +87,30 @@ or, to rebuild the model code from scratch, `Rebuild the model.` Claude Code fol
 the model (connection check), then the first-login password change. Run import-postgresql first if the database does not
 exist; running it again also removes the model's login and route, which the demonstration then recreates.
 
+**Phase 2 on Oracle, step by step.** Each step is a command typed into Claude Code with this repository open. Windows
+steps read the legacy application and write a hand-off file; Linux steps build from those files only. Where a step
+ends in `Status: proposed`, review the diff, change the line to `Status: approved` yourself, then commit and push
+before the next step; pull on Linux before each Linux step. Each skill checks its machine and its prerequisites and
+stops if they are not met.
+
+| # | Machine | Command | What it does | Needs first | Details |
+|---|---|---|---|---|---|
+| 1 | Windows | `/export-oracle` | Exports the SQL Server database as sanitized Oracle files | SQL Server LocalDB with the Phase 1 data | [export-oracle](docs/phase1/dbmigrate/export-oracle/README.md) |
+| 2 | Linux | `/import-oracle` | Loads the files into Oracle in Docker (`mar-oracle`) and verifies them | Step 1 pushed | [import-oracle](docs/phase1/dbmigrate/import-oracle/README.md) |
+| 3 | Linux | `/model-oracle` | Builds and runs the Spring Boot model on the migrated database | Step 2 | [model plan](docs/phase2/model/oracle/CLAUDE.md) |
+| 4 | Windows | `/export-controller` | Writes the controller contract `CONTROLLER.md` (`Status: proposed`) | Legacy application | [controller](docs/phase2/controller/README.md) |
+| 5 | You | approve | Review `CONTROLLER.md`, set `Status: approved`, commit, push | Step 4 | [controller](docs/phase2/controller/README.md) |
+| 6 | Linux | `/controller-oracle` | Builds, tests and starts the REST API with Swagger on `127.0.0.1:8080` over the database copy `mar-oracle-controller` (the `controller` agent implements the API) | Steps 3 and 5 | [controller plan](docs/phase2/controller/oracle/CLAUDE.md) |
+| 7 | Windows | `/export-view` | Writes the view contract `VIEW.md` (`Status: proposed`) and the style hand-off `STYLE.md` | Step 5 | [view](docs/phase2/view/README.md) |
+| 8 | You | approve | Review `VIEW.md` and `STYLE.md`, set `Status: approved`, commit, push | Step 7 | [view](docs/phase2/view/README.md) |
+| 9 | Linux | `/import-view` | Builds the Angular 21 view in `view/angular/` of `master-antique-repair-claude`, tests it, smoke-tests it against the API, writes `IMPORT_VIEW_REPORT.md` | Step 8, and **the API from step 6 still running** (`curl -sf 127.0.0.1:8080/v3/api-docs` answers) | [view](docs/phase2/view/README.md) |
+| 10 | Both | commit | Review and commit `master-antique-repair-claude` and this repository | Step 9 | |
+
+The Linux steps never read the legacy application (`master-antique-repair`); the hand-off files must be enough. If a
+contract changes, re-run its export step and every step after it. The security component (sign-up, login, password
+reset) is not built yet: until it is, the API names the acting user with a stand-in header and the Angular build uses
+a development-only sign-in in its place.
+
 ### Components
 These experiments took on a modular approach, focusing on each project component as separate tasks. 
 

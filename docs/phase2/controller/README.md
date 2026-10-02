@@ -6,7 +6,9 @@ use cases of the Phase 1 application, not CRUD on every table.
 | File | What it is |
 |---|---|
 | [CONTROLLER.md](CONTROLLER.md) | **The controller contract**: every permitted action, numbered, grouped by role, with the legacy rules it must keep. Status: approved. |
-| [oracle/CLAUDE.md](oracle/CLAUDE.md) | The import-controller plan (run with `/import-controller` or `Run import-controller`): build, run and smoke test on the migrated Oracle database `mar-oracle`; its endpoint table is keyed by the contract's action numbers. |
+
+| [oracle/CLAUDE.md](oracle/CLAUDE.md) | The controller-oracle plan (run with `Run controller-oracle`): database copy, build, run and smoke test on the migrated Oracle database. Its endpoint list predates the contract and is to be rewritten from it. |
+
 | [`.claude/agents/controller.md`](../../../.claude/agents/controller.md) | The **controller agent**, the Claude Code subagent that owns this layer. |
 
 ## The contract
