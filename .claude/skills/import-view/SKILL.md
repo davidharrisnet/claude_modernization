@@ -45,9 +45,13 @@ Run `uname -s` with the Bash tool. `Linux` means continue. Anything else (`MINGW
 ## Read before writing anything
 
 Read `VIEW.md`, `STYLE.md` and `EXPORT_VIEW_DECISIONS.md` in full, and `CONTROLLER.md` for the server messages and
-rules. They are self-contained: build from them, not from the legacy application. If the legacy repo
-(`~/dev/claude_work/master-antique-repair/`) is present you may read it, read-only, only to resolve something VIEW.md
-marks as unclear; record each such lookup in the report.
+rules. They are self-contained: build from them, not from the legacy application.
+
+**Never read the legacy repo** (`~/dev/claude_work/master-antique-repair/`, or any other copy of the Phase 1
+application), not even as a cross-check. The point of this exercise is that the hand-off files are enough. Where
+VIEW.md is unclear, make a decision from VIEW.md, STYLE.md, the decisions report, CONTROLLER.md and the API, and record
+it in the report together with what the contract would need to say, so it can be corrected by `/export-view` on
+Windows.
 
 **Precedence**: VIEW.md wins over STYLE.md for structure and text; STYLE.md wins for classes and look; the live
 `/v3/api-docs` wins for URLs, request and response shapes. Where they disagree with each other or with the
@@ -163,5 +167,5 @@ Name each test after the page or action it covers ("action 11: Assign to Me ..."
   found, and point to the report.
 - Tell the user to review `git diff` in both repos and commit; the decisions belong in `EXPORT_VIEW_DECISIONS.md` §11
   on the Windows side if they change the contract.
-- Never edit VIEW.md, STYLE.md, CONTROLLER.md or their status lines; never change the API code (report what it lacks
+- Never read the legacy repo; never edit VIEW.md, STYLE.md, CONTROLLER.md or their status lines; never change the API code (report what it lacks
   instead); never write to the `mar-oracle` container; no git command that changes anything; ignore `STATUS.md`.

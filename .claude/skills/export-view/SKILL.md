@@ -28,8 +28,8 @@ through an agent, so the page-by-page reasoning stays visible. The decisions beh
 `docs/phase2/view/EXPORT_VIEW_DECISIONS.md`; read it first and follow it. If the source contradicts it, follow the
 source, say so in the output file and in the report to the user.
 
-**Both files must be self-contained.** The Linux machine has no legacy repository: never write "see the legacy page";
-write what the page has.
+**Both files must be self-contained.** The Linux side builds from them alone and never reads the legacy code: never
+write "see the legacy page"; write what the page has.
 
 ## Source (read only)
 

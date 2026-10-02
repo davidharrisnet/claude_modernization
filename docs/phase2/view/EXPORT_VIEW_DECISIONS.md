@@ -12,8 +12,11 @@ not yet confirmed and must be settled by the skill's first run, not assumed.
   - **`VIEW.md`**: the view contract (pages, routes, role access, navigation, controls and the controller actions
     behind them, exact text, accessibility fixes, what is not carried forward).
   - **`STYLE.md`**: the styling hand-off (Bootstrap 3.3.7 to 5.3 class mapping, the custom CSS, icons, colours).
-- Both files are **self-contained**. The Linux machine that builds the Angular project has no copy of the legacy
-  repository, so anything the Angular build needs must be written in these files, not referenced.
+- Both files are **self-contained**: anything the Angular build needs is written in them, not referenced. **The Linux
+  side never reads the legacy application**, even though a copy exists on that machine
+  (`~/dev/claude_work/master-antique-repair/`): the exercise shows that the hand-off files are enough. `/import-view`
+  resolves an unclear point by a recorded decision and reports what VIEW.md should say, so the contract is corrected
+  on Windows. Only `/export-view` reads the legacy code.
 - The skill reads only. It never changes the legacy repository and runs no git command that changes anything.
 - Decision: **one skill, two files.** Both files come from the same reading of the same pages (a page's markup gives
   its structure and its classes together), so one pass keeps them consistent. They are separate files because they
@@ -284,7 +287,7 @@ documented. These are those choices, so they can be reviewed or overridden later
 | # | Decision | Section | Reason |
 |---|---|---|---|
 | 1 | Split prerequisite check: approved CONTROLLER.md on Windows, built and tested model and controller on Linux | §2 | Each machine checks what it can see; a single note-based gate trusts a note rather than a build |
-| 2 | Bootstrap classes translated on Windows and written as a table in STYLE.md | §7 | Linux has no legacy source to check a guess against |
+| 2 | Bootstrap classes translated on Windows and written as a table in STYLE.md | §7 | The translation is reviewed with the contract instead of being guessed at build time |
 | 3 | ng-bootstrap instead of Bootstrap's JavaScript | §7 | No jQuery, no DOM manipulation outside Angular |
 | 4 | Bootstrap Icons replace Glyphicons | §7 | Glyphicons were removed in Bootstrap 4; Bootstrap Icons is the project's own set |
 | 5 | `btn-default` to `btn-secondary`, `btn-xs` to `btn-sm`, `jumbotron` to utility classes, `label` to `badge` | §7 | Nearest 5.3 equivalent; the removed classes have no direct replacement |
