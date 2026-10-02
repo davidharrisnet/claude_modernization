@@ -326,6 +326,19 @@ Decisions made by the first `/export-view` run (2026-10-02), recorded in VIEW.md
 | 36 | `btn-default` beside a primary button becomes `btn-outline-secondary` | STYLE.md | Keeps the legacy visual weight (Bootstrap 3's default button was light) |
 | 37 | Selects use `form-select`; legacy inline styles become utilities or two named classes (`.metrics-scroll`, `.metrics-pie`) | STYLE.md | 5.3 styles selects separately; no inline styles in Angular templates |
 
+Decisions made when writing the Linux skill `/import-view` (2026-10-02):
+
+| # | Decision | Where | Reason |
+|---|---|---|---|
+| 38 | The Angular project lives in `view/angular/` of the Phase 2 repo, project name `mar-view` | import-view | Beside `model/oracle/`, one folder per component |
+| 39 | Endpoints are found from the live `/v3/api-docs` by the "Action N:" prefix of each operation summary, not from VIEW.md | import-view | VIEW.md has no URLs by design; the controller already tags every operation with its action number |
+| 40 | Precedence: VIEW.md for structure and text, STYLE.md for look, `/v3/api-docs` for URLs and shapes | import-view | Each file is authoritative for one thing; differences are reported |
+| 41 | Security screens are built with their server calls stubbed, plus a development-only sign-in stand-in that sets `X-Acting-User-Id` from memory | import-view | The API has no authentication yet (controller-oracle decision 4); only `AuthService` and the interceptor change when the security component arrives |
+| 42 | The stand-in never stores the user in `localStorage`, `sessionStorage` or a cookie, and the production build must not contain it | import-view | A header naming any user id is an impersonation switch; it must not survive a reload or ship |
+| 43 | A dev-server proxy sends `/api` to `127.0.0.1:8080` | import-view | One origin for the browser, so the API needs no CORS change |
+| 44 | The smoke test uses read actions only | import-view | It runs against the long-lived `mar-oracle-controller` copy; writes would change the parity data |
+| 45 | The run makes its own secondary decisions and records them in `IMPORT_VIEW_REPORT.md` | import-view | Same rule as this table: decide, then document |
+
 Later runs add their decisions to this table.
 
 ## 12. Risks and open items
